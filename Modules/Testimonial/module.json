@@ -1,0 +1,9 @@
+{
+    "name": "Testimonial",
+    "alias": "testimonial",
+    "description": "Testimonial management",
+    "priority": 100,
+    "providers": [
+        "Modules\\Testimonial\\Providers\\TestimonialServiceProvider"
+    ]
+}
