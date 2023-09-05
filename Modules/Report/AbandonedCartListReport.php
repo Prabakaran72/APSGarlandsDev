@@ -20,7 +20,7 @@ class AbandonedCartListReport extends Report
     public function query()
     {
         
-        return Product::select('abandonedcartlistreport.id','users.first_name','users.last_name','abandonedcartlistreport.slug','abandonedcartlistreport.customer_id', 'abandonedcartlistreport.quantity','abandonedcartlistreport.rate', 'abandonedcartlistreport.product_id', 'abandonedcartlistreport.reason', 'abandonedcartlistreport.created_at')
-        ->join('abandonedcartlistreport', 'products.id', '=', 'abandonedcartlistreport.product_id')->join('users','users.id','=','abandonedcartlistreport.customer_id');
+        return Product::select('abandonedcartlistreport.id','abandonedcartlistreport.first_name','abandonedcartlistreport.last_name','abandonedcartlistreport.slug','abandonedcartlistreport.customer_id', 'abandonedcartlistreport.quantity','abandonedcartlistreport.rate', 'abandonedcartlistreport.product_id', 'abandonedcartlistreport.reason', 'abandonedcartlistreport.created_at')
+        ->join('abandonedcartlistreport', 'products.id', '=', 'abandonedcartlistreport.product_id');
     }
 }
