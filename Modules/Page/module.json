@@ -1,9 +1,0 @@
-{
-    "name": "Page",
-    "alias": "page",
-    "description": "Managing pages.",
-    "priority": 9999,
-    "providers": [
-        "Modules\\Page\\Providers\\PageServiceProvider"
-    ]
-}

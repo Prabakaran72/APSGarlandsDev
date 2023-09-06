@@ -1,6 +1,0 @@
-{
-    "name": "Address",
-    "alias": "address",
-    "description": "The FleetCart Address Module.",
-    "priority": 100
-}
