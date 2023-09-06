@@ -32,7 +32,6 @@ class AbandonedCartListReport extends Report
             }
             $query->whereRaw("DATE_FORMAT(abandonedcartlistreport.created_at, '%Y-%m-%d') >= ?", [$from])
             ->whereRaw("DATE_FORMAT(abandonedcartlistreport.created_at, '%Y-%m-%d') <= ?", [$to]);
-        })
-        ;
+        });
     }
 }
