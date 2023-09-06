@@ -10,7 +10,6 @@ class AbandonedCartListReport extends Report
     
     protected function view()
     {
-
         return 'report::admin.reports.abandoned_cart_list_report.index';
     }
 
