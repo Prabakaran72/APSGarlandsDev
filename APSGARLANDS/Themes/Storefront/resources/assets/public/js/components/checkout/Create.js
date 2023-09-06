@@ -91,39 +91,21 @@ export default {
         },
 
         "form.billing.city": function (newCity) {
-            if (newCity) {
-                this.addTaxes();
-            }
         },
 
         "form.shipping.city": function (newCity) {
-            if (newCity) {
-                this.addTaxes();
-            }
         },
 
         "form.billing.zip": function (newZip) {
-            if (newZip) {
-                this.addTaxes();
-            }
         },
 
         "form.shipping.zip": function (newZip) {
-            if (newZip) {
-                this.addTaxes();
-            }
         },
 
         "form.billing.state": function (newState) {
-            if (newState) {
-                this.addTaxes();
-            }
         },
 
         "form.shipping.state": function (newState) {
-            if (newState) {
-                this.addTaxes();
-            }
         },
 
         "form.ship_to_a_different_address": function (newValue) {
@@ -134,8 +116,6 @@ export default {
                 this.form.shipping = {};
                 this.resetAddressErrors("shipping");
             }
-
-            this.addTaxes();
         },
 
         "form.terms_and_conditions": function () {
@@ -301,25 +281,6 @@ export default {
 
         changeShippingMethod(shippingMethodName) {
             this.$set(this.form, "shipping_method", shippingMethodName);
-        },
-
-        addTaxes() {
-            this.loadingOrderSummary = true;
-
-            $.ajax({
-                method: "POST",
-                url: route("cart.taxes.store"),
-                data: this.form,
-            })
-                .then((cart) => {
-                    store.updateCart(cart);
-                })
-                .catch((xhr) => {
-                    this.$notify(xhr.responseJSON.message);
-                })
-                .always(() => {
-                    this.loadingOrderSummary = false;
-                });
         },
 
         placeOrder() {
@@ -727,7 +688,7 @@ $.ajax({
           hideTermsModal(){
             $('#terms-modal').modal('hide');
           },
-        //If we need accept the terms button 
+        //If we need accept the terms button
         //   acceptTerms(){
         //     this.form.terms_and_conditions = true;
         //     hideTermsModal();

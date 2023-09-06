@@ -6,7 +6,6 @@ use Modules\Support\Money;
 use Modules\Tag\Entities\Tag;
 use Modules\Media\Entities\File;
 use Modules\Brand\Entities\Brand;
-use Modules\Tax\Entities\TaxClass;
 use Modules\Option\Entities\Option;
 use Modules\Review\Entities\Review;
 use Modules\Support\Eloquent\Model;
@@ -88,7 +87,7 @@ class Product extends Model
     {
         static::saved(function ($product) {
             if (!empty(request()->all())) {
-                
+
                 $product->saveRelations(request()->all());
             }
 
@@ -186,11 +185,6 @@ dd($sql);
     public function categories()
     {
         return $this->belongsToMany(Category::class, 'product_categories');
-    }
-
-    public function taxClass()
-    {
-        return $this->belongsTo(TaxClass::class)->withDefault();
     }
 
     public function tags()
@@ -535,7 +529,7 @@ dd($sql);
     //         ->withoutGlobalScope('active')
     //         ->pluck('product_id');
     // }
-    
+
 
     public static function findBySlug($slug)
     {
@@ -576,7 +570,7 @@ dd($sql);
      * @param array $attributes
      * @return void
      */
-    
+
     public function saveRelations($attributes = [])
     {
         // dd($attributes);
@@ -590,7 +584,7 @@ dd($sql);
             'pre_short_description' => array_get($attributes, 'pre_short_description'),
             'is_preorder_status' => array_get($attributes, 'is_preorder_status')
         ];
-    
+
         $this->preOrderProduct()->sync([$preorderAttributes]);
         $this->relatedProducts()->sync(array_get($attributes, 'related_products', []));
     }

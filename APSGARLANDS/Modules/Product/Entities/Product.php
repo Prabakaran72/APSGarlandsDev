@@ -6,7 +6,6 @@ use Modules\Support\Money;
 use Modules\Tag\Entities\Tag;
 use Modules\Media\Entities\File;
 use Modules\Brand\Entities\Brand;
-use Modules\Tax\Entities\TaxClass;
 use Modules\Option\Entities\Option;
 use Modules\Review\Entities\Review;
 use Modules\Support\Eloquent\Model;
@@ -38,9 +37,9 @@ class Product extends Model
      *
      * @var array
      */
-    //protected $fillable = ['brand_id', 'tax_class_id', 'slug', 'sku', 'price', 'special_price', 'special_price_type', 'special_price_start', 'special_price_end', 'selling_price', 'manage_stock', 'qty', 'in_stock', 'is_virtual', 'is_active', 'new_from', 'new_to','prepare_days', 'pre_short_description', 'is_preorder_status'];
+    //protected $fillable = ['brand_id', 'slug', 'sku', 'price', 'special_price', 'special_price_type', 'special_price_start', 'special_price_end', 'selling_price', 'manage_stock', 'qty', 'in_stock', 'is_virtual', 'is_active', 'new_from', 'new_to','prepare_days', 'pre_short_description', 'is_preorder_status'];
 
-    protected $fillable = ['brand_id', 'tax_class_id', 'slug', 'sku', 'price', 'special_price', 'special_price_type', 'special_price_start', 'special_price_end', 'selling_price', 'manage_stock', 'qty', 'in_stock', 'is_active', 'new_from', 'new_to','prepare_days', 'pre_short_description', 'is_preorder_status'];
+    protected $fillable = ['brand_id', 'slug', 'sku', 'price', 'special_price', 'special_price_type', 'special_price_start', 'special_price_end', 'selling_price', 'manage_stock', 'qty', 'in_stock', 'is_active', 'new_from', 'new_to','prepare_days', 'pre_short_description', 'is_preorder_status'];
 
     /**
      * The attributes that should be cast to native types.
@@ -168,11 +167,6 @@ class Product extends Model
     public function categories()
     {
         return $this->belongsToMany(Category::class, 'product_categories');
-    }
-
-    public function taxClass()
-    {
-        return $this->belongsTo(TaxClass::class)->withDefault();
     }
 
     public function tags()
@@ -536,7 +530,7 @@ class Product extends Model
 
     public function clean()
     {
-        return array_except($this->toArray(), ['description', 'short_description', 'translations', 'categories', 'files', 'is_active', 'in_stock', 'brand_id', 'tax_class', 'tax_class_id', 'viewed', 'created_at', 'updated_at', 'deleted_at']);
+        return array_except($this->toArray(), ['description', 'short_description', 'translations', 'categories', 'files', 'is_active', 'in_stock', 'brand_id', 'viewed', 'created_at', 'updated_at', 'deleted_at']);
     }
 
     /**

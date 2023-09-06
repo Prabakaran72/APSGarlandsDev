@@ -1,21 +1,5 @@
 @extends('report::admin.reports.layout')
 
-@section('filters')
-    <div class="form-group">
-        <label for="tax-class">{{ trans('report::admin.filters.tax_class') }}</label>
-
-        <select name="tax_class" id="tax-class" class="form-control">
-            <option value="">{{ trans('report::admin.filters.please_select') }}</option>
-
-            @foreach ($taxClasses as $id => $label)
-                <option value="{{ $id }}" {{ request('tax_class') == $id ? 'selected' : '' }}>
-                    {{ $label }}
-                </option>
-            @endforeach
-        </select>
-    </div>
-@endsection
-
 @section('report_result')
     <h3 class="tab-content-title">
         {{ trans('report::admin.filters.report_types.taxed_products_report') }}

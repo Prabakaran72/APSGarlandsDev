@@ -19,6 +19,7 @@
         "laravel/legacy-factories": "^1.0",
         "laravel/sanctum": "^3.0",
         "laravel/tinker": "^2.7",
+        "maatwebsite/laravel-sidebar": "*",
         "mehedi/stylist": "dev-master",
         "nwidart/laravel-modules": "^9.0",
         "swayok/alternative-laravel-cache": "^6.1",

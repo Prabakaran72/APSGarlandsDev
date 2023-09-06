@@ -67,11 +67,6 @@ class CartItem implements JsonSerializable
         return $this;
     }
 
-    public function findTax(array $addresses)
-    {
-        return $this->product->taxClass->findTaxRate($addresses);
-    }
-
     public function jsonSerialize()
     {
         return [

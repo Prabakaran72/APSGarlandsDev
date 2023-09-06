@@ -4,7 +4,6 @@ namespace Modules\Cart;
 
 use JsonSerializable;
 use Modules\Support\Money;
-use Modules\Tax\Entities\TaxRate;
 use Illuminate\Support\Collection;
 use Modules\Coupon\Entities\Coupon;
 use Modules\Product\Entities\Product;
@@ -49,7 +48,7 @@ class Cart extends DarryldecodeCart implements JsonSerializable
     public function store($productId, $qty, $options = [])
     {
         $options = array_filter($options);
-        $product = Product::with('files', 'categories', 'taxClass')->findOrFail($productId);
+        $product = Product::with('files', 'categories')->findOrFail($productId);
         $chosenOptions = new ChosenProductOptions($product, $options);
 
         $this->add([

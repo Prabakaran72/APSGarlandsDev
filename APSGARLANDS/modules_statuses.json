@@ -24,7 +24,7 @@
     "Shipping": true,
     "Slider": true,
     "Support": true,
-    "Tax": true,
+    "Tax": false,
     "Transaction": true,
     "Translation": true,
     "User": true,
