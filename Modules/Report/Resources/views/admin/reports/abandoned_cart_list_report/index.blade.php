@@ -1,6 +1,14 @@
 @extends('report::admin.reports.layout')
 
+@section('filters')
+    <div class="form-group">
+        <label for="brand">{{ trans('report::admin.filters.product') }}</label>
 
+        <input type="text" name="product" class="form-control" id="product" value="{{ $request->product }}">
+    </div>
+    @include('report::admin.reports.filters.from')
+    @include('report::admin.reports.filters.to')
+@endsection
 
 @section('report_result')
     <h3 class="tab-content-title">
@@ -36,7 +44,7 @@
                             {{ $abandoned->rate }}
                         </td>
                         <td>
-                            {{ $abandoned->created_at }}
+                            {{ $abandoned->created_at->format('d-m-Y') }}
                         </td>
                         <td>
                             {{ $abandoned->first_name }}{{ $abandoned->last_name }}

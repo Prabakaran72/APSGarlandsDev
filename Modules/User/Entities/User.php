@@ -151,7 +151,7 @@ class User extends EloquentUser implements AuthenticatableContract
     {
         return $this->belongsToMany(Product::class, 'wish_lists')->withTimestamps();
     }
-
+    
     /**
      * Get the default address of the user.
      *

@@ -114,7 +114,7 @@ return [
         'abandoned_products_count'=> 'Products Count',
         'abandoned_customer_name' => 'Customer Name',
         'abandoned_rate' => 'Price',
-        'abandoned_date'=> 'Date Time',
+        'abandoned_date'=> 'Date',
         'abandoned_reason'=> 'Reason',
 
     ],
