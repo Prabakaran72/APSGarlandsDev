@@ -41,7 +41,14 @@
 *::after {
   box-sizing: border-box;
 }
-
+.profile-image {
+  width: 30px; /* Adjust the width and height as needed */
+  height: 30px;
+  border-radius: 50%; /* Creates a circular shape */
+  border: 2px solid #fff; /* Optional border style */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Optional shadow effect */
+  object-fit: cover; /* Ensures the image covers the container */
+}
 html {
   font-family: sans-serif;
   line-height: 1.15;

@@ -103,6 +103,19 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-md-9">
+                            <div class="form-group">
+                                <label for="confirm-password">
+                                    {{ trans('storefront::account.profile.image_url') }}
+                                </label>
+
+                                <input type="file" id="image_url" accept=".jpg,.png" name="image_url" class="form-control" >
+
+                                @error('password_confirmation')
+                                    <span class="error-message">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
 
                     <button type="submit" class="btn btn-lg btn-primary btn-save-changes" data-loading>
                         {{ trans('storefront::account.profile.save_changes') }}
