@@ -40,5 +40,6 @@
     "Rewardpoints": true,
     "Testimonial": true,
     "Fixedrate": true,
-    "Pickupstore": true
+    "Pickupstore": true,
+    "Recurring": true
 }

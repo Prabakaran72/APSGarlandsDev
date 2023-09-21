@@ -31,8 +31,8 @@
             columns: [
                 { data: 'checkbox', orderable: false, searchable: false, width: '3%' },
                 { data: 'id' },
-                { data: 'id' }, //customer_name
-                { data: 'id' }, //customer_email
+                { data: 'first_name', name: 'customers.first_name', orderable: false, defaultContent: '' },
+                  { data: 'id' }, //customer_email
                 { data: 'delivery_time' }, //delivery_time
                 // { data: 'status', name: 'is_active', searchable: false },
                 { data: 'created', name: 'created_at' },
