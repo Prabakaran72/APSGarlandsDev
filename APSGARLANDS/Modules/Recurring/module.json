@@ -1,0 +1,10 @@
+{
+    "name": "Recurring",
+    "alias": "recurring",
+    "description": "Recurring management",
+    "priority": 100,
+    "providers": [
+        "Modules\\Recurring\\Providers\\RecurringServiceProvider"
+    ]
+}
+ 
