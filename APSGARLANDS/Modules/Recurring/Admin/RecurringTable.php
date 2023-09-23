@@ -17,5 +17,7 @@ class RecurringTable extends AdminTable
             ->addColumn('customer_name', function ($recurring) {
                 return $recurring->customer_full_name;
             });
+
+        return $this->newTable();
     }
 }

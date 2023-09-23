@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('recurrings', [
     'as' => 'admin.recurrings.index',
-    'uses' => 'RecurringController@index',
+    'uses' => 'RecurringController@list_recurring_main_orders',
     'middleware' => 'can:admin.recurrings.index',
 ]);
 

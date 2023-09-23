@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('recurring_main_orders', function (Blueprint $table) {
             $table->id();
-            $table->integer('customer_id') ;
+            $table->integer('created_id') ;
             $table->time('delivery_time') ;
             $table->timestamps();
         });

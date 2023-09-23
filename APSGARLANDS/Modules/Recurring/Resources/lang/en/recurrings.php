@@ -9,7 +9,7 @@ return [
         'recurring_order_main_id' => 'Recurring Id',
         'main_order_id' => 'Order Id',
         'delivery_time' => 'Delivery Time',
-        'completed_status' => 'Completed Status',
+        'completed_status' => 'Status',
     ],
     'tabs' => [
         'group' => [

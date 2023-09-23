@@ -12,9 +12,9 @@ use Modules\Recurring\Entities\recurring_sub_order;
 class Recurring extends Model
 {
 
-   //  protected $table = 'recurring_main_order';
+    //protected $table = 'recurring_main_orders';
 
-    protected $fillable = ['id', 'order_id', 'customer_id', 'recurring_delivery_time'];
+    protected $fillable = ['id', 'order_id', 'customer_id', 'delivery_time'];
 
     public function table()
     {
@@ -23,8 +23,10 @@ class Recurring extends Model
     }
 
     public function recurring_sub_datas(){
-        // dd(recurring_sub_order::class);
         return $this->hasMany(recurringSubOrder::class);
     }
 
+    public function users(){
+        return $this->belongsTo(User::class,'created_id');
+    }
 }
