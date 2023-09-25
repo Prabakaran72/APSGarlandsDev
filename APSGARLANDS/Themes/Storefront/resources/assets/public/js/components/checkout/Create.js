@@ -55,6 +55,10 @@ export default {
             stripeError: null,
             authorizeNetToken: null,
             termsModalContent: "",   //For Terms and Conditions Modal popup
+            preparingDays: null,
+			selectedDate:'',
+			minDate: null,
+			recurring_order: false,
         };
     },
 
