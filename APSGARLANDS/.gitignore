@@ -6,7 +6,15 @@
 /storage/logs/*
 public/phplog
 .env
+#to avoid builded js and css files
+public/modules/
+Themes/Storefront/assets/public/js/app.js
+node_modules/
+vendor/
+storage/logs/
 
+#avoid tracking node modules in all directories and subdirectories in this project
+**/node_modules/
 
 
 /.meta
@@ -15,3 +23,55 @@ npm-debug.log
 yarn-error.log
 *.map
 
+#to avoid npm mix js and css files
+Modules/Admin/Assets/js/admin.js
+Modules/Brand/Assets/admin/js/brand.js      
+Modules/Category/Assets/admin/js/jstree.js  
+Modules/Currency/Assets/admin/js/currency.js
+Modules/Import/Assets/admin/js/importer.js  
+Modules/Media/Assets/admin/js/media.js      
+Modules/Menu/Assets/admin/js/menu.js        
+Modules/Order/Assets/admin/js/order.js      
+Modules/Report/Assets/admin/js/report.js
+Modules/Setting/Assets/admin/js/setting.js
+Modules/Translation/Assets/admin/css/translation.css
+Modules/Translation/Assets/admin/css/translation.rtl.css
+Modules/Translation/Assets/admin/js/translation.js
+Modules/User/Assets/admin/js/login.js
+Modules/User/Assets/admin/js/user.js
+Themes/Storefront/assets/admin/js/storefront.js
+Themes/Storefront/assets/public/css/app.css
+Themes/Storefront/assets/public/css/app.rtl.css
+Themes/Storefront/assets/public/js/app.js
+public/modules/admin/js/admin.js
+public/modules/brand/admin/js/brand.js
+public/modules/category/admin/js/jstree.js
+public/modules/currency/admin/js/currency.js
+public/modules/import/admin/js/importer.js
+public/modules/media/admin/js/media.js
+public/modules/menu/admin/js/menu.js
+public/modules/order/admin/js/order.js
+public/modules/report/admin/js/report.js
+public/modules/setting/admin/js/setting.js
+public/modules/translation/admin/css/translation.css
+public/modules/translation/admin/css/translation.rtl.css
+public/modules/translation/admin/js/translation.js
+public/modules/user/admin/js/login.js
+public/modules/user/admin/js/user.js
+public/themes/storefront/admin/js/storefront.js
+public/themes/storefront/public/css/app.css
+public/themes/storefront/public/css/app.rtl.css
+public/themes/storefront/public/js/app.js
+storage/logs/laravel.log
+vendor/autoload.php
+vendor/composer/ClassLoader.php
+vendor/composer/InstalledVersions.php
+vendor/composer/LICENSE
+vendor/composer/autoload_classmap.php
+vendor/composer/autoload_files.php
+vendor/composer/autoload_namespaces.php
+vendor/composer/autoload_psr4.php
+vendor/composer/autoload_static.php
+vendor/composer/installed.json
+vendor/composer/installed.php
+vendor/composer/platform_check.php

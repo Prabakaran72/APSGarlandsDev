@@ -115,7 +115,7 @@
 .coupon-wrap {
     .form-group {
         display: flex;
-        margin-bottom: 0;
+        margin-bottom: 5px;
 
         .form-input {
             input {
@@ -242,6 +242,31 @@
             display: none;
         }
     }
+
+    .rewardpoints-wrap {
+        .form-group {
+            flex-direction: column;
+
+            .form-input {
+                input {
+                    width: 100%;
+                }
+
+                .error-message {
+                    display: block;
+                }
+            }
+
+            .btn-apply-coupon {
+                margin: 15px 0 0 0;
+                align-self: stretch;
+            }
+        }
+
+        > .error-message {
+            display: none;
+        }
+    }
 }
 
 .arrow-black {
@@ -340,5 +365,28 @@
 
     100% {
         transform: scale(1);
+    }
+}
+
+.rewardpoints-wrap {
+    .form-group {
+        display: flex;
+        margin-bottom: 5px;
+
+        .form-input {
+            input {
+                height: 40px;
+                width: 150px;
+            }
+        }
+
+        .error-message {
+            display: none;
+        }
+
+        .btn-apply-rewardpoints {
+            margin-left: 10px;
+            align-self: flex-start;
+        }
     }
 }
