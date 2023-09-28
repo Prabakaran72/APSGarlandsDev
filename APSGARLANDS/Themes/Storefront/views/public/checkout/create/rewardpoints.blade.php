@@ -1,4 +1,5 @@
-<div class="rewardpoints-wrap">
+<div class="rewardpoints-wrap"> 
+    
     <div class="form-group">
         <div class="form-input">
             <input

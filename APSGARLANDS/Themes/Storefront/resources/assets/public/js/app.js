@@ -77,6 +77,7 @@ Vue.component("compare-index", CompareIndex);
 Vue.component("my-wishlist", MyWishlist);
 Vue.component("my-addresses", MyAddresses);
 Vue.component("counter", Counter);
+Vue.component("rewardpoints-modal", RewardpointsModal);
 new Vue({
     el: "#app",
 

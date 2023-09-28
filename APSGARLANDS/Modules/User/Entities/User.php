@@ -16,6 +16,9 @@ use Cartalyst\Sentinel\Laravel\Facades\Activation;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Modules\RewardpointsGift\Entities\RewardpointsGift;
+use Modules\RewardpointsGift\Entities\CustomerRewardPoint;
+use Modules\Rewardpoints\Entities\Rewardpoints;
+use Illuminate\Support\Facades\DB;
 
 class User extends EloquentUser implements AuthenticatableContract
 {
@@ -156,7 +159,7 @@ class User extends EloquentUser implements AuthenticatableContract
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    
+
     public function wishlist()
     {
         // return $this->belongsToMany(Product::class, 'wish_lists')->withTimestamps();
@@ -210,9 +213,9 @@ class User extends EloquentUser implements AuthenticatableContract
     public function getFullNameAttribute()
     {
         // return ucfirst($this->customer_first_name)." ".ucfirst($this->customer_last_name);
-        return ucfirst($this->first_name)." ".ucfirst($this->last_name);
+        return ucfirst($this->first_name) . " " . ucfirst($this->last_name);
     }
-   
+
 
     /**
      * Set user's permissions.
@@ -270,16 +273,36 @@ class User extends EloquentUser implements AuthenticatableContract
     {
         return $this->hasMany(RewardpointsGift::class, 'user_id');
     }
-    
+
     public function customerRewardPoints()
     {
-        return $this->hasMany(CustomerRewardPoint::class,'customer_id');
+        return $this->hasMany(CustomerRewardPoint::class, 'customer_id');
     }
 
     public function customerlist()
     {
-        $customerUsers = User::where(function($query) {
+        $customerUsers = User::where(function ($query) {
             $query->hasRoleName('customer');
         })->get();
+    }
+
+    public function getUsersActiveRewardpoints()
+    {
+        $userRewardsLog =  CustomerRewardPoint::where('customer_id', auth()->user()->id)
+            ->selectRaw('SUM(reward_points_earned) as reward_points_earned_total')
+            ->selectRaw('SUM(reward_points_claimed) as  reward_points_claimed_total')
+            ->selectRaw('SUM(CASE WHEN expiry_date IS NOT NULL AND expiry_date < NOW() THEN reward_points_earned ELSE 0 END) as expired_points')
+            ->get();
+
+        if (!empty($userRewardsLog->reward_points_earned_total)) {
+            $usersActiveRewardpoints = $userRewardsLog->reward_points_earned_total - ($userRewardsLog->reward_points_claimed_total ?? $userRewardsLog->reward_points_claimed_total) - ($userRewardsLog->expired_points ?? $userRewardsLog->expired_points);
+        }
+        else{
+            $usersActiveRewardpoints = 0;
+        }
+
+        $rewardSetting = Rewardpoints::first();
+
+        return (['rewardSetting'=>$rewardSetting, 'userRewardsLog'=>$userRewardsLog, 'usersActiveRewardpoints'=> $usersActiveRewardpoints]);
     }
 }

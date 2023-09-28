@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
 use Modules\RewardpointsGift\Admin\CustomerRewardPointsTable;
 use DB;
+use Modules\Rewardpoints\Entities\Rewardpoints;
 
 class CustomerRewardPoint extends Model
 {
@@ -74,4 +75,19 @@ class CustomerRewardPoint extends Model
             ->newQuery();
         return new CustomerRewardPointsTable($query);
     }
+    
+    //getUserRewardpoints() - returns active rewardpoints for an auth user
+    public function getUsersActiveRewardpoints()
+    {
+        $userRewardsLog =  $this::where('customer_id', auth()->user())
+            ->selectRaw('SUM(reward_points_earned) as reward_points_earned_total')
+            ->selectRaw('SUM(reward_points_claimed) as  reward_points_claimed_total')
+            ->selectRaw('SUM(CASE WHEN expiry_date IS NOT NULL AND expiry_date < NOW() THEN reward_points_earned ELSE 0 END) as expired_points')
+            ->get();
+            dd($userRewardsLog);
+    }
+    public function getRewardSetting(){
+        return Rewardpoints::where('id',1)->get();
+    }
+
 }

@@ -17,6 +17,7 @@ return [
         'my_addresses' => 'My Addresses',
         'my_profile' => 'My Profile',
         'logout' => 'Logout',
+        'my_rewardpoints' => 'My Rewardpoints',
     ],
     'dashboard' => [
         'recent_orders' => 'Recent Orders',
@@ -104,4 +105,24 @@ return [
         'image_url' => 'Upload Image',
         'profile_image' => 'Profile Image'
     ],
+    'rewardpoints' => [
+        'rewardpoints' => 'Rewardpoints',
+        'no_rewardpoints' => 'You haven\'t earned any Rewardpoints yet.',
+        'reward_points_earned' => 'Earned Reward Points',
+        'reward_points_claimed' => 'Reward Points Claimed',
+        'expiry_date' => 'Expiry Date',
+        'created_at' => 'Earned/Claimed On',
+        'reward_type' => 'Reward Type',
+        'reward_types'=>[
+            'manualoffer' => 'Special Offer',
+            'birthday' => 'Birthday Gift',
+            'firstsignup' => 'First Signup',
+            'firstorder' => 'First Order',
+            'firstpayment' => 'First Payment',
+            'firstreview' => 'First Review',
+        ],
+        'totalPointEarned' => 'Total Points Earned',
+        'totalPointsClaimed' => 'Totla Points Claimed',
+        'alive_points' => 'Available Points'
+    ],  
 ];

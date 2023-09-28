@@ -39,7 +39,7 @@ export default {
             return store.state.cart.coupon.code !== undefined;
         },
         hasRewardPoints() {
-            return store.state.cart.coupon.code !== undefined;
+            return store.state.cart.rewardPoints !== undefined;
         },
     },
 
