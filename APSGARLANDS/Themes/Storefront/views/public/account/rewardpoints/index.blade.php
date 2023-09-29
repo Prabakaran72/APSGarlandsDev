@@ -19,45 +19,6 @@
                 </div>
             @else
                 <div class="table-responsive">
-                    @php
-                        function calculateRewardPoints($rewardpoints)
-                        {
-                            $currentDate = now(); // Get the current date and time
-                            $totalPointEarned = 0;
-                            $totalPointsClaimed = 0;
-                            $totalPointsExpiredAndNotClaimed = 0;
-                            $totalPointsAliveAndNotClaimed = 0;
-                        
-                            foreach ($rewardpoints as $row) {
-                                if ($row->reward_points_earned) {
-                                    $totalPointEarned += $row->reward_points_earned;
-                                }
-                        
-                                if ($row->reward_points_claimed) {
-                                    $totalPointsClaimed += $row->reward_points_claimed;
-                                }
-                        
-                                if ($row->expiry_date) {
-                                    $expiryDate = \Carbon\Carbon::parse($row->expiry_date);
-                                    if ($expiryDate->lt($currentDate) && !$row->reward_points_claimed) {
-                                        $totalPointsExpiredAndNotClaimed += $row->reward_points_earned ?? 0;
-                                    } elseif ($expiryDate->gte($currentDate) && !$row->reward_points_claimed) {
-                                        $totalPointsAliveAndNotClaimed += $row->reward_points_earned ?? 0;
-                                    }
-                                }
-                            }
-                        
-                            return [
-                                'totalPointEarned' => $totalPointEarned,
-                                'totalPointsClaimed' => $totalPointsClaimed,
-                                'totalPointsExpiredAndNotClaimed' => $totalPointsExpiredAndNotClaimed,
-                                'totalPointsAliveAndNotClaimed' => $totalPointsAliveAndNotClaimed,
-                            ];
-                        }
-                        
-                        $rewardPointTotals = calculateRewardPoints($rewardpoints);
-                    @endphp
-
                     <table class="table table-borderless my-rewardpoints-table">
                         <thead>
                             <tr>
@@ -70,13 +31,24 @@
                         </thead>
 
                         <tbody>
+                            @php
+                                //Initialized for calculation
+                                $totalPointEarned = 0;
+                                $totalPointsClaimed = 0;
+                                $totalPointsExpired = 0;
+                                $totalPointsUsedExpired =0;
+                                $totalPointsEarnedExpired =0;
+                                $alivePoints = 0;
+                                $currentDate = date("Y-m-d H:i:s");
+                            @endphp
+
                             @foreach ($rewardpoints as $row)
                                 <tr>
                                     <td>
                                         @if ($row->reward_type)
                                             {{ trans('storefront::account.rewardpoints.reward_types.' . $row->reward_type) }}
                                         @else
-                                            Claimed
+                                            {{ 'Claimed' }}
                                         @endif
                                     </td>
                                     <td>{{ $row->created_at }}</td>
@@ -85,17 +57,51 @@
                                     <td>{{ $row->expiry_date }}</td>
 
                                 </tr>
+                                @php
+                                    $totalPointEarned += $row->reward_points_earned ? $row->reward_points_earned : 0;
+                                    $totalPointsClaimed += $row->reward_points_claimed ? $row->reward_points_claimed : 0;
+                                    if(!is_null($row->expiry_date))
+                                    {
+                                        $totalPointsEarnedExpired = 'expirydate not null \n\r';
+                                    }
+                                    if($row->expiry_date < $currentDate)
+                                    {
+                                        $totalPointsEarnedExpired = 'expirydate less than current \n\r';
+                                    }
+                                    if($row->created_at < $currentDate)
+                                    {
+                                        $totalPointsEarnedExpired = 'createdate less than current \n\r';
+                                    }
+                                    if(!is_null($row->reward_points_claimed))
+                                    {
+                                        $totalPointsEarnedExpired = 'reward_points_claimed is null \n\r';
+                                    }
+
+                                    if(!is_null($row->expiry_date) && $row->expiry_date < $currentDate && $row->created_at < 
+                                    $currentDate && !is_null($row->reward_points_claimed))
+                                    {
+                                        $totalPointsUsedExpired += $row->reward_points_claimed;
+                                    }
+                                    if(is_null($row->expiry_date) && $row->expiry_date < $currentDate && !is_null($row->reward_points_earned))
+                                    {
+                                        $totalPointsEarnedExpired +=$row->reward_points_earned;
+                                    }
+                                @endphp
                             @endforeach
                         </tbody>
                         <tfoot>
                             <tr>
                                 <th colspan="5">
-                                    {{ trans('storefront::account.rewardpoints.totalPointEarned') }}:
-                                    {{ $rewardPointTotals['totalPointEarned'] }}<br>
-                                    {{ trans('storefront::account.rewardpoints.totalPointsClaimed') }}:
-                                    {{ $rewardPointTotals['totalPointsClaimed'] }}<br>
-                                    {{ trans('storefront::account.rewardpoints.alive_points') }}:
-                                    {{ $rewardPointTotals['totalPointsAliveAndNotClaimed'] }}
+                                    {{ trans('storefront::account.rewardpoints.totalPointEarned') }}
+                                    {{ $totalPointEarned }}<br>
+                                    {{ trans('storefront::account.rewardpoints.totalPointsClaimed') }}
+                                    {{ $totalPointsClaimed }}<br>
+                                    {{-- {{ trans('storefront::account.rewardpoints.alive_points') }}:
+                                    {{ $rewardPointTotals['totalPointsAliveAndNotClaimed'] }} --}}
+                                    {{ 'totalPointsEarnedExpired'}}:
+                                    {{ $totalPointsEarnedExpired}}
+                                    {{ 'totalPointsUsedExpired' }}:
+                                    {{ $totalPointsUsedExpired }}
                                 </th>
                             </tr>
                         </tfoot>
