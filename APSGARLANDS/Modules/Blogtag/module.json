@@ -1,0 +1,9 @@
+{
+    "name": "Blogtag",
+    "alias": "blogtag",
+    "description": "Managing blogtags.",
+    "priority": 9999,
+    "providers": [
+        "Modules\\Blogtag\\Providers\\BlogtagServiceProvider"
+    ]
+}

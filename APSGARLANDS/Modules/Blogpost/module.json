@@ -1,0 +1,9 @@
+{
+    "name": "Blogpost",
+    "alias": "blogpost",
+    "description": "Managing blogposts.",
+    "priority": 9999,
+    "providers": [
+        "Modules\\Blogpost\\Providers\\BlogpostServiceProvider"
+    ]
+}

@@ -1,0 +1,9 @@
+{
+    "name": "Blogcategory",
+    "alias": "blogcategory",
+    "description": "Managing blogcategorys.",
+    "priority": 9999,
+    "providers": [
+        "Modules\\Blogcategory\\Providers\\BlogcategoryServiceProvider"
+    ]
+}
