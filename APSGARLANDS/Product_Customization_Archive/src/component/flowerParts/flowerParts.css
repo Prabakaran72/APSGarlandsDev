@@ -1,0 +1,28 @@
+.option_garland_chose
+{    
+    /* background-color: blueviolet; */
+    background-color: #f0f0f0;
+    border: 1px solid #d1d1d1;
+    max-width: 100%;
+    border-radius: 10px;
+    box-shadow: 5px 5px 10px #b0b0b0, -5px -5px 10px #ffffff;
+}
+.top_garland_option
+{
+    
+    width: 100%;
+    /* background-color: aqua; */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.top_part_option
+{
+    /* background-color: blue; */
+    width: 80%;   
+}
+.top_part_cards
+{
+    height: 65px;
+    width: 65px;
+}

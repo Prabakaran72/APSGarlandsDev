@@ -9,12 +9,12 @@ public/phplog
 #to avoid builded js and css files
 public/modules/
 Themes/Storefront/assets/public/js/app.js
-node_modules/
-vendor/
+# node_modules/
+# vendor/
 storage/logs/
 
 #avoid tracking node modules in all directories and subdirectories in this project
-**/node_modules/
+# **/node_modules/
 
 
 /.meta
@@ -68,6 +68,6 @@ APSGARLANDS/Modules/Translation/node_modules/
 APSGARLANDS/Themes/Storefront/node_modules/
 APSGARLANDS/mix-manifest.json
 APSGARLANDS/storage/logs/
-APSGARLANDS/vendor/
-APSGARLANDS/node_modules/
+# APSGARLANDS/vendor/
+# APSGARLANDS/node_modules/
 
