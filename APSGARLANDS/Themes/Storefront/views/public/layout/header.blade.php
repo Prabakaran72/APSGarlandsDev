@@ -187,7 +187,7 @@
                   @break
 
                   @default
-                          <i class="las la-user"></i>
+                          <i class="las la-user"></i>@endswitch 
                                 </div>                                
                                 <span>{{ trans('storefront::layout.account') }}</span>
                             </a>

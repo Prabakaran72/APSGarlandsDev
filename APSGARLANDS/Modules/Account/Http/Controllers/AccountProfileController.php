@@ -30,7 +30,7 @@ class AccountProfileController
             'image_url' => 'required|image|mimes:png,jpg|max:2048',
         ]);
     $user_id = auth()->user()->id; 
-    $directoryPath = public_path("storage/profile/{$user_id}");
+    $directoryPath = public_path("/storage/profile/{$user_id}");
     if (!file_exists($directoryPath)) {
         mkdir($directoryPath, 0755, true);
     }
