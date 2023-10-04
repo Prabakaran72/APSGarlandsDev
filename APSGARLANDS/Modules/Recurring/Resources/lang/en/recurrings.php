@@ -1,30 +1,32 @@
 <?php
 
 return [
-    'recurring' => 'Recurring',
+    'recurring' => 'Recurring Order',
     'recurrings' => 'Recurring Order',
+    'recurringSubOrder' => 'Recurring Sub Order',
     'table' => [
         'customer_name' => 'Customer Name',
         'customer_email' => 'Customer Email',
         'recurring_order_main_id' => 'Recurring Id',
         'main_order_id' => 'Order Id',
         'delivery_time' => 'Delivery Time',
-        'completed_status' => 'Status',
+        'status' => 'Status',
+    ],
+
+    'sub_table' => [
+        'order_id' => 'Order Id',
+        'selected_date' => 'Selected Date',
+        'delivery_date' => 'Delivery Date',
+        'updated_user_id' => 'Updated User Id',
+    ],
+    'button'=>[
+        'unsubscribe' =>'Unsubscribe'
     ],
     'tabs' => [
         'group' => [
             'recurring_information' => 'Recurring Information',
         ],
         'general' => 'General',
-        'usage_restrictions' => 'Usage Restrictions',
-        'usage_limits' => 'Usage Limits',
     ],
-    'form' => [
-        'price_types' => [
-            '0' => 'Fixed',
-            '1' => 'Percent',
-        ],
-        'allow_free_shipping' => 'Allow free shipping',
-        'enable_the_recurring' => 'Approved the recurring',
-    ],
+
 ];

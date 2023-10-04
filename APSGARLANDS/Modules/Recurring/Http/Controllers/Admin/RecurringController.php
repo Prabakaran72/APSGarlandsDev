@@ -4,7 +4,7 @@ namespace Modules\Recurring\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use Modules\Recurring\Entities\Recurring;
-use Modules\Recurring\Entities\recurring_main_order;
+use Modules\User\Entities\User;
 use Modules\Admin\Traits\HasCrudActions;
 use Modules\Recurring\Http\Requests\SaveRecurringRequest;
 
@@ -44,10 +44,12 @@ class RecurringController
     protected $validation = SaveRecurringRequest::class;
 
 
-    public function list_recurring_main_orders(Request $request)
+    public function index(Request $request)
     {
+        // dd($this->getModel());
         if ($request->has('query')) {
             return $this->getModel()
+                // ->with['user']
                 ->search($request->get('query'))
                 ->query()
                 ->limit($request->get('limit', 10))
@@ -55,9 +57,10 @@ class RecurringController
         }
 
         if ($request->has('table')) {
-            return $this->getModel()->table($request);
+            return $this->getModel()->table("12");
         }
 
+        // $user = User::all();
         return view("{$this->viewPath}.index");
 
     }

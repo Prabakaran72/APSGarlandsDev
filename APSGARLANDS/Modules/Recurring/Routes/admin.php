@@ -4,8 +4,14 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('recurrings', [
     'as' => 'admin.recurrings.index',
-    'uses' => 'RecurringController@list_recurring_main_orders',
+    'uses' => 'RecurringController@index',
     'middleware' => 'can:admin.recurrings.index',
+]);
+
+Route::get('recurringSubOrder/{id?}', [
+    'as' => 'admin.recurringSubOrder.index',
+    'uses' => 'RecurringSubOrderController@index',
+    'middleware' => 'can:admin.recurringSubOrder.index',
 ]);
 
 Route::get('recurrings/create', [
@@ -14,25 +20,16 @@ Route::get('recurrings/create', [
     'middleware' => 'can:admin.recurrings.create',
 ]);
 
-Route::post('recurrings', [
-    'as' => 'admin.recurrings.store',
-    'uses' => 'RecurringController@store',
-    'middleware' => 'can:admin.recurrings.create',
-]);
-
-Route::get('recurrings/{id}/edit', [
+Route::get('recurringSubOrder/{id}/edit', [
     'as' => 'admin.recurrings.edit',
-    'uses' => 'RecurringOrderController@edit',
-]);
-
-Route::put('recurrings/{id}', [
-    'as' => 'admin.recurrings.update',
-    'uses' => 'RecurringController@update',
-    'middleware' => 'can:admin.recurrings.edit',
+    'uses' => 'RecurringSubOrderController@edit',
+    'middleware' => 'can:admin.recurringSubOrder.index',
 ]);
 
 Route::delete('recurrings/{ids?}', [
     'as' => 'admin.recurrings.destroy',
-    'uses' => 'RecurringController@destroy',
+    'uses' => 'recurringController@destroy',
     'middleware' => 'can:admin.recurrings.destroy',
 ]);
+
+Route::post('admin/recurrings/unsubscribeMultipleOrder', 'RecurringSubOrderController@unsubscribeMultipleOrder')->name('admin.recurrings.unsubscribeMultipleOrder');

@@ -2,9 +2,10 @@
 
 return [
     'admin.recurrings' => [
-        'index' => 'recurring::permissions.index',
-        'create' => 'recurring::permissions.create',
-        'edit' => 'recurring::permissions.edit',
-        'destroy' => 'recurring::permissions.destroy',
+        'index' => 'recurring::permissions.recurrings.index',
+        // 'create' => 'recurring::permissions.create',
+        'edit' => 'recurring::permissions.recurrings.edit',
+        // 'destroy' => 'recurring::permissions.destroy',
     ],
 ];
+
