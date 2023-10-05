@@ -1,0 +1,9 @@
+{
+    "name": "Pickupstore",
+    "alias": "pickupstore",
+    "description": "Managing pickupstores.",
+    "priority": 9999,
+    "providers": [
+        "Modules\\Pickupstore\\Providers\\PickupstoreServiceProvider"
+    ]
+}

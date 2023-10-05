@@ -1,0 +1,27 @@
+{
+    "name": "fleetcart/galleries",
+    "description": "The FleetCart Galleries Module.",
+    "authors": [
+        {
+            "name": "Girish",
+            "email": "giri@santhila.co"
+        }
+    ],
+    "require": {
+        "php": "^8.0.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Galleries\\": ""
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0.x-dev"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev"
+}

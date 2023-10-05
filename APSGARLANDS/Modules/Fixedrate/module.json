@@ -1,0 +1,9 @@
+{
+    "name": "Fixedrate",
+    "alias": "fixedrate",
+    "description": "Managing fixedrates.",
+    "priority": 9999,
+    "providers": [
+        "Modules\\Fixedrate\\Providers\\FixedrateServiceProvider"
+    ]
+}

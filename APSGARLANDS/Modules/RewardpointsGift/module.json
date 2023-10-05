@@ -1,0 +1,9 @@
+{
+    "name": "RewardpointsGift",
+    "alias": "rewardpointsgift",
+    "description": "The APSGarlands RewardpointsGift Module.",
+    "priority": 100,
+    "providers": [
+        "Modules\\RewardpointsGift\\Providers\\RewardpointsGiftServiceProvider"
+    ]
+}

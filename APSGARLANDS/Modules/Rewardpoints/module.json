@@ -1,0 +1,11 @@
+{
+    "name": "Rewardpoints",
+    "alias": "rewardpoints",
+    "description": "Rewardpoints management",
+    "keywords": [],
+    "priority": 100,
+    "providers": [
+        "Modules\\Rewardpoints\\Providers\\RewardpointsServiceProvider"
+    ],
+    "files": []
+}

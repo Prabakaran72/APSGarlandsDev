@@ -1,0 +1,32 @@
+<?php
+
+return [
+    'enable_bday_points' => '',
+    'enable_show_customer_points' => '',
+    'enable_show_points_with_order' => '',
+    'enable_show_points_by_mail' => '',
+    'enable_give_old_order_points' => '',
+    'enable_remove_points_order_refund' => '',
+    'add_days_reward_points_expiry' =>  'Add days for expiry points',
+    'add_days_reward_points_assignment' =>  'Add days for assignment points',
+    'use_points_per_order'  =>  'User can use number of points per order',
+    'min_order_cart_value_redemption'   =>  'Minimum order cart value to redeem reward points',
+    'set_points_for_all_user'   =>  'Set User\'s Getable Points Equivalent Order Amount',
+    'currency_value'    =>  'MYR',
+    'point_value'    =>  'points',
+    'set_redeem_points'   =>  'Set User\'s Cash Equivalent Redemption:',
+    'redemption_value'   =>  'Redemption value',
+    'redemption_point_value'    =>  'points',
+    'redemption_currency_value' =>  'MYR',
+    'set_extra_points'   =>  'Set Extra Points For Users',
+    'epoint_first_signup_value' =>  'First Signup Points',
+    'epoint_ref_point_value' =>  'Referral Points',
+    'epoint_forder_point_value' =>  'First Order Points',
+    'epoint_freview_point_value' =>  'First Review Points',
+    'epoint_fpay_point_value'   =>  'First REM payment gateway points',
+    'epoint_bday_point_value'   =>  'Gift Birthday Points',
+    'start_date' => 'Start date',
+    'end_date' => 'End date',
+    'is_active' => 'Status',
+   
+];
