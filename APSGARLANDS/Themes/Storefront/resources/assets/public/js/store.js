@@ -60,12 +60,47 @@ export default {
         });
     },
 
-    removeFromWishlist(productId) {
+
+    // removeMultiDatasFromWishlist(productsDataId, getReason) {
+                
+    //     console.log('productsDataId',productsDataId.length);        
+    //     console.log('getReason',getReason);        
+       
+
+    //     this.state.wishlist.splice(this.state.wishlist.indexOf(productsDataId.length), 1);
+
+    //     this.state.wishlist.length - productsDataId.length;
+
+    //     $.ajax({
+    //         method: "DELETE",
+    //         url: route('wishlist.products.delete',{ productsDataId, getReason }),
+    //     })
+    // },
+
+
+    removeMultiDatasFromWishlist(productsDataId, getReason) {    
+                                                           
+        const newWishlist = this.state.wishlist.filter(item => !productsDataId.includes(item));        
+        this.state.wishlist = newWishlist;
+        
+        this.wishlistCount();        
+      
+        // Make the AJAX request to delete the items on the server
+        $.ajax({
+          method: "DELETE",
+          url: route('wishlist.products.delete', { productsDataId, getReason }),
+        });                       
+      },
+
+      
+
+    removeFromWishlist(productId, data) {
+        var proData = data.reason;       
         this.state.wishlist.splice(this.state.wishlist.indexOf(productId), 1);
 
         $.ajax({
             method: "DELETE",
-            url: route("wishlist.destroy", { productId }),
+            url: route("wishlist.destroy", { productId, proData }),
         });
     },
 

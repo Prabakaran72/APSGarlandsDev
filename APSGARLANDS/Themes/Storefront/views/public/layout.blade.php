@@ -17,6 +17,9 @@
     @stack('meta')
 
     <link href="https://fonts.googleapis.com/css?family=Rubik:300,400,500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css">
 
     @if (is_rtl())
         <link rel="stylesheet" href="{{ v(Theme::url('public/css/app.rtl.css')) }}">
@@ -92,7 +95,6 @@
         @include('public.layout.breadcrumb')
 
         @yield('content')
-
         @include('public.home.sections.subscribe')
         @include('public.layout.footer')
 
@@ -112,6 +114,83 @@
     @stack('scripts')
 
     {!! setting('custom_footer_assets') !!}
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
+
+    @if (setting('testimonial_slider_enabled'))
+        <script>
+            $(document).ready(function() {
+                console.log("loaded");
+                $.ajax({
+                    url: '{{ route('testimonials.slider') }}',
+                    method: 'GET',
+                    dataType: 'html',
+                    success: function(response) {
+                        $('#testimonial_slide_div').html(response);
+                        //testimonial_slide_div - THE ELEMENT IS LOCATED IN THE FILE PATH->Themes\Storefront\views\public\home\index.blade.php
+                        $('#testimonials-list').owlCarousel({
+                            loop: true,
+                            center: true,
+                            items: 5, // Display 5 testimonials at a time
+                            margin: 0,
+                            autoplay: true,
+                            dots: true,
+                            autoplayTimeout: 5000,
+                            smartSpeed: 450,
+                            responsive: {
+                                0: {
+                                    items: 1
+                                },
+                                768: {
+                                    items: 2
+                                },
+                                1170: {
+                                    items: 3
+                                }
+                            }
+                        });
+                    },
+                    error: function() {
+                        console.error('Error loading testimonials');
+                    }
+                });
+
+                $.ajax({
+                    url: '{{ route('galleries.slider') }}',
+                    method: 'GET',
+                    dataType: 'html',
+                    success: function(response) {
+                        $('#galleries_slide_div').html(response);
+                        $('#galleries-list').owlCarousel({
+                            loop: true,
+                            center: true,
+                            items: 5, // Display 5 testimonials at a time
+                            margin: 0,
+                            autoplay: true,
+                            dots: true,
+                            autoplayTimeout: 30000,
+                            smartSpeed: 450,
+                            responsive: {
+                                0: {
+                                    items: 1
+                                },
+                                768: {
+                                    items: 2
+                                },
+                                1170: {
+                                    items: 3
+                                }
+                            }
+                        });
+                    },
+                    error: function() {
+                        console.error('Error loading galleries');
+                    }
+                });
+            });
+        </script>
+    @endif
+
 </body>
 
 </html>

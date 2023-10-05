@@ -35,7 +35,7 @@ class StoreOrderRequest extends Request
             'billing.state' => 'required',
             'create_an_account' => 'boolean',
             'password' => 'required_if:create_an_account,1',
-           'ship_to_a_different_address' => 'boolean',
+            'ship_to_a_different_address' => 'boolean',
             'shipping.first_name' => 'required_if:ship_to_a_different_address,1',
             'shipping.last_name' => 'required_if:ship_to_a_different_address,1',
             'shipping.address_1' => 'required_if:ship_to_a_different_address,1',

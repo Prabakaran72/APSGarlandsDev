@@ -52,85 +52,92 @@
 
                 <div class="header-column-right d-flex">
 
-                        <div class="header-contact header">
-                            <a href="{{ route('contact.create') }}" class="menu-link" style='margin:0;'>
-                                <div class="icon-wrap">
-                                    <i class="las la-phone"></i>
-                                </div>
-                                <span style="display:none">{{ trans('storefront::layout.contact') }}</span>
-                            </a>
-                        </div>
-
-                        <div class="header-contact header">
-                            <a href="{{ route('compare.index') }}" class="menu-link">
-                                <div class="icon-wrap">
-                                    <i class="las la-random"></i>
-                                </div>
-                                <span style="display:none">{{ trans('storefront::layout.compare') }}</span>
-                            </a>
-                        </div>
-                        
-
-                        <div class="header-contact header">
-                            <a href="{{ route('account.wishlist.index') }}" class="header-wishlist menu-link">
-                                <div class="icon-wrap">
-                                    <i class="lar la-heart"></i>
-                                    <div class="count" v-text="wishlistCount"></div>
-                                </div>
-
-                                <span>{{ trans('storefront::layout.favorites') }}</span>
-                            </a>
-                        </div>
-
-                        <div class="header-cart">
+                    <div class="header-contact header">
+                        <a href="{{ route('contact.create') }}" class="menu-link" style='margin:0;'>
                             <div class="icon-wrap">
-                                <i class="las la-cart-arrow-down"></i>
-                                <div class="count" v-text="cart.quantity"></div>
+                                <i class="las la-phone"></i>
+                            </div>
+                            <span style="display:none">{{ trans('storefront::layout.contact') }}</span>
+                        </a>
+                    </div>
+
+                    <div class="header-contact header">
+                        <a href="{{ route('compare.index') }}" class="menu-link">
+                            <div class="icon-wrap">
+                                <i class="las la-random"></i>
+                            </div>
+                            <span style="display:none">{{ trans('storefront::layout.compare') }}</span>
+                        </a>
+                    </div>
+
+
+                    <div class="header-contact header">
+                        <a href="{{ route('account.wishlist.index') }}" class="header-wishlist menu-link">
+                            <div class="icon-wrap">
+                                <i class="lar la-heart"></i>
+                                <div class="count" v-text="wishlistCount"></div>
                             </div>
 
-                            <span v-html="cart.subTotal.inCurrentCurrency.formatted"></span>
+                            <span>{{ trans('storefront::layout.favorites') }}</span>
+                        </a>
+                    </div>
+
+                    <div class="header-cart">
+                        <div class="icon-wrap">
+                            <i class="las la-cart-arrow-down"></i>
+                            <div class="count" v-text="cart.quantity"></div>
                         </div>
 
-                    <!-- new  -->                    
+                        <span v-html="cart.subTotal.inCurrentCurrency.formatted"></span>
+                    </div>
 
-                    
+                    <!-- new  -->
 
-                                    
+
+
+
                     @if (is_multilingual())
-                        <li >
-                            <i class="las la-language"></i>
-                            <select class="custom-select-option arrow-black" onchange="location = this.value">
-                                @foreach (supported_locales() as $locale => $language)
-                                    <option value="{{ localized_url($locale) }}" {{ locale() === $locale ? 'selected' : '' }}>
-                                        {{ $language['name'] }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </li>
+                        <div class="header-contact header">
+                            <div class="count">
+                            <li>
+                                <i class="las la-language"></i>
+                                <select class="custom-select-option arrow-black" onchange="location = this.value">
+                                    @foreach (supported_locales() as $locale => $language)
+                                        <option value="{{ localized_url($locale) }}"
+                                            {{ locale() === $locale ? 'selected' : '' }}>
+                                            {{ $language['name'] }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </li>
+                        </div>
+                        </div>
                     @endif
 
                     @if (is_multi_currency())
-                        <li >
+                    <div class="header-contact header">
+                     <div class="count">
+                        <li>
                             <i class="las la-money-bill"></i>
                             <select class="custom-select-option arrow-black" onchange="location = this.value">
                                 @foreach (setting('supported_currencies') as $currency)
-                                    <option
-                                        value="{{ route('current_currency.store', ['code' => $currency]) }}"
-                                        {{ currency() === $currency ? 'selected' : '' }}
-                                    >
+                                    <option value="{{ route('current_currency.store', ['code' => $currency]) }}"
+                                        {{ currency() === $currency ? 'selected' : '' }}>
                                         {{ $currency }}
                                     </option>
                                 @endforeach
                             </select>
                         </li>
+                     </div>
+                    </div>
                     @endif
-                    
 
 
 
 
 
-                   
+
+
 
 
                     <!-- <div class='quick-menu' style='display:flex'>
@@ -148,53 +155,98 @@
 
 
                             @auth
-                            <div class="header-contact header">
-                                <a href="{{ route('account.dashboard.index') }}" class="menu-link">
-                                    <div class="icon-wrap">
-                                        <i class="las la-user"></i>
-                                    </div>                                
-                                    <span>{{ trans('storefront::layout.account') }}</span>
-                                </a>
-                            </div>
-                            @else
-                            <div class="header-contact header">
-                                <a href="{{ route('login') }}" class="menu-link">
-                                    <div class="icon-wrap">
-                                        <i class="las la-sign-in-alt"></i>
-                                    </div>                                
-                                    <span>{{ trans('storefront::layout.login') }}</span>
-                                </a>
-                            </div>
-                            @endauth    
+                                                        <div class="header-contact header">
+                                                            <a href="{{ route('account.dashboard.index') }}" class="menu-link">
+                                                                <div class="icon-wrap">
+                                                                    <i class="las la-user"></i>
+                                                                </div>
+                                                                <span>{{ trans('storefront::layout.account') }}</span>
+                                                            </a>
+                                                        </div>
+@else
+    <div class="header-contact header">
+                                                            <a href="{{ route('login') }}" class="menu-link">
+                                                                <div class="icon-wrap">
+                                                                    <i class="las la-sign-in-alt"></i>
+                                                                </div>
+                                                                <span>{{ trans('storefront::layout.login') }}</span>
+                                                            </a>
+                                                        </div>
+                            @endauth
                         </div>
                     </div> -->
 
 
 
-                    <div class='' style='display:flex' >
-                        
+                    {{-- <div class='' style='display:flex'>
+
                         @auth
-                        <div class="header-contact header">
-                            <a href="{{ route('account.dashboard.index') }}" class="menu-link">
-                                <div class="icon-wrap">
-                                    <i class="las la-user"></i>
-                                </div>                                
-                                <span>{{ trans('storefront::layout.account') }}</span>
+                            <div class="header-contact header">
+                                <a href="{{ route('account.dashboard.index') }}" class="menu-link">
+                                    <li class="dropdown top-nav-menu pull-right">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+            
+                                        @switch(true)
+                                            @case(auth()->user()->sso_google == '1' || auth()->user()->sso_fb == '1')
+                                                <img src="{{ auth()->user()->sso_avatar }}" alt="User Profile Image"
+                                                    class="profile-image" width="50px" height="50px">
+                                            @break
+
+                                            @case(auth()->user()->sso_fb == '' && auth()->user()->sso_google == '' && !empty(auth()->user()->image_url))
+                                                <img src="{{ auth()->user()->image_url }}" alt="User Profile Image"
+                                                    class="profile-image" width="50px" height="50px">
+                                            @break
+
+                                            <i class="las la-user"></i>
+                                @endswitch {{ trans('storefront::layout.account') }}
                             </a>
-                        </div>
+                            <ul class="navbar-nav ml-auto">
+                                <li><a href="{{ route('account.profile.update') }}">{{ trans('storefront::layout.my_Profile') }}
+                                    </a></li>
+                                <li><a href="{{ route('logout') }}">{{ trans('storefront::layout.login') }}
+                                    </a></li>
+                            </ul>
+                        </li>
+                            </div>
                         @else
+                            <div class="header-contact header">
+                                <a href="{{ route('login') }}" class="menu-link">
+                                    <div class="icon-wrap">
+                                        <i class="las la-sign-in-alt"></i>
+                                    </div>
+                                    <span>{{ trans('storefront::layout.login') }}</span>
+                                </a>
+                            </div>
+                        @endauth
+                    </div> --}}
+                    {{-- <div class='' style='display:flex'> --}}
                         <div class="header-contact header">
-                            <a href="{{ route('login') }}" class="menu-link">
-                                <div class="icon-wrap">
-                                    <i class="las la-sign-in-alt"></i>
-                                </div>                                
-                                <span>{{ trans('storefront::layout.login') }}</span>
-                            </a>
+                        @auth
+                                <div class="dropdown">
+                                    <a href="#" class="menu-link" id="profile-dropdown" data-toggle="dropdown"
+                                        aria-haspopup="true" aria-expanded="false">
+                                        <!-- Your image here -->
+                                        <img src="{{ auth()->user()->sso_avatar ?? auth()->user()->image_url ?? 'storage/profile/default.jpg' }}"
+                                            alt="User Profile Image" class="profile-image" width="50px" height="50px">
+                                        {{-- {{ trans('storefront::layout.account') }} --}}
+                                        {{ auth()->user()->full_name }}
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="profile-dropdown">
+
+                                        <a class="dropdown-item"
+                                            href="{{ route('account.profile.update') }}">{{ trans('storefront::layout.my_Profile') }}</a>
+                                        <a class="dropdown-item"
+                                            href="{{ route('logout') }}">{{ trans('storefront::layout.logout') }}</a>
+                                    </div>
+                                </div>
+                        @else
+                        <div class="count">
+                            <a href="{{ route('login') }}">{{ trans('storefront::layout.login') }}</a>
                         </div>
-                        @endauth    
+                        @endauth
                     </div>
 
-                </div>
+                {{-- </div> --}}
             </div>
         </div>
     </div>

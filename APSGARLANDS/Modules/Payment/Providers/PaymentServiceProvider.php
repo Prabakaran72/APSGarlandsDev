@@ -12,6 +12,7 @@ use Modules\Payment\Gateways\PayPal;
 use Modules\Payment\Gateways\Paytm;
 use Modules\Payment\Gateways\Stripe;
 use Modules\Payment\Gateways\Razorpay;
+use Modules\Payment\Gateways\Razerpay;
 use Illuminate\Support\ServiceProvider;
 use Modules\Payment\Gateways\BankTransfer;
 use Modules\Payment\Gateways\CheckPayment;
@@ -45,6 +46,7 @@ class PaymentServiceProvider extends ServiceProvider
         $this->registerStripe();
         $this->registerPaytm();
         $this->registerRazorpay();
+        $this->registerRazerpay();
         $this->registerInstamojo();
         $this->registerAuthorizenet();
         $this->registerPaystack();
@@ -96,7 +98,12 @@ class PaymentServiceProvider extends ServiceProvider
             Gateway::register('razorpay', new Razorpay());
         }
     }
-
+    private function registerRazerpay()
+    {
+        if ($this->enabled('razerpay')) {
+            Gateway::register('razerpay', new Razerpay());
+        }
+    }
 
     private function registerInstamojo()
     {

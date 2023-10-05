@@ -7,6 +7,7 @@ return [
     'filters' => [
         'report_type' => 'Report Type',
         'report_types' => [
+            'abandoned_wishlist' => 'Abandoned Wishlist',
             'coupons_report' => 'Coupons Report',
             'customers_order_report' => 'Customers Order Report',
             'products_purchase_report' => 'Products Purchase Report',
@@ -14,12 +15,13 @@ return [
             'products_view_report' => 'Products View Report',
             'branded_products_report' => 'Branded Products Report',
             'categorized_products_report' => 'Categorized Products Report',
-            'taxed_products_report' => 'Taxed Products Report',
+        //     'taxed_products_report' => 'Taxed Products Report',
             'tagged_products_report' => 'Tagged Products Report',
             'sales_report' => 'Sales Report',
             'search_report' => 'Search Report',
             'shipping_report' => 'Shipping Report',
-            'tax_report' => 'Tax Report',
+            'abandoned_cart_list_report' => 'Abandoned Cart List Report',
+
         ],
         'date_start' => 'Date Start',
         'date_end' => 'Date End',
@@ -53,12 +55,22 @@ return [
         'tax_name' => 'Tax Name',
     ],
     'table' => [
+        'user' => 'User',
         'date' => 'Date',
         'orders' => 'Orders',
         'products' => 'Products',
         'product' => 'Product',
         'products_count' => 'Products Count',
         'total' => 'Total',
+        'customer' => 'User',
+
+        // abandoned_report
+        'product_id' => 'Order Id',
+        'product_name' => 'Product Name',
+        'product_price' => 'Product Price',
+        'stock' => 'Stock',
+        'reason' => 'Reason',
+        'date' => 'Date',
 
         // coupons_report
         'coupon_name' => 'Coupon Name',
@@ -108,5 +120,12 @@ return [
 
         // tax report
         'tax_name' => 'Tax Name',
+        //ABANDONED CART LIST REPROT
+        'abandoned_products_name' => 'Products Name',
+        'abandoned_products_count'=> 'Products Count',
+        'abandoned_customer_name' => 'Customer Name',
+        'abandoned_rate' => 'Price',
+        'abandoned_date'=> 'Date',
+        'abandoned_reason'=> 'Reason',
     ],
 ];

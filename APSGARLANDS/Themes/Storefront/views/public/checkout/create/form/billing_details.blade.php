@@ -4,9 +4,9 @@
     <div class="select-address" v-if="hasAddress" v-cloak>
         <div class="form-group">
             <div class="form-radio" v-for="address in addresses">
-                <input type="radio" v-model="form.billingAddressId" :value="address.id"
+                <input type="radio" class="billRad" v-model="form.billingAddressId" :value="address.id"
                     :id="'billing-address-' + address.id">
-
+                
                 <label :for="'billing-address-' + address.id">
                     <span v-text="address.full_name"></span>
                     <span v-text="address.address_1"></span>

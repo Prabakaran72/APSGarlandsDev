@@ -23,18 +23,9 @@
                     <span class="price-amount" v-html="cart.subTotal.inCurrentCurrency.formatted">
                     </span>
                 </li>
-
-                <li v-for="tax in cart.taxes">
-                    <label v-text="tax.name"></label>
-
-                    <span class="price-amount" v-html="tax.amount.inCurrentCurrency.formatted">
-                    </span>
-                </li>
-
                 <li v-if="hasCoupon" v-cloak>
                     <label>
                         {{ trans('storefront::cart.coupon') }}
-
                         <span class="coupon-code">
                             [@{{ cart.coupon.code }}]
                             <span class="btn-remove-coupon" @click="removeCoupon">
@@ -42,7 +33,6 @@
                             </span>
                         </span>
                     </label>
-
                     <span class="price-amount" v-html="'-' + cart.coupon.value.inCurrentCurrency.formatted">
                     </span>
                 </li>
@@ -56,26 +46,32 @@
                         <input type="radio" name="shipping_method" v-model="form.shipping_method"
                             :value="shippingMethod.name" :id="shippingMethod.name"
                             @change="updateShippingMethod(shippingMethod.name)">
-
                         <label :for="shippingMethod.name" v-text="shippingMethod.label"></label>
-
-                        <span class="price-amount" v-html="shippingMethod.cost.inCurrentCurrency.formatted">
+                
+                        <!-- Use a data-bound id attribute to set the id dynamically -->
+                        <span :id="'price_' + shippingMethod.name" class="price-amount" v-html="shippingMethod.cost.inCurrentCurrency.formatted">
                         </span>
+                        
                     </div>
+                    <span id="pincode_not_servicable" class="pincode-message" style="display: none;"> This Pincode not serviceable for flat rate shippment Option</span>
                 </div>
-            </div>
-
-            <div class="order-summary-total">
-                <label>{{ trans('storefront::cart.total') }}</label>
-                <span class="total-price" v-html="cart.total.inCurrentCurrency.formatted"></span>
-            </div>
+                
+                {{-- <div v-if="form.shipping_method== 'flat_rate'" > --}}
+                <div class="order-summary-total">
+                    <label>{{ trans('storefront::cart.total') }}</label>
+                    <!-- Remove single quotes around the id attribute value -->
+                    <span :id="'total_' + form.shipping_method" class="total-price" v-html="cart.total.inCurrentCurrency.formatted"></span>
+                    
+                </div>
+                {{-- </div> --}}
+                
         </div>
 
         <div class="order-summary-bottom">
             <div class="form-group checkout-terms-and-conditions">
                 <div class="form-check">
-                    <input type="checkbox" v-model="form.terms_and_conditions" id="terms-and-conditions">
-
+                    <input type="checkbox" v-model="form.terms_and_conditions" id="terms-and-conditions" :disabled="shouldDisableCheckbox">
+                    {{-- <input type="checkbox" v-model="form.terms_and_conditions" id="terms-and-conditions" :disabled="form.shipping_method === 'flat_rate' && !serviceAvailable"> --}}
                     <label for="terms-and-conditions" class="form-check-label">
                         {{ trans('storefront::checkout.i_agree_to_the') }}
                         {{-- <a href="{{ $termsPageURL }}">

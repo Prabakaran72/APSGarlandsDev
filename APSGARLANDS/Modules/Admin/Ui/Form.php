@@ -42,13 +42,14 @@ class Form
 
     public function input($name, $title, $errors, $entity = null, $options = [])
     {
+
+        
         return $this->field($name, $title, $errors, $entity, $options, [$this, 'inputField']);
     }
 
     public function textarea($name, $title, $errors, $entity = null, $options = [])
     {
         $options = array_merge(['rows' => 10, 'cols' => 10], $options);
-
         return $this->field($name, $title, $errors, $entity, $options, [$this, 'textareaField']);
     }
 

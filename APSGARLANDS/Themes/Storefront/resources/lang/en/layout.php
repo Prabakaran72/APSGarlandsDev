@@ -39,4 +39,6 @@ return [
     'contact_us' => 'Contact Us',
     'my_account' => 'My Account',
     'tags' => 'Tags',
+    'my_Profile'=>'Profile',
+    'logout' => 'Logout',
 ];

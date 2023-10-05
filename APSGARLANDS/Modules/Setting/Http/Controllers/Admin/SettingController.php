@@ -11,7 +11,7 @@ class SettingController
     /**
      * Show the form for editing the specified resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\Responsek
      */
     public function edit()
     {
@@ -27,6 +27,7 @@ class SettingController
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
      */
+    // public function update(UpdateSettingRequest $request)
     public function update(UpdateSettingRequest $request)
     {
         $this->handleMaintenanceMode($request);

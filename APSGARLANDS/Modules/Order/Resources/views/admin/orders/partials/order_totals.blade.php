@@ -16,12 +16,12 @@
                             </tr>
                         @endif
 
-                        @foreach ($order->taxes as $tax)
+                        {{-- @foreach ($order->taxes as $tax)
                             <tr>
                                 <td>{{ $tax->name }}</td>
                                 <td class="text-right">{{ $tax->order_tax->amount->format() }}</td>
                             </tr>
-                        @endforeach
+                        @endforeach --}}
 
                         @if ($order->hasCoupon())
                             <tr>

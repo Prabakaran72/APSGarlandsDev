@@ -1,3 +1,13 @@
+<div class="form-group" style="display: none">
+    <div class="form-radio" v-for="shippingMethod in cart.availableShippingMethods">
+        <input type="radio" name="shipping_method" v-model="form.shipping_method"
+            :value="shippingMethod.name" :id="shippingMethod.name"
+            @change="updateShippingMethod(shippingMethod.name)">
+        <label :for="shippingMethod.name" v-text="shippingMethod.label"></label>
+       
+    </div>
+</div>
+<div v-if="form.shipping_method !== 'local_pickup'">
 <div class="shipping-details">
     <div class="row">
         <div class="col-md-18">
@@ -18,7 +28,7 @@
                 <div class="select-address" v-if="hasAddress">
                     <div class="form-group">
                         <div class="form-radio" v-for="address in addresses">
-                            <input type="radio" v-model="form.shippingAddressId" :value="address.id"
+                            <input type="radio" class="shipRad" v-model="form.shippingAddressId" :value="address.id"
                                 :id="'shipping-address-' + address.id">
 
                             <label :for="'shipping-address-' + address.id">
@@ -184,4 +194,5 @@
             </div>
         </div>
     </div>
+</div>
 </div>

@@ -45,18 +45,6 @@ class CartTax implements JsonSerializable
         });
     }
 
-    private function taxApplicableProducts()
-    {
-        return $this->cart->items()->filter(function ($cartItem) {
-            return $this->hasMatchingTaxClass($cartItem);
-        });
-    }
-
-    private function hasMatchingTaxClass($cartItem)
-    {
-        return $cartItem->product->tax_class_id === $this->taxRate->tax_class_id;
-    }
-
     public function toArray()
     {
         return [

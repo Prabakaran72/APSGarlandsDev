@@ -4,6 +4,7 @@ namespace Modules\Report;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Modules\Product\Entities\Product;
 
 abstract class Report
 {
@@ -26,8 +27,13 @@ abstract class Report
             ->simplePaginate(20)
             ->appends($request->query());
 
+        $model = $this->query()->getModel()->getFillable();   // Check model using dd()
+        // Fetch all product names from the "product" table
+        $allProductNames = Product::pluck('slug');
+
+            
         return view($this->view())
-            ->with(array_merge(compact('report'), $this->data()));
+            ->with(array_merge(compact('report'), $this->data(), compact('allProductNames')));
     }
 
     public function report($request)
@@ -37,8 +43,8 @@ abstract class Report
         foreach ($this->filters($request) as $name => $value) {
             $this->{$name}($value);
         }
-
-        return $this->query;
+       
+        return $this->query;        
     }
 
     private function filters($request)

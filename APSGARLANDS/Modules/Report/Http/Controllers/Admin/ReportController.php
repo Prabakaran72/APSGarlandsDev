@@ -16,6 +16,8 @@ use Modules\Report\TaggedProductsReport;
 use Modules\Report\BrandedProductsReport;
 use Modules\Report\ProductsPurchaseReport;
 use Modules\Report\CategorizedProductsReport;
+use Modules\Report\AbandonedWishlistReport;
+use Modules\Report\AbandonedCartListReport;
 
 class ReportController
 {
@@ -25,6 +27,7 @@ class ReportController
      * @var array
      */
     private $reports = [
+        'abandoned_wishlist' => AbandonedWishlistReport::class,
         'coupons_report' => CouponsReport::class,
         'customers_order_report' => CustomersOrderReport::class,
         'products_purchase_report' => ProductsPurchaseReport::class,
@@ -37,7 +40,9 @@ class ReportController
         'sales_report' => SalesReport::class,
         'search_report' => SearchReport::class,
         'shipping_report' => ShippingReport::class,
-        'tax_report' => TaxReport::class,
+        'abandoned_cart_list_report'=>AbandonedCartListReport::class,
+
+        // 'tax_report' => TaxReport::class,
     ];
 
     /**

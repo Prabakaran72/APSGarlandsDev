@@ -20,7 +20,7 @@ trait Searchable
     public function search($query, $callback = null)
     {
         $scoutBuilder = $this->scoutSearch($query, $callback);
-
+       
         return new Builder($this, $scoutBuilder);
     }
 }

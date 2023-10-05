@@ -41,7 +41,6 @@ class ProductTabs extends Tabs
             $tab->view('product::admin.products.tabs.general', [
                 'brands' => $this->brands(),
                 'categories' => Category::treeList(),
-                'taxClasses' => $this->taxClasses(),
                 'tags' => Tag::list(),
             ]);
         });
@@ -52,13 +51,7 @@ class ProductTabs extends Tabs
         return Brand::list()->prepend(trans('admin::admin.form.please_select'), '');
     }
 
-    private function taxClasses()
-    {
-        return TaxClass::list()->prepend(trans('admin::admin.form.please_select'), '');
-    }
-
-    private function price()
-    {
+    private function price() {
         return tap(new Tab('price', trans('product::products.tabs.price')), function (Tab $tab) {
             $tab->weight(10);
 

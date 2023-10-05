@@ -74,7 +74,11 @@ export default {
             return cartItem.product.manage_stock && cartItem.product.qty < qty;
         },
 
-        remove(cartItem) {
+        remove() { 
+            var cartItem_copy=$('#cartItem_copy').val();
+        let deleteReason = $('#deleteReason').val();
+var cartItem=JSON.parse(cartItem_copy);
+
             this.loadingOrderSummary = true;
 
             store.removeCartItem(cartItem);
@@ -82,10 +86,19 @@ export default {
             if (store.cartIsEmpty()) {
                 this.crossSellProducts = [];
             }
-
+            
             $.ajax({
-                method: 'DELETE',
-                url: route('cart.items.destroy', { cartItemId: cartItem.id }),
+                    type:'POST',
+                    datatype:"application/JSON",
+                    method: 'DELETE',
+                    url: route('cart.items.destroy', { cartItemId: cartItem.id+'$$##$$'+cartItem.product.slug+'$$##$$'+cartItem.product.id+'$$##$$'+cartItem.qty+'$$##$$'+cartItem.unitPrice.amount+'$$##$$'+deleteReason,
+             
+                    }),
+                    data:{product_id:JSON.stringify(cartItem.product.id),
+                        product_slug:JSON.stringify(cartItem.product.slug),
+                        product_amount:JSON.stringify(cartItem.unitPrice.inCurrentCurrency.formatted),
+                        product_qty:JSON.stringify(cartItem.qty),
+                        cartdata_full:JSON.stringify(cartItem)}
             }).then((cart) => {
                 store.updateCart(cart);
             }).catch((xhr) => {
@@ -93,28 +106,75 @@ export default {
             }).always(() => {
                 this.loadingOrderSummary = false;
             });
-        },
+            $('#deleteItemModal').modal('hide');
+$('#deleteReason').val('');
+        
+    },
+       
+        clearCart() { 
+            var deleteReasonOverall=$("#deleteReasonOverall").val();
+           
+        
+          const jsonStr = JSON.stringify(store.state.cart.items);
+const jsonObject = JSON.parse(jsonStr);
+const newArray = [];
 
-        clearCart() {
-            store.clearCart();
+// Iterate through the object properties
+for (const key in jsonObject) {
+  if (jsonObject[key].hasOwnProperty('id')) {
+    // const idValue = jsonObject[key].id;
+    const idQtyValue = jsonObject[key].qty;
+    const idProductValue = jsonObject[key].product.id;
+    const idSlugValue = jsonObject[key].product.slug;
+    const idUnitValue = jsonObject[key].unitPrice.amount;
 
-            if (store.cartIsEmpty()) {
-                this.crossSellProducts = [];
-            }
+    
+const value_arr=idProductValue+"@@@"+idSlugValue+"@@@"+idQtyValue+"@@@"+idUnitValue;
+    newArray.push(value_arr);
+  }
+}const newArrayvalue=newArray;
 
             $.ajax({
                 method: 'POST',
                 url: route('cart.clear.store'),
+                data:{cartItemListNewArray:newArrayvalue,reason_destroy:deleteReasonOverall},
+
             }).then((cart) => {
                 store.updateCart(cart);
             }).catch((xhr) => {
                 this.$notify(xhr.responseJSON.message);
             });
-        },
+            store.clearCart();
+            location.reload();
+
+
+    },
 
         changeShippingMethod(shippingMethodName) {
             this.shippingMethodName = shippingMethodName;
         },
+       
+        getCartItem(cartItem){
+            $('#deleteItemModal').modal('show');
+            $('#cartItem_copy').val(JSON.stringify(cartItem));
+            
+       
+       },
+       getCartItemOverall(){
+        $('#deleteItemModalOverall').modal('show');
+       },
+       getClose(){
+        $('#deleteItemModal').modal('hide');
+        $('#deleteReason').val('');
+
+
+       },
+       getCloseOverall(){
+        $('#deleteItemModalOverall').modal('hide');
+        $('#deleteReasonOverall').val('');
+
+
+       },
 
         fetchCrossSellProducts() {
             $.ajax({

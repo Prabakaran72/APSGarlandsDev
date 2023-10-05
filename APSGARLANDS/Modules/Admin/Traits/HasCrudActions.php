@@ -5,6 +5,10 @@ namespace Modules\Admin\Traits;
 use Illuminate\Http\Request;
 use Modules\Support\Search\Searchable;
 use Modules\Admin\Ui\Facades\TabManager;
+use Modules\Fixedrate\Entities\Fixedrate;
+use Modules\Shipping\Providers\ShippingServiceProvider;
+use Illuminate\Support\Facades\Config; 
+use Illuminate\Support\Facades\Session;
 
 trait HasCrudActions
 {
@@ -16,6 +20,7 @@ trait HasCrudActions
      */
     public function index(Request $request)
     {
+       
         if ($request->has('query')) {
             return $this->getModel()
                 ->search($request->get('query'))
@@ -25,11 +30,53 @@ trait HasCrudActions
         }
 
         if ($request->has('table')) {
+            // if($this->getResourceName() == 'rewardpointsGift')
+            // {
+            //     return $this->getModel()->tableDummy($request);
+            // }
             return $this->getModel()->table($request);
         }
-
         return view("{$this->viewPath}.index");
     }
+    
+    public function getpincode()
+    {
+        $pincodeData = Fixedrate::all(['pincode', 'flat_price']);
+
+        if ($pincodeData->isNotEmpty()) {
+            // Prepare an associative array where the pincode is the key and flat_price is the value
+            $pincodePriceMap = $pincodeData->pluck('flat_price', 'pincode')->toArray();
+        
+            return response()->json($pincodePriceMap);
+        }
+        
+        return response()->json([]); // Return an empty array if there is no data
+        
+        //($pincodeData);
+    }
+//     public function getfixedrates(Request $request)
+// {
+//     $newPrice = $request->input('price');
+    
+//     // You can store or use the price as needed
+    
+//     return response()->json(['price' => $newPrice]);
+// }
+ // Adjust the namespace as needed
+
+ // Import the Config facade
+ 
+
+ public function getfixedrates(Request $request)
+ {
+     $dynamicFlatRateCost = $request->input('price');
+ 
+     // Store the dynamic flat rate cost in the session
+     Session::put('dynamic_flat_rate_cost', $dynamicFlatRateCost);
+ 
+     return response()->json(['flat_rate_cost' => $dynamicFlatRateCost]);
+ }
+ 
 
     /**
      * Show the form for creating a new resource.
@@ -218,7 +265,7 @@ trait HasCrudActions
     {
         return trans($this->label);
     }
-
+   
     /**
      * Get route prefix of the resource.
      *

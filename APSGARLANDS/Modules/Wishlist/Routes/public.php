@@ -8,3 +8,6 @@ Route::middleware('auth')->group(function () {
 
     Route::get('wishlist/products', 'WishlistProductController@index')->name('wishlist.products.index');
 });
+
+ // new
+ Route::delete('wishlist/multidatas/{productsDataId}', 'WishlistController@destroySelectedDatas')->name('wishlist.products.delete');

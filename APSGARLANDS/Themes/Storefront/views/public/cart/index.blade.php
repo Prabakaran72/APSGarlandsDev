@@ -13,10 +13,10 @@
                         <div class="shopping-cart">
                             <div class="shopping-cart-inner">
                                 @include('public.cart.index.cart_items')
-                                @include('public.cart.index.coupon')
+                                {{-- @include('public.cart.index.coupon') --}}
                             </div>
 
-                            @include('public.cart.index.order_summary')
+                            {{-- @include('public.cart.index.order_summary') --}}
                         </div>
                     </template>
 

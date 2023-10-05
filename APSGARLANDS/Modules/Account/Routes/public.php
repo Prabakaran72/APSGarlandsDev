@@ -18,6 +18,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('account/reviews', 'AccountReviewController@index')->name('account.reviews.index');
 
+    Route::get('account/testimonials', 'AccountTestimonialController@index')->name('account.testimonials.index');
+
     Route::get('addresses', 'AccountAddressController@index')->name('account.addresses.index');
     Route::post('addresses', 'AccountAddressController@store')->name('account.addresses.store');
     Route::put('addresses/{id}', 'AccountAddressController@update')->name('account.addresses.update');

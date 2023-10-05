@@ -5,6 +5,7 @@ namespace Modules\User\Entities;
 use Modules\Order\Entities\Order;
 use Modules\User\Admin\UserTable;
 use Modules\Review\Entities\Review;
+use Modules\Testimonial\Entities\Testimonial;
 use Illuminate\Auth\Authenticatable;
 use Modules\Address\Entities\Address;
 use Modules\Product\Entities\Product;
@@ -14,6 +15,7 @@ use Modules\Address\Entities\DefaultAddress;
 use Cartalyst\Sentinel\Laravel\Facades\Activation;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
+use Modules\RewardpointsGift\Entities\RewardpointsGift;
 
 class User extends EloquentUser implements AuthenticatableContract
 {
@@ -32,6 +34,13 @@ class User extends EloquentUser implements AuthenticatableContract
         'first_name',
         'permissions',
         'user_type',
+        'sso_id',
+        'sso_username',
+        'sso_locale',
+        'sso_avatar',
+        'is_sso_google',
+        'is_sso_fb',
+        'image_url'
     ];
 
     /**
@@ -148,9 +157,11 @@ class User extends EloquentUser implements AuthenticatableContract
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
+    
     public function wishlist()
     {
-        return $this->belongsToMany(Product::class, 'wish_lists')->withTimestamps();
+        // return $this->belongsToMany(Product::class, 'wish_lists')->withTimestamps();
+        return $this->belongsToMany(Product::class, 'wish_lists')->where('is_deleted', 0)->withTimestamps();
     }
 
     /**
@@ -183,15 +194,26 @@ class User extends EloquentUser implements AuthenticatableContract
         return $this->hasMany(Review::class, 'reviewer_id');
     }
 
+    public function testimonials()
+    {
+        return $this->hasMany(Testimonial::class, 'user_id');
+    }
+
     /**
      * Get the full name of the user.
      *
      * @return string
      */
+    // public function getFullNameAttribute()
+    // {
+    //     return "{$this->first_name} {$this->last_name}";
+    // }
     public function getFullNameAttribute()
     {
-        return "{$this->first_name} {$this->last_name}";
+        // return ucfirst($this->customer_first_name)." ".ucfirst($this->customer_last_name);
+        return ucfirst($this->first_name)." ".ucfirst($this->last_name);
     }
+   
 
     /**
      * Set user's permissions.
@@ -243,5 +265,22 @@ class User extends EloquentUser implements AuthenticatableContract
     public function table()
     {
         return new UserTable($this->newQuery());
+    }
+
+    public function rewardpointsgift()
+    {
+        return $this->hasMany(RewardpointsGift::class, 'user_id');
+    }
+    
+    public function customerRewardPoints()
+    {
+        return $this->hasMany(CustomerRewardPoint::class,'customer_id');
+    }
+
+    public function customerlist()
+    {
+        $customerUsers = User::where(function($query) {
+            $query->hasRoleName('customer');
+        })->get();
     }
 }

@@ -14,7 +14,7 @@
 
         <div class="panel-body">
             <div class="my-profile">
-                <form method="POST" action="{{ route('account.profile.update') }}">
+                <form method="POST" action="{{ route('account.profile.update') }}" enctype="multipart/form-data">
                     @csrf
                     @method('put')
 
@@ -103,6 +103,33 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-md-9">
+                            <div class="form-group">
+                                <label for="confirm-password">
+                                    {{ trans('storefront::account.profile.profile_image') }}
+                                </label>
+                                @if(auth()->user()->image_url)
+                                    <img src="{{ auth()->user()->image_url }}" alt="User Profile Image"
+                                    width="100px" height="100px">
+                                @else
+                                <span>{{ trans('storefront::account.profile.no_profile_image') }}</span>
+                                @endif
+                                
+                            </div>
+                        </div>
+                    <div class="col-md-9">
+                            <div class="form-group">
+                                <label for="confirm-password">
+                                    {{ trans('storefront::account.profile.image_url') }}
+                                </label>
+
+                                <input type="file" id="image_url" accept=".jpg,.png" name="image_url" class="form-control" >
+
+                                @error('password_confirmation')
+                                    <span class="error-message">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
 
                     <button type="submit" class="btn btn-lg btn-primary btn-save-changes" data-loading>
                         {{ trans('storefront::account.profile.save_changes') }}

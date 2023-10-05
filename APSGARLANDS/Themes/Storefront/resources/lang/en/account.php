@@ -13,6 +13,7 @@ return [
         'my_downloads' => 'My Downloads',
         'my_wishlist' => 'My Wishlist',
         'my_reviews' => 'My Reviews',
+        'my_testimonials' => 'My Testimonials',
         'my_addresses' => 'My Addresses',
         'my_profile' => 'My Profile',
         'logout' => 'Logout',
@@ -68,6 +69,9 @@ return [
         'rating' => 'RATING',
         'no_reviews' => 'You haven\'t reviewed any product yet.',
     ],
+    'testimonials' => [
+        'no_testimonials' => 'You don\'t have a Testimonial',
+    ],
     'addresses' => [
         'confirm' => 'Are you sure want to delete this address?',
         'edit' => 'Edit',
@@ -97,5 +101,8 @@ return [
         'new_password' => 'New Password',
         'confirm_password' => 'Confirm Password',
         'save_changes' => 'SAVE CHANGES',
+        'image_url' => 'Upload Image',
+        'profile_image' => 'Profile Image',
+        'no_profile_image' => ' Not Available'
     ],
 ];

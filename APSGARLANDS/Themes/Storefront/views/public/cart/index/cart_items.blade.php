@@ -8,9 +8,9 @@
                 <th>{{ trans('storefront::cart.table.quantity') }}</th>
                 <th>{{ trans('storefront::cart.table.line_total') }}</th>
                 <th>
-                    <button class="btn-remove" @click="clearCart">
-                        <i class="las la-times"></i>
-                    </button>
+                   
+                        <i class="las la-times"  @click="getCartItemOverall" ></i>
+                   
                 </th>
             </tr>
         </thead>
@@ -82,11 +82,57 @@
                 </td>
 
                 <td>
-                    <button class="btn-remove" @click="remove(cartItem)">
-                        <i class="las la-times"></i>
-                    </button>
+                        <i class="las la-times" @click="getCartItem(cartItem)"></i>
+
+                    
                 </td>
             </tr>
         </tbody>
     </table>
 </div>
+
+<div class="modal fade" id="deleteItemModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete Item</h5>
+                    <button type="button" class="close" data-dismiss="modal" @click="getClose" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="display:none">
+                    
+                    <textarea id="cartItem_copy" class="form-control"></textarea>
+                </div>
+                <div class="modal-body">
+                    <p>Why do you want to delete this item from your cart?</p>
+                    <textarea id="deleteReason" class="form-control"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="getClose">Close</button>
+                    <button type="button" class="btn btn-danger" @click="remove" >Delete</button>
+                </div>
+            </div>
+        </div>
+    </div> 
+    <div class="modal fade" id="deleteItemModalOverall" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete Item</h5>
+                    <button type="button" class="close"  aria-label="Close" @click="getCloseOverall">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                
+                <div class="modal-body">
+                    <p>Why do you want to delete this item from your cart?</p>
+                    <textarea id="deleteReasonOverall" class="form-control"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="getCloseOverall">Close</button>
+                    <button type="button" class="btn btn-danger" @click="clearCart" >Delete</button>
+                </div>
+            </div>
+        </div>
+    </div> 

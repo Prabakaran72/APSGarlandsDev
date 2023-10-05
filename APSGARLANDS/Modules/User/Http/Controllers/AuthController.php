@@ -84,20 +84,45 @@ class AuthController extends BaseAuthController
             return redirect($this->redirectTo());
         }
 
-        [$firstName, $lastName] = $this->extractName($user->getName());
+        $is_sso_google   =   $is_sso_fb  =   0;
 
-        $registeredUser = $this->auth->registerAndActivate([
+        if (!(empty($user->user['sub']))) {
+            $is_sso_google  =   '1';
+            $is_sso_fb  =   '0';
+        } else {
+            $is_sso_fb  =   '1';
+            $is_sso_google  =   '0';
+        }
+
+        echo "\r\n <br/> user : \r\n <br/><pre>"; print_r($user);
+        exit();
+        $googleID   =   $googleLocale   =   $googleAvatar   =   '';
+
+        if(!(empty($user))) {
+            //foreach($user as $gData) {
+            $googleID   =   $user->user['sub'];
+            $googleLocale   =   $user->user['locale'];
+            $googleAvatar   =   $user->avatar;
+        }
+
+        [$firstName, $lastName] =   $this->extractName($user->getName());
+
+        $registeredUser =   $this->auth->registerAndActivate([
             'first_name' => $firstName,
             'last_name' => $lastName,
             'email' => $user->getEmail(),
             'phone' => '',
+            'is_sso_google' => $is_sso_google,
+            'is_sso_fb' => $is_sso_fb,
             'password' => str_random(),
+            'google_id' =>  $googleID,
+            'google_username'   =>  $user->getName(),
+            'google_locale' =>  $googleLocale,
+            'google_avatar' =>  $googleAvatar,
         ]);
 
         $this->assignCustomerRole($registeredUser);
-
         auth()->login($registeredUser);
-
         return redirect($this->redirectTo());
     }
 

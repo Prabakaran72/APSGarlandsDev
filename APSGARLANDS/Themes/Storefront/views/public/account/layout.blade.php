@@ -50,7 +50,14 @@
                                 {{ trans('storefront::account.pages.my_reviews') }}
                             </a>
                         </li>
-
+                        @if (setting('my_testimonial_enabled'))
+                        <li class="{{ request()->routeIs('account.testimonials.index') ? 'active' : '' }}">
+                            <a href="{{ route('account.testimonials.index') }}">
+                                <i class="las la-quote-left"></i>
+                                {{ trans('storefront::account.pages.my_testimonials') }}
+                            </a>
+                        </li>
+                        @endif
                         <li class="{{ request()->routeIs('account.addresses.index') ? 'active' : '' }}">
                             <a href="{{ route('account.addresses.index') }}">
                                 <i class="las la-address-book"></i>
@@ -58,19 +65,7 @@
                             </a>
                         </li>
 
-                        <li class="{{ request()->routeIs('account.profile.edit') ? 'active' : '' }}">
-                            <a href="{{ route('account.profile.edit') }}">
-                                <i class="las la-user-circle"></i>
-                                {{ trans('storefront::account.pages.my_profile') }}
-                            </a>
-                        </li>
-
-                        <li>
-                            <a href="{{ route('logout') }}">
-                                <i class="las la-sign-out-alt"></i>
-                                {{ trans('storefront::account.pages.logout') }}
-                            </a>
-                        </li>
+                       
                     </ul>
                 </div>
 

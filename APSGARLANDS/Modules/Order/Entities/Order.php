@@ -66,25 +66,25 @@ class Order extends Model
         return !is_null($this->coupon);
     }
 
-    public function totalTax()
-    {
-        $total = 0;
+    // public function totalTax()
+    // {
+    //     $total = 0;
 
-        if ($this->hasTax()) {
-            $this->taxes()
-                ->get()
-                ->each(function ($tax) use (&$total) {
-                    $total += $tax->order_tax->amount->amount();
-                });
-        }
+    //     if ($this->hasTax()) {
+    //         $this->taxes()
+    //             ->get()
+    //             ->each(function ($tax) use (&$total) {
+    //                 $total += $tax->order_tax->amount->amount();
+    //             });
+    //     }
 
-        return Money::inDefaultCurrency($total);
-    }
+    //     return Money::inDefaultCurrency($total);
+    // }
 
-    public function hasTax()
-    {
-        return $this->taxes->isNotEmpty();
-    }
+    // public function hasTax()
+    // {
+    //     return $this->taxes->isNotEmpty();
+    // }
 
     public function salesAnalytics()
     {
@@ -136,14 +136,14 @@ class Order extends Model
         return $this->belongsTo(Coupon::class)->withTrashed();
     }
 
-    public function taxes()
-    {
-        return $this->belongsToMany(TaxRate::class, 'order_taxes')
-            ->using(OrderTax::class)
-            ->as('order_tax')
-            ->withPivot('amount')
-            ->withTrashed();
-    }
+    // public function taxes()
+    // {
+    //     return $this->belongsToMany(TaxRate::class, 'order_taxes')
+    //         ->using(OrderTax::class)
+    //         ->as('order_tax')
+    //         ->withPivot('amount')
+    //         ->withTrashed();
+    // }
 
     public function transaction()
     {
@@ -165,10 +165,10 @@ class Order extends Model
         return Money::inDefaultCurrency($discount);
     }
 
-    public function getTaxAttribute($tax)
-    {
-        return Money::inDefaultCurrency($tax);
-    }
+    // public function getTaxAttribute($tax)
+    // {
+    //     return Money::inDefaultCurrency($tax);
+    // }
 
     public function getTotalAttribute($total)
     {
@@ -258,10 +258,10 @@ class Order extends Model
         });
     }
 
-    public function attachTax(CartTax $cartTax)
-    {
-        $this->taxes()->attach($cartTax->id(), ['amount' => $cartTax->amount()->amount()]);
-    }
+    // public function attachTax(CartTax $cartTax)
+    // {
+    //     $this->taxes()->attach($cartTax->id(), ['amount' => $cartTax->amount()->amount()]);
+    // }
 
     public function storeTransaction($response)
     {

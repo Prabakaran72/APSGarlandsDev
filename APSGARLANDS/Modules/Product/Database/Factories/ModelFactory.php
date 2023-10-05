@@ -1,6 +1,7 @@
 <?php
 
 use Modules\Product\Entities\Product;
+use Modules\User\Entities\User;
 
 $factory->define(Product::class, function (Faker\Generator $faker) {
     return [
@@ -12,5 +13,6 @@ $factory->define(Product::class, function (Faker\Generator $faker) {
         'slug' => $faker->slug(),
         'sku' => $faker->word(),
         'is_active' => $faker->boolean(),
+        'craeted-by' => User::all()->random()->id,
     ];
 });

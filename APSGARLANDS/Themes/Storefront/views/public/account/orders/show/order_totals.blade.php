@@ -18,7 +18,7 @@
             </li>
         @endif
 
-        @foreach ($order->taxes as $tax)
+        {{-- @foreach ($order->taxes as $tax)
             <li>
                 <label>{{ $tax->name }}</label>
 
@@ -26,7 +26,7 @@
                     {{ $tax->order_tax->amount->convert($order->currency, $order->currency_rate)->format($order->currency) }}
                 </span>
             </li>
-        @endforeach
+        @endforeach --}}
 
         @if ($order->hasCoupon())
             <li>
