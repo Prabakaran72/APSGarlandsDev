@@ -105,9 +105,9 @@
             <div class="col-md-2">
                 <div class="shipping-address">
                     {{-- <h4 class="pull-left mb-4">{{ trans('order::orders.shipping_address') }}</h4> --}}
-                    {{-- <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editShippingModal">
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editShippingModal">
                         Edit 
-                    </button> --}}
+                    </button>
                     
                 </div>
             </div>

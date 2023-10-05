@@ -21,6 +21,7 @@ return [
     ],
     'form' => [
         'activated' => 'Activated',
+        'user_type' => 'Mannual Order',
     ],
     'or_reset_password' => 'or, Reset Password',
     'send_reset_password_email' => 'Send Reset Password Email',

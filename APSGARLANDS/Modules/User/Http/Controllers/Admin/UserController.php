@@ -6,6 +6,7 @@ use Modules\User\Entities\User;
 use Modules\Admin\Traits\HasCrudActions;
 use Modules\User\Http\Requests\SaveUserRequest;
 use Cartalyst\Sentinel\Laravel\Facades\Activation;
+use Modules\Address\Entities\Address;
 
 class UserController
 {
@@ -47,11 +48,18 @@ class UserController
      */
     public function store(SaveUserRequest $request)
     {
+        // return $request->user_type;
         $request->merge(['password' => bcrypt($request->password)]);
 
         $user = User::create($request->all());
 
         $user->roles()->attach($request->roles);
+
+        if($request->user_type == 1){
+            
+            $user->addresses()->create($request->all());
+
+        }
 
         Activation::complete($user, Activation::create($user)->code);
 
@@ -68,12 +76,25 @@ class UserController
      */
     public function update($id, SaveUserRequest $request)
     {
+     
         $user = User::findOrFail($id);
 
         if (is_null($request->password)) {
             unset($request['password']);
         } else {
             $request->merge(['password' => bcrypt($request->password)]);
+        }
+
+        if($request->user_address || $request->user_type){
+            if ($request->filled('user_address')) {
+                // return $request->all();
+                $address = Address::find($request->user_address);
+                $address->update($request->all());
+            } else {
+               
+                $user->addresses()->create($request->all());
+            }
+           
         }
 
         $user->update($request->all());

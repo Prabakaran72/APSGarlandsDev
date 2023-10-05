@@ -1,6 +1,8 @@
 <?php
-
 namespace Modules\Order\Http\Controllers;
+
+use Illuminate\Routing\Controller;
+// namespace Modules\Order\Http\Controllers;
 
 class OrderController
 {
@@ -23,7 +25,7 @@ class OrderController
     {
         return view('order::show');
     }
-    
+   
     public function updateshipping()
     {
         dd('sdfsdf');

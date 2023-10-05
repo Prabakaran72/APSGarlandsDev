@@ -27,3 +27,4 @@ class OrderStatusChanged
         $this->order = $order;
     }
 }
+ 
