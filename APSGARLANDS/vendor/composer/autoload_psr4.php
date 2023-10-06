@@ -213,4 +213,5 @@ return array(
     'Astrotomic\\Translatable\\' => array($vendorDir . '/astrotomic/laravel-translatable/src/Translatable'),
     'AlternativeLaravelCache\\' => array($vendorDir . '/swayok/alternative-laravel-cache/AlternativeLaravelCache'),
     'Algolia\\AlgoliaSearch\\' => array($vendorDir . '/algolia/algoliasearch-client-php/src'),
+    'Alaouy\\Youtube\\' => array($vendorDir . '/alaouy/youtube/src'),
 );

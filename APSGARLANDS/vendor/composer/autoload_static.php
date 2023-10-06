@@ -341,6 +341,7 @@ class ComposerStaticInitd0f9ef869ed531663c961b6244517af3
             'Astrotomic\\Translatable\\' => 24,
             'AlternativeLaravelCache\\' => 24,
             'Algolia\\AlgoliaSearch\\' => 22,
+            'Alaouy\\Youtube\\' => 15,
         ),
     );
 
@@ -1182,6 +1183,10 @@ class ComposerStaticInitd0f9ef869ed531663c961b6244517af3
         array (
             0 => __DIR__ . '/..' . '/algolia/algoliasearch-client-php/src',
         ),
+        'Alaouy\\Youtube\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/alaouy/youtube/src',
+        ),
     );
 
     public static $prefixesPsr0 = array (
@@ -1225,6 +1230,10 @@ class ComposerStaticInitd0f9ef869ed531663c961b6244517af3
         'AWS\\CRT\\NativeResource' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/NativeResource.php',
         'AWS\\CRT\\OptionValue' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/Options.php',
         'AWS\\CRT\\Options' => __DIR__ . '/..' . '/aws/aws-crt-php/src/AWS/CRT/Options.php',
+        'Alaouy\\Youtube\\Facades\\Youtube' => __DIR__ . '/..' . '/alaouy/youtube/src/Facades/Youtube.php',
+        'Alaouy\\Youtube\\Rules\\ValidYoutubeVideo' => __DIR__ . '/..' . '/alaouy/youtube/src/Rules/ValidYoutubeVideo.php',
+        'Alaouy\\Youtube\\Youtube' => __DIR__ . '/..' . '/alaouy/youtube/src/Youtube.php',
+        'Alaouy\\Youtube\\YoutubeServiceProvider' => __DIR__ . '/..' . '/alaouy/youtube/src/YoutubeServiceProvider.php',
         'Algolia\\AlgoliaSearch\\AccountClient' => __DIR__ . '/..' . '/algolia/algoliasearch-client-php/src/AccountClient.php',
         'Algolia\\AlgoliaSearch\\Algolia' => __DIR__ . '/..' . '/algolia/algoliasearch-client-php/src/Algolia.php',
         'Algolia\\AlgoliaSearch\\AnalyticsClient' => __DIR__ . '/..' . '/algolia/algoliasearch-client-php/src/AnalyticsClient.php',

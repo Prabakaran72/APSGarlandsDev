@@ -26,7 +26,7 @@
                                 <div class="checkout-right">
                                     @include('public.checkout.create.payment')
                                     @include('public.checkout.create.coupon')
-                                    @include('public.checkout.create.rewardpoints')
+                                    {{-- @include('public.checkout.create.rewardpoints') --}}
                                 </div>
                             </div>
                             @include('public.checkout.create.order_summary')

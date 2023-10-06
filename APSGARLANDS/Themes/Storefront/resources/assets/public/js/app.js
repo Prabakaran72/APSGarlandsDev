@@ -37,6 +37,7 @@ import CompareIndex from "./components/compare/Index";
 import MyWishlist from "./components/account/wishlist/Index";
 import MyAddresses from "./components/account/addresses/Index";
 import Counter from "./components/Counter.vue";
+import Rewardpoints from "./components/Rewardpoints.vue";
 Vue.prototype.route = route;
 Vue.prototype.$notify = notify;
 Vue.prototype.$trans = trans;
