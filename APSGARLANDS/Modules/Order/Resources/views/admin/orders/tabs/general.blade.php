@@ -1022,6 +1022,7 @@
     });
 
     function add_couponData() {
+       
         const is_present = sub.is_percent;
         const orderAmount = updateTotal();
         const type = 'percent';
@@ -1029,17 +1030,18 @@
         if (is_present && updateTotal() > 0) {
             const valid = handleCouponValidation(sub, orderAmount);
             const discountRow = document.querySelector('.discount-row');
-
-            if (valid) {
+           const validstrng = valid == 'Coupon is valid' ? true :false;
+            if (valid !== 'Coupon is valid') {
                 discountRow.style.display = "none";
                 discountRow.querySelector('td:nth-child(3)').textContent = '';
                 discountRow.querySelector('td:nth-child(4)').textContent = '';
             }
 
-            if (valid == 'coupon is valid') {
+            if (valid == 'Coupon is valid') {
                 const discount = sub.value;
                 const discountAmount = discounted(discount, orderAmount, type);
                 discountRow.style.display = 'table-row';
+                console.log('sub',sub);
                 const thirdtd = discountRow.querySelector('td:nth-child(3)');
                 const forthtd = discountRow.querySelector('td:nth-child(4)');
                 forthtd.textContent = '-MYR ' + discountAmount;
@@ -1193,86 +1195,151 @@
         return isValid;
     }
 
+    // function handleCouponValidation(coupon, orderAmount) {
+    //     // if(coupon.maximum_spend){
+    //     //     return 'coupon maximum_spend exists.';
+    //     // }else{
+    //     //     return 'coupon maximum_spend doest exists.';
+    //     // }
+
+    //     try {
+    //         // Check if the coupon code is missing or empty
+    //         if (!coupon || !coupon.code) {
+    //             throw new Error('The coupon does not exist.');
+    //         }
+
+    //         // Check if the coupon has expired
+    //         const currentDate = new Date();
+    //         const endDate = new Date(coupon.end_date);
+
+    //         if (currentDate > endDate) {
+    //             throw new Error('Coupon has expired');
+    //         }
+
+    //         // Check if the coupon is used up
+    //         if (coupon.usage_limit_per_coupon) {
+    //             throw new Error('Coupon has been fully used');
+    //         }
+
+    //         // Check if the order amount is below the minimum spend
+    //         // const orderAmount =  orderAmount /* Get the order amount from your application */;
+    //         if (coupon.didNotSpendTheRequiredAmount) {
+    //             const minimumSpend = parseFloat(coupon.minimum_spend.amount);
+
+    //             if (orderAmount < minimumSpend) {
+    //                 throw new Error(`Order amount must be at least ${coupon.minimum_spend.formatted}`);
+    //             }
+
+    //         }
+
+    //         if (coupon.maximum_spend) {
+    //             // Check if the order amount exceeds the maximum spend
+    //             const maximumSpend = parseFloat(coupon.maximum_spend.amount);
+
+    //             if (orderAmount > maximumSpend) {
+    //                 throw new Error(`Order amount cannot exceed ${coupon.maximum_spend.formatted}`);
+    //             }
+    //         }
+
+
+    //         // Check if the customer has exceeded the usage limit
+    //         const usageLimitPerCustomer = coupon.usage_limit_per_customer;
+
+    //         if (coupon.usageLimitpercoupon !== false && coupon.used >= usage_limit_per_coupon) {
+    //             throw new Error(`Customer has exceeded the usage limit for this coupon`);
+    //         }
+
+    //         // Add more custom checks here based on your requirements
+
+    //         // Check if the coupon has already applied
+    //         const alreadyApplied = coupon.alreadyapplied;
+
+    //         if (alreadyApplied) {
+    //             throw new error('The coupon has been already applied.');
+    //         }
+
+    //         const invalid = coupon.invalid;
+
+    //         if (invalid) {
+    //             throw new error('The coupon is not valid.');
+    //         }
+
+
+
+    //         // If all checks pass, you can return a success message
+    //         return 'coupon is valid';
+
+    //     } catch (error) {
+    //         // Handle and log the error or return an error message
+    //         return `Error: ${error.message}`;
+    //     }
+
+    // }
+
     function handleCouponValidation(coupon, orderAmount) {
-        // if(coupon.maximum_spend){
-        //     return 'coupon maximum_spend exists.';
-        // }else{
-        //     return 'coupon maximum_spend doest exists.';
-        // }
-
-        try {
-            // Check if the coupon code is missing or empty
-            if (!coupon || !coupon.code) {
-                throw new Error('The coupon does not exist.');
-            }
-
-            // Check if the coupon has expired
-            const currentDate = new Date();
-            const endDate = new Date(coupon.end_date);
-
-            if (currentDate > endDate) {
-                throw new Error('Coupon has expired');
-            }
-
-            // Check if the coupon is used up
-            if (coupon.usageLimitpercoupon) {
-                throw new Error('Coupon has been fully used');
-            }
-
-            // Check if the order amount is below the minimum spend
-            // const orderAmount =  orderAmount /* Get the order amount from your application */;
-            if (coupon.didNotSpendTheRequiredAmount) {
-                const minimumSpend = parseFloat(coupon.minimum_spend.amount);
-
-                if (orderAmount < minimumSpend) {
-                    throw new Error(`Order amount must be at least ${coupon.minimum_spend.formatted}`);
-                }
-
-            }
-
-            if (coupon.maximum_spend) {
-                // Check if the order amount exceeds the maximum spend
-                const maximumSpend = parseFloat(coupon.maximum_spend.amount);
-
-                if (orderAmount > maximumSpend) {
-                    throw new Error(`Order amount cannot exceed ${coupon.maximum_spend.formatted}`);
-                }
-            }
-
-
-            // Check if the customer has exceeded the usage limit
-            const usageLimitPerCustomer = coupon.usage_limit_per_customer;
-
-            if (coupon.usageLimitpercoupon !== false && coupon.used >= usage_limit_per_coupon) {
-                throw new Error(`Customer has exceeded the usage limit for this coupon`);
-            }
-
-            // Add more custom checks here based on your requirements
-
-            // Check if the coupon has already applied
-            const alreadyApplied = coupon.alreadyapplied;
-
-            if (alreadyApplied) {
-                throw new error('The coupon has been already applied.');
-            }
-
-            const invalid = coupon.invalid;
-
-            if (invalid) {
-                throw new error('The coupon is not valid.');
-            }
-
-
-
-            // If all checks pass, you can return a success message
-            return 'coupon is valid';
-
-        } catch (error) {
-            // Handle and log the error or return an error message
-            return `Error: ${error.message}`;
+    try {
+        // Check if the coupon code is missing or empty
+        if (!coupon || !coupon.code) {
+            throw new Error('The coupon does not exist.');
         }
 
+        // Check if the coupon has expired
+        const currentDate = new Date();
+        const endDate = new Date(coupon.end_date);
+
+        if (currentDate > endDate) {
+            throw new Error('Coupon has expired');
+        }
+
+        // Check if the coupon is used up
+        if (coupon.usage_limit_per_coupon && coupon.used >= coupon.usage_limit_per_coupon) {
+            throw new Error('Coupon has been fully used');
+        }
+
+        // Check if the order amount is below the minimum spend
+        if (coupon.minimum_spend) {
+            const minimumSpend = parseFloat(coupon.minimum_spend.amount);
+
+            if (orderAmount < minimumSpend) {
+                throw new Error(`Order amount must be at least ${coupon.minimum_spend.formatted}`);
+            }
+        }
+
+        // Check if the order amount exceeds the maximum spend (if maximum_spend is not null)
+        if (coupon.maximum_spend) {
+            const maximumSpend = parseFloat(coupon.maximum_spend.amount);
+
+            if (orderAmount > maximumSpend) {
+                throw new Error(`Order amount cannot exceed ${coupon.maximum_spend.formatted}`);
+            }
+        }
+
+        // Check if the customer has exceeded the usage limit
+        if (coupon.perCustomerUsageLimitReached) {
+            throw new Error(`Customer has exceeded the usage limit for this coupon`);
+        }
+
+        // Add more custom checks here based on your requirements
+
+        // Check if the coupon has already applied
+        if (coupon.alreadyapplied) {
+            throw new Error('The coupon has already been applied.');
+        }
+
+        // Check if the coupon is marked as invalid
+        if (coupon.invalid) {
+            throw new Error('The coupon is not valid.');
+        }
+
+        // If all checks pass, you can return a success message
+        return 'Coupon is valid';
+
+    } catch (error) {
+        // Handle and log the error or return an error message
+        return `Error: ${error.message}`;
     }
+}
+
 
 
     function discounted(discount = '', orderAmount = null, type = '') {
@@ -1287,10 +1354,10 @@
                 // Calculate the discounted amount
                 const discountAmount = (discountPercentage / 100) * amount;
                 const discountedAmount = amount - discountAmount;
-
+               
                 // Return the discounted amount as a string with 2 decimal places
-                updateTotal(discountedAmount.toFixed(2));
-                return discountedAmount.toFixed(2);
+                updateTotal(discountAmount.toFixed(2));
+                return discountAmount.toFixed(2);
             } else {
                 // Handle invalid input (e.g., non-numeric values)
                 return 'Invalid input';
@@ -1325,10 +1392,9 @@
 
 
 
-
         fetch(route('cart.coupon.store', {
                 coupon: coupon,
-                type: 'manual'
+                type: 'manual',
             }), {
                 method: 'POST',
                 headers: {
@@ -1351,10 +1417,12 @@
                 const errorElement = document.getElementById('coupon_error');
                 const discountRow = document.querySelector('.discount-row');
                 const validationMessage = handleCouponValidation(couponObject, orderAmount);
+                const valdate = validationMessage == 'Coupon is valid' ? true : false;
                 const discount_amt = document.getElementById('discount_amt');
                 const is_percent = document.getElementById('discount_type');
                 const coupon_id = document.getElementById('coupon_id');
-                if (validationMessage) {
+                if (validationMessage !== 'Coupon is valid') {
+
                     discountRow.style.display = "none";
                     discountRow.querySelector('td:nth-child(3)').textContent = '';
                     discountRow.querySelector('td:nth-child(4)').textContent = '';
@@ -1363,7 +1431,8 @@
                 const forthtd = discountRow.querySelector('td:nth-child(4)');
                 errorElement.textContent = validationMessage;
                 errorElement.style.color = 'red';
-                if (validationMessage == 'coupon is valid') {
+                if (validationMessage == 'Coupon is valid') {
+                    
                     const discount = couponObject.value;
                     const discount_type = couponObject.is_percent;
                     coupon_id.value = couponObject.id;
@@ -1860,6 +1929,7 @@
                                     // Redirect to the list page
                                     window.location.href = route(
                                     "admin.orders.index"); // Replace with the actual URL
+                                    // console.log('products',data.products);
                                 }
 
                             }

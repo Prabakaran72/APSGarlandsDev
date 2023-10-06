@@ -12,7 +12,6 @@ use Modules\Support\Country;
 use Modules\Support\State;
 use Modules\Product\Entities\Product;
 use Illuminate\Http\Request;
-use Modules\Cart\Facades\OrderCart;
 use Modules\Coupon\Entities\Coupon;
 
 class OrderController
@@ -141,12 +140,15 @@ class OrderController
                 $product_obj = new OrderProduct;
                 $insert_pro = $product_obj->create($product);
             }
-
+            // Coupon::increment('used');
             // return response()->json([
             //     'data' => 'successpdata',
             //     'products' => $p
             // ]);
 
+        }
+        if($insert->coupon_id){
+            Coupon::find($insert->coupon_id)->increment('used');
         }
 
         // foreach ($p as $product){
@@ -173,7 +175,7 @@ class OrderController
             
             return response()->json([
                 'data' => 'success',
-                'products' => $p
+                'products' => $insert->coupon_id
             ]);
         }
         

@@ -9,7 +9,7 @@ use Modules\Support\Eloquent\Model;
 
 class Address extends Model
 {
-    protected $fillable = ['first_name', 'last_name', 'address_1', 'address_2', 'city', 'state', 'zip', 'country'];
+    protected $fillable = ['first_name', 'last_name', 'address_1', 'address_2', 'city', 'state', 'zip', 'country','user_type'];
 
     protected $appends = ['full_name', 'state_name', 'country_name'];
 

@@ -16,6 +16,7 @@ use Modules\Coupon\Checkers\ExcludedCategories;
 use Modules\Coupon\Checkers\UsageLimitPerCoupon;
 use Modules\Coupon\Checkers\ApplicableCategories;
 use Modules\Coupon\Checkers\UsageLimitPerCustomer;
+use Modules\User\Entities\User;
 
 class CartCouponController
 {
@@ -41,8 +42,27 @@ class CartCouponController
      */
     public function store()
     {
+        
+        if(request()->type == 'manual')
+        {
+           
+            // $obj = Coupon::whereRaw("code = ?",['vin50'])->whereRaw("is_active = ?",['1'])->get();
+            // dd($coupon);
+            // $coupon = Coupon::whereRaw("BINARY code = ?", [request()->coupon])->first();
+            // dd($coupon);
+            $coupon = Coupon::findByCode(request('coupon'));
+            $coupon['perCustomerUsageLimitReached'] = $coupon->perCustomerUsageLimitReached();
+            resolve(Pipeline::class)
+            ->send($coupon)
+            ->through($this->checkers);
+           return response()->json([
+            'coupon' => $coupon
+           ]);
+        }
+        
         $coupon = Coupon::findByCode(request('coupon'));
-
+        
+        
         resolve(Pipeline::class)
             ->send($coupon)
             ->through($this->checkers)
