@@ -13,6 +13,7 @@
                     @include('public.cart.index.steps')
                     <form @submit.prevent="placeOrder" @input="errors.clear($event.target.name)">
                         <div class="checkout">
+                            @include('public.checkout.create.form.rewardpoints_claiming_bar') <!-- //$$$$-->
                             <div class="checkout-inner">
                                 <div class="checkout-left">
                                     <div class="checkout-form">
@@ -26,7 +27,6 @@
                                 <div class="checkout-right">
                                     @include('public.checkout.create.payment')
                                     @include('public.checkout.create.coupon')
-                                    {{-- @include('public.checkout.create.rewardpoints') --}}
                                 </div>
                             </div>
                             @include('public.checkout.create.order_summary')

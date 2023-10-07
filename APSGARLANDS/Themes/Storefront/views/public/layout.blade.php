@@ -94,7 +94,6 @@
         @include('public.layout.header')
         @include('public.layout.navigation')
         @include('public.layout.breadcrumb')
-
         @yield('content')
         @include('public.home.sections.subscribe')
         @include('public.layout.footer')

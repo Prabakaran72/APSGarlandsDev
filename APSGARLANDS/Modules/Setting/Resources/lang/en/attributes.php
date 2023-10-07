@@ -121,5 +121,5 @@ return [
 
     //MY TESTIMONIAL
     'my_testimonial' => 'My Testimonial',
-
+    'rewardpoints_enabled' => 'Rewardpoints',
 ];

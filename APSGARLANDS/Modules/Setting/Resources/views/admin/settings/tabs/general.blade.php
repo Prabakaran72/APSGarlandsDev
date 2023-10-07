@@ -11,5 +11,6 @@
         {{ Form::checkbox('testimonial_slider_enabled', trans('setting::attributes.testimonial_slider'), trans('setting::settings.form.allow_testimonial_slider'), $errors, $settings) }}
         {{ Form::checkbox('my_testimonial_enabled', trans('setting::attributes.my_testimonial'), trans('setting::settings.form.allow_my_testimonial'), $errors, $settings) }}
         {{ Form::checkbox('cookie_bar_enabled', trans('setting::attributes.cookie_bar_enabled'), trans('setting::settings.form.show_cookie_bar'), $errors, $settings) }}
+        {{ Form::checkbox('rewardpoints_enabled', trans('setting::attributes.rewardpoints_enabled'), trans('setting::settings.form.rewardpoints_enabled'), $errors, $settings) }}
     </div>
 </div>
