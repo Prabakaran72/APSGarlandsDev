@@ -3,9 +3,10 @@ import store from "../../store";
 import Errors from "../../Errors";
 import CartHelpersMixin from "../../mixins/CartHelpersMixin";
 import ProductHelpersMixin from "../../mixins/ProductHelpersMixin";
+import RewardPointClaimingBar from "../layout/RewardPointClaimingBar";
 
 export default {
-    mixins: [CartHelpersMixin, ProductHelpersMixin],
+    mixins: [CartHelpersMixin, ProductHelpersMixin,RewardPointClaimingBar],
 
     props: [
         "customerEmail",
@@ -546,7 +547,7 @@ export default {
             if (!this.form.terms_and_conditions || this.placingOrder) {
                 return;
             }
-           console.log('it s placeorder function',this.form.payment_method)
+           console.log('it s placeorder function',RewardPointClaimingBar.form.redeemptionAmount)
             this.placingOrder = true;
 
             $.ajax({
@@ -942,7 +943,12 @@ export default {
           hideTermsModal(){
             $('#terms-modal').modal('hide');
           },
-        
+          
+          redeemRewardPoints(){
+                // console.log('Redeem points', this.form.redeemptionAmount? this.form.redeemptionAmount:null);
+                console.log("redeemRewardPoints method Create");
+          },
 
     },
+
 };
