@@ -1,0 +1,9 @@
+{
+    "name": "Subscriber",
+    "alias": "subscriber",
+    "description": "Managing subscribers.",
+    "priority": 9999,
+    "providers": [
+        "Modules\\Subscriber\\Providers\\SubscriberServiceProvider"
+    ]
+}

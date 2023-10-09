@@ -1,0 +1,9 @@
+{
+    "name": "Email",
+    "alias": "email",
+    "description": "Managing Email.",
+    "priority": 9999,
+    "providers": [
+        "Modules\\Email\\Providers\\EmailServiceProvider"
+    ]
+}

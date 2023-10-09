@@ -1,0 +1,9 @@
+{
+    "name": "Template",
+    "alias": "template",
+    "description": "Managing Template.",
+    "priority": 9999,
+    "providers": [
+        "Modules\\Template\\Providers\\TemplateServiceProvider"
+    ]
+}
