@@ -22,8 +22,8 @@
                     </td>
 
                     <td>
-                        <span class="badge {{ order_status_badge_class($order->status) }}">
-                            {{ $order->status() }}
+                        <span class="badge {{ $order->status === 'pending_payment' ? 'badge-danger' : order_status_badge_class($order->status) }}">
+                            {{ $order->status === 'pending_payment' ? 'Payment Failed' : $order->status() }}
                         </span>
                     </td>
 

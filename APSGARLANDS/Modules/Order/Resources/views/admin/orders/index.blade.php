@@ -31,13 +31,32 @@
             index: '{{ "admin.orders.index" }}',
             show: '{{ "admin.orders.show" }}',
         });
-
+    //     function updateStatusField(data) {
+    //     return data.map(function (row) {
+    //         if (row.status === 'Pending Payment') {
+    //             row.status = 'Payment Failed';
+    //         }
+    //         return row;
+    //     });
+    // }
         new DataTable('#orders-table .table', {
             columns: [
                 { data: 'id', width: '5%' },
                 { data: 'customer_name', orderable: false, searchable: false },
                 { data: 'customer_email' },
-                { data: 'status' },
+                {
+                data: 'status',
+                render: function (data, type, row) {
+                    // This function is called for each status cell
+                    if (type === 'display') {
+                        if (row.status === 'Pending Payment') {
+                            return 'Payment Failed';
+                        }
+                        return row.status;
+                    }
+                    return data;
+                }
+            },
                 { data: 'total' },
                 { data: 'created', name: 'created_at' },
             ],
