@@ -227,6 +227,8 @@ export default {
                 this.renderStripeElements();
             }
         });
+
+
     },
 
     methods: {
@@ -301,8 +303,7 @@ export default {
                     console.error(error);
                 }
             });
-        }
-        ,
+        },
         
 
         zipExists(newZip) {
@@ -950,5 +951,4 @@ export default {
           },
 
     },
-
 };

@@ -20,10 +20,14 @@ $redemption_currency_value=1;
                     <div class="row justify-content-center">
                         <div class="rewardpoint-bar">
                             <div class="rewardpoint-bar-text">
-                                {{ trans('storefront::layout.customer_have_rewardpoints_to_claim',['activeRewardPoints'=>$activeRewardPoints, 'maxLimitRewardpoints'=>$use_points_per_order])}}
+                                {{-- {{ trans('storefront::layout.customer_have_rewardpoints_to_claim',['activeRewardPoints'=>$activeRewardPoints, 'maxLimitRewardpoints'=>$use_points_per_order])}} --}}
+                                You have <span v-text="rewardPoints.activeRewardPoints"></span>
+                                reward points to claim. You Can Redeem upto <span
+                                    v-text="rewardPoints.use_points_per_order"></span>
                             </div>
                             <div class="rewardpoint-bar-text">
-                               <input type="number" placeholder="No of points..." v-if="form.redeemptionAmount !== null" v-model="form.redeemptionAmount"/>
+                               <input type="number" placeholder="No of points..." v-model="rewardPoints.redeemedPoint" step="1"/>
+                               <label v-if="rewardPoints.error.status==true" v-text="rewardPoints.error.message" class="text-right"></label>
                             </div>
 
                             <div class="rewardpoint-bar-action">

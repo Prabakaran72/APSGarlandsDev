@@ -59,6 +59,10 @@ public/themes/storefront/public/css/app.css
 public/themes/storefront/public/css/app.rtl.css
 public/themes/storefront/public/js/app.js
 storage/logs/laravel.log
+APSGARLANDS/Themes/Storefront/assets/public/css/app.css
+APSGARLANDS/Themes/Storefront/assets/public/css/app.rtl.css
+APSGARLANDS/Themes/Storefront/assets/public/js/app.js
+APSGARLANDS/public/themes/storefront/public/js/app.js
 
 APSGARLANDS/Modules/Admin/node_modules/
 APSGARLANDS/Modules/Category/node_modules/
@@ -68,6 +72,6 @@ APSGARLANDS/Modules/Translation/node_modules/
 APSGARLANDS/Themes/Storefront/node_modules/
 APSGARLANDS/mix-manifest.json
 APSGARLANDS/storage/logs/
-# APSGARLANDS/vendor/
-# APSGARLANDS/node_modules/
+APSGARLANDS/vendor/
+APSGARLANDS/node_modules/
 
