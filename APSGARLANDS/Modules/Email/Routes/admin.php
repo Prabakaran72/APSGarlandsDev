@@ -20,6 +20,13 @@ Route::post('emails', [
     'middleware' => 'can:admin.emails.create',
 ]);
 
+// New stores not store
+Route::post('emails', [
+    'as' => 'admin.emails.stores',
+    'uses' => 'EmailController@store',
+    'middleware' => 'can:admin.emails.create',
+]);
+
 Route::get('emails/{id}/edit', [
     'as' => 'admin.emails.edit',
     'uses' => 'EmailController@edit',
@@ -28,6 +35,13 @@ Route::get('emails/{id}/edit', [
 
 Route::put('emails/{id}/edit', [
     'as' => 'admin.emails.update',
+    'uses' => 'EmailController@update',
+    'middleware' => 'can:admin.emails.edit',
+]);
+
+// New updates not update
+Route::put('emails/{id}/edit', [
+    'as' => 'admin.emails.updates',
     'uses' => 'EmailController@update',
     'middleware' => 'can:admin.emails.edit',
 ]);

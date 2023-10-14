@@ -141,6 +141,7 @@ trait HasCrudActions
      */
     public function edit($id)
     {
+        $test = 'Hello';
         $data = array_merge([
             'tabs' => TabManager::get($this->getModel()->getTable()),
             $this->getResourceName() => $this->getEntity($id),

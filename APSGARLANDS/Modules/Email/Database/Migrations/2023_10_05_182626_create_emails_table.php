@@ -15,10 +15,9 @@ return new class extends Migration
     {
         Schema::create('emails', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('subscribers');
+            $table->json('subscribers');
             $table->string('subject');
-            $table->string('template');
-            $table->string('template_id');
+            $table->string('template');            
             $table->date('date');
             $table->boolean('is_active');
             $table->timestamps();

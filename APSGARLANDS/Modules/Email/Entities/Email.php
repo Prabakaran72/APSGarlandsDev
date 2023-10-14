@@ -7,7 +7,7 @@ use Modules\Support\Eloquent\Model;
 use Modules\Meta\Eloquent\HasMetaData;
 use Modules\Support\Eloquent\Sluggable;
 use Modules\Support\Eloquent\Translatable;
-
+use Modules\Subscriber\Entities\Subscriber;
 class Email extends Model
 {
     use  HasMetaData;
@@ -49,10 +49,10 @@ class Email extends Model
      *
      * @return void
      */
-    protected static function booted()
-    {
-        static::addActiveGlobalScope();
-    }
+    // protected static function booted()
+    // {
+    //     static::addActiveGlobalScope();
+    // }
 
    
 
@@ -66,4 +66,10 @@ class Email extends Model
     {
         return new AdminTable($this->newQuery()->withoutGlobalScope('active'));
     }
+
+    public function subscriber()
+    {
+        return $this->belongsTo(Subscriber::class,'email','subscribers');   
+    }
+    
 }

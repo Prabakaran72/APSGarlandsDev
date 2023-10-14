@@ -4,6 +4,7 @@ namespace Modules\Email\Http\Controllers;
 
 use Modules\Email\Entities\Email;
 use Modules\Media\Entities\File;
+use Modules\Template\Entities\TemplateTranslation;
 
 class EmailController
 {
@@ -16,7 +17,7 @@ class EmailController
     public function show($slug)
     {
         $logo = File::findOrNew(setting('storefront_header_logo'))->path;
-        $email = Email::where('slug', $slug)->firstOrFail();
+        $email = Email::where('slug', $slug)->firstOrFail();        
 
         return view('public.emails.show', compact('email', 'logo'));
     }
