@@ -38,7 +38,7 @@
                 </li>
                 <li> <span v-html="cart?.rewardpoints?.isValidRedemption"></li>
                 {{-- <li v-if="cart?.rewardpoints?.isValidRedemption" >{{ "cart.rewardpoints.isValidRedemption :"}}<span v-html="cart?.rewardpoints?.isValidRedemption"></span></li>  --}}
-                <li v-if="cart?.rewardpoints?.isValidRedemption" >
+                <li v-if="store.state.cart?.rewardpoints?.isValidRedemption" >
                     <h6>{{ trans('storefront::cart.reward_points') }}</h6>
                 </li>
                 <li v-if="cart?.rewardpoints?.isValidRedemption">

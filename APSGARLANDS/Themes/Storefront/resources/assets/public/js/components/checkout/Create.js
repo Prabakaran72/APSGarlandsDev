@@ -15,6 +15,7 @@ export default {
         "defaultAddress",
         "addresses",
         "countries",
+        "customerrewardpoints",
     ],
 
     data() {
@@ -23,10 +24,10 @@ export default {
                 customer_email: this.customerEmail,
                 customer_phone: this.customerPhone,
                 billing: {
-                    zip: '' ,
+                    zip: "",
                 },
                 shipping: {
-                    zip: '' 
+                    zip: "",
                 },
                 billingAddressId: null,
                 shippingAddressId: null,
@@ -37,16 +38,16 @@ export default {
             },
             fixedrate: {
                 price: 0,
-                total:0,
+                total: 0,
             },
             totalFlatRateValue: 0,
             serviceAvailable: true,
             states: {
                 billing: {
-                    zip: '' ,
+                    zip: "",
                 },
                 shipping: {
-                    zip: '' ,
+                    zip: "",
                 },
             },
             placingOrder: false,
@@ -55,7 +56,26 @@ export default {
             stripeCardElement: null,
             stripeError: null,
             authorizeNetToken: null,
-            termsModalContent: "",   //For Terms and Conditions Modal popup
+            termsModalContent: "", //For Terms and Conditions Modal popup
+
+            // reward: {
+            //     show: false,
+            //     redemptionAmount: 0,
+            //     isValidRedemption: false,
+            // },
+
+            rewardPoints: {
+                activeRewardPoints: this.customerrewardpoints.activeRewardPoints,
+                use_points_per_order: this.customerrewardpoints.use_points_per_order,
+                redeemedPoint: this.customerrewardpoints.redeemedPoint, //User's input
+                pointsEquolantCase: this.customerrewardpoints.pointsEquolantCase, //Ex 100 Points equal to 20MYR.SO 1pt :this.customerrewardpoints./100 ie (.2)
+                min_order_cart_value_redemption: this.customerrewardpoints.min_order_cart_value_redemption,
+                currency_value: this.customerrewardpoints.currency_value, //if customer can earn rewardpoints, then currency rate
+                point_value: this.customerrewardpoints.point_value, //if customer can earn rewardpoints, then point values per order amount
+                redemption_point_value: this.customerrewardpoints.redemption_point_value,
+                redemption_currency_value: this.customerrewardpoints.redemption_currency_value,
+                error: { status: false, message: "" },
+            },
         };
     },
 
@@ -63,10 +83,11 @@ export default {
         shouldDisableCheckbox() {
             // Check if the conditions for disabling the checkbox are met
             return (
-              this.form.shipping_method === 'flat_rate' && !this.serviceAvailable
+                this.form.shipping_method === "flat_rate" &&
+                !this.serviceAvailable
             );
-          },
-        
+        },
+
         hasAddress() {
             return Object.keys(this.addresses).length !== 0;
         },
@@ -92,14 +113,13 @@ export default {
         },
 
         shouldShowPaymentInstructions() {
-            return ["bank_transfer", "check_payment","razerpay"].includes(
+            return ["bank_transfer", "check_payment", "razerpay"].includes(
                 this.form.payment_method
             );
         },
 
         paymentInstructions() {
             if (this.shouldShowPaymentInstructions) {
-                console.log('instruction',this.gateways[this.form.payment_method].instructions);
                 return this.gateways[this.form.payment_method].instructions;
             }
         },
@@ -108,10 +128,10 @@ export default {
     watch: {
         shouldDisableCheckbox(newVal) {
             if (newVal && this.form.terms_and_conditions) {
-              // If the checkbox was checked and now becomes disabled, uncheck it
-              this.form.terms_and_conditions = false;
+                // If the checkbox was checked and now becomes disabled, uncheck it
+                this.form.terms_and_conditions = false;
             }
-          },
+        },
         "form.billingAddressId": function () {
             this.mergeSavedBillingAddress();
         },
@@ -133,29 +153,29 @@ export default {
         },
 
         "form.billing.zip": function (newZip) {
-            if(this.form.newBillingAddress == true) {
+            if (this.form.newBillingAddress == true) {
                 this.zipExists(newZip);
             } else {
                 this.zipExists(newZip);
             }
-           // console.log("billing zip"+ this.form.billing.zip);
+            // console.log("billing zip"+ this.form.billing.zip);
             // if (newZip) {
             //     this.addTaxes();
             // }
         },
 
         "form.shipping.zip": function (newZip) {
-            if(this.form.newShippingAddress == true) {
+            if (this.form.newShippingAddress == true) {
                 this.zipExists(newZip);
             } else {
                 this.zipExists(newZip);
             }
-           // console.log("shipping zip"+ this.form.shipping.zip);
+            // console.log("shipping zip"+ this.form.shipping.zip);
             // if (newZip) {
             //     this.addTaxes();
             // }
         },
-        "newzip": function(newZip){
+        newzip: function (newZip) {
             this.zipExists(newZip);
         },
 
@@ -188,7 +208,7 @@ export default {
         },
 
         "form.payment_method": function (newPaymentMethod) {
-            console.log('this.form.payment_method',this.form.payment_method);
+            // console.log("this.form.payment_method", this.form.payment_method);
             if (newPaymentMethod === "paypal") {
                 this.$nextTick(this.renderPayPalButton);
             }
@@ -197,6 +217,12 @@ export default {
                 this.stripeError = "";
             }
         },
+        // "rewardPoints.redeemedPoint": function () {
+        //     this.hasRedemptionErrors();
+        // },
+        // "reward.redemptionAmount": function () {
+        //     this.hasEnoughOrderAmounToRedeem();
+        // },
     },
 
     created() {
@@ -227,184 +253,235 @@ export default {
                 this.renderStripeElements();
             }
         });
-
-
     },
 
     methods: {
-
         getFixedRate(price) {
             $.ajax({
                 method: "GET",
                 url: route("admin.fixedrates.getfixedrates", { price: price }),
                 success: (data) => {
                     this.$nextTick(() => {
-                    if (price === 0) {
-                        document.getElementById('pincode_not_servicable').style.display = 'block';
-                        this.serviceAvailable= false;
-                        const cartTotalAmount = parseFloat(this.cart.subTotal.amount);
-                        let newTotalAmount;
-                        if ($.isEmptyObject(this.cart.coupon)) {
+                        if (price === 0) {
+                            document.getElementById(
+                                "pincode_not_servicable"
+                            ).style.display = "block";
+                            this.serviceAvailable = false;
+                            const cartTotalAmount = parseFloat(
+                                this.cart.subTotal.amount
+                            );
+                            let newTotalAmount;
+                            if ($.isEmptyObject(this.cart.coupon)) {
+                                newTotalAmount = cartTotalAmount;
+                                // console.log('inside if:',newTotalAmount);
+                            } else {
+                                newTotalAmount =
+                                    cartTotalAmount -
+                                    parseFloat(this.cart.coupon.value.amount);
+                            }
 
-                            newTotalAmount = cartTotalAmount  
-                            // console.log('inside if:',newTotalAmount);
+                            // console.log('newTotalAmount', newTotalAmount);
+                            const formattedNewTotal =
+                                "MYR " + newTotalAmount.toFixed(2);
+
+                            this.fixedrate.total = formattedNewTotal;
+                            // Update the elements in the DOM
+                            const priceFlatRate =
+                                document.getElementById("price_flat_rate");
+                            const totalFlatRate =
+                                document.getElementById("total_flat_rate");
+                            if (priceFlatRate) {
+                                document.getElementById(
+                                    "price_flat_rate"
+                                ).innerText = "MYR 0.00";
+                            }
+                            if (totalFlatRate) {
+                                document.getElementById(
+                                    "total_flat_rate"
+                                ).innerText = this.fixedrate.total;
+                            }
+                            // console.log('Updated total_flat_rate IF CONDITION: ' + this.fixedrate.total);
+                            this.updateTotalFlatRate();
                         } else {
-                            newTotalAmount = cartTotalAmount - parseFloat(this.cart.coupon.value.amount);
-                        }
+                            document.getElementById(
+                                "pincode_not_servicable"
+                            ).style.display = "none";
+                            this.serviceAvailable = true;
+                            const formattedPrice =
+                                "MYR " + parseFloat(price).toFixed(2);
+                            const cartTotalAmount = parseFloat(
+                                this.cart.subTotal.amount
+                            );
+                            let newTotalAmount;
 
-                        // console.log('newTotalAmount', newTotalAmount);
-                        const formattedNewTotal = 'MYR ' + newTotalAmount.toFixed(2);
-                        
-                        this.fixedrate.total = formattedNewTotal;
-                        // Update the elements in the DOM
-                        const priceFlatRate = document.getElementById('price_flat_rate');
-                        const totalFlatRate = document.getElementById('total_flat_rate');
-                        if(priceFlatRate){
-                            document.getElementById('price_flat_rate').innerText = 'MYR 0.00';
+                            if ($.isEmptyObject(this.cart.coupon)) {
+                                newTotalAmount =
+                                    cartTotalAmount + parseFloat(price);
+                            } else {
+                                // Apply coupon discount if cartCouponAmount is defined
+                                newTotalAmount =
+                                    cartTotalAmount +
+                                    parseFloat(price) -
+                                    parseFloat(this.cart.coupon.value.amount);
+                                // console.log('inside else coupon exists:',newTotalAmount);
+                            }
 
-                        }if(totalFlatRate){
-                            document.getElementById('total_flat_rate').innerText = this.fixedrate.total;
+                            // console.log('newTotalAmount', newTotalAmount);
+                            const formattedNewTotal =
+                                "MYR " + newTotalAmount.toFixed(2);
+                            this.fixedrate.price = formattedPrice;
+                            this.fixedrate.total = formattedNewTotal;
+                            const priceFlatRate =
+                                document.getElementById("price_flat_rate");
+                            const totalFlatRate =
+                                document.getElementById("total_flat_rate");
+                            if (priceFlatRate) {
+                                document.getElementById(
+                                    "price_flat_rate"
+                                ).innerText = this.fixedrate.price;
+                            }
+                            if (totalFlatRate) {
+                                document.getElementById(
+                                    "total_flat_rate"
+                                ).innerText = this.fixedrate.total;
+                            }
+                            // console.log('Updated total_flat_rate FROM ELSE: ' +parseFloat(price)+'---' +parseFloat(this.cart.subTotal.amount)+'----'+ this.fixedrate.total);
+                            this.updateTotalFlatRate();
                         }
-                        // console.log('Updated total_flat_rate IF CONDITION: ' + this.fixedrate.total);
-                        this.updateTotalFlatRate();
-                    } else {
-                        document.getElementById('pincode_not_servicable').style.display = 'none';
-                        this.serviceAvailable= true;
-                        const formattedPrice = 'MYR ' + parseFloat(price).toFixed(2);
-                        const cartTotalAmount = parseFloat(this.cart.subTotal.amount);
-                        let newTotalAmount;
-
-                        if($.isEmptyObject(this.cart.coupon)) {
-                            newTotalAmount  =   cartTotalAmount + parseFloat(price);
-                        } else {
-                            // Apply coupon discount if cartCouponAmount is defined
-                            newTotalAmount  =  ( cartTotalAmount + parseFloat(price)) - parseFloat(this.cart.coupon.value.amount);
-                            // console.log('inside else coupon exists:',newTotalAmount);
-                        }
-
-                        // console.log('newTotalAmount', newTotalAmount);
-                        const formattedNewTotal = 'MYR ' + newTotalAmount.toFixed(2);
-                        this.fixedrate.price =formattedPrice;
-                        this.fixedrate.total=formattedNewTotal ;
-                        const priceFlatRate = document.getElementById('price_flat_rate');
-                        const totalFlatRate = document.getElementById('total_flat_rate');
-                        if(priceFlatRate){
-                            document.getElementById('price_flat_rate').innerText = this.fixedrate.price;
-                        }
-                        if(totalFlatRate){
-                            document.getElementById('total_flat_rate').innerText = this.fixedrate.total;
-                        }
-                        // console.log('Updated total_flat_rate FROM ELSE: ' +parseFloat(price)+'---' +parseFloat(this.cart.subTotal.amount)+'----'+ this.fixedrate.total);
-                        this.updateTotalFlatRate();
-                    }
-                });
+                    });
                 },
-                error: function(error) {
+                error: function (error) {
                     console.error(error);
-                }
+                },
             });
         },
-        
 
         zipExists(newZip) {
             this.$nextTick(() => {
-            $.ajax({
-                method: "GET",
-                url: route("admin.fixedrates.getpincode"),
-                data: '',
-            })
-            .then(response => {
-           
-          if (response && typeof response === 'object') {
-            let zipFound = false;
-            // Iterate through the keys of the response object
-            for (const key in response) {
-                if (key == newZip) {
-                    const price = response[key];
-                    const cartTotalAmount = parseFloat(this.cart.subTotal.amount);
-                    document.getElementById('pincode_not_servicable').style.display = 'none';
-                    this.serviceAvailable= true;
-                    let newTotalAmount;
+                $.ajax({
+                    method: "GET",
+                    url: route("admin.fixedrates.getpincode"),
+                    data: "",
+                })
+                    .then((response) => {
+                        if (response && typeof response === "object") {
+                            let zipFound = false;
+                            // Iterate through the keys of the response object
+                            for (const key in response) {
+                                if (key == newZip) {
+                                    const price = response[key];
+                                    const cartTotalAmount = parseFloat(
+                                        this.cart.subTotal.amount
+                                    );
+                                    document.getElementById(
+                                        "pincode_not_servicable"
+                                    ).style.display = "none";
+                                    this.serviceAvailable = true;
+                                    let newTotalAmount;
 
-                    if($.isEmptyObject(this.cart.coupon)) {
-                        newTotalAmount  =   cartTotalAmount + parseFloat(price);
-                    } else {
-                        // Apply coupon discount if cartCouponAmount is defined
-                        newTotalAmount  =  ( cartTotalAmount + parseFloat(price)) - parseFloat(this.cart.coupon.value.amount);
-                        // console.log('inside else coupon exists:',newTotalAmount);
-                    }
-                    const formattedPrice = 'MYR ' + parseFloat(price).toFixed(2);
-                    const formattedNewTotal = 'MYR ' + newTotalAmount.toFixed(2);
-                    this.fixedrate.price =formattedPrice;
-                    this.fixedrate.total=formattedNewTotal ;
-                    // console.log('Updated total_flat_rate FROM ELSE IN ZIP EXISTS: ' +parseFloat(price)+'---' +parseFloat(this.cart.subTotal.amount)+'$----'+ this.fixedrate.total);
-                    this.getFixedRate(price);                    
-                    zipFound = true;                
-                    break;
-                }
-                this.updateTotalFlatRate();
-                
-            }
+                                    if ($.isEmptyObject(this.cart.coupon)) {
+                                        newTotalAmount =
+                                            cartTotalAmount + parseFloat(price);
+                                    } else {
+                                        // Apply coupon discount if cartCouponAmount is defined
+                                        newTotalAmount =
+                                            cartTotalAmount +
+                                            parseFloat(price) -
+                                            parseFloat(
+                                                this.cart.coupon.value.amount
+                                            );
+                                        // console.log('inside else coupon exists:',newTotalAmount);
+                                    }
+                                    const formattedPrice =
+                                        "MYR " + parseFloat(price).toFixed(2);
+                                    const formattedNewTotal =
+                                        "MYR " + newTotalAmount.toFixed(2);
+                                    this.fixedrate.price = formattedPrice;
+                                    this.fixedrate.total = formattedNewTotal;
+                                    // console.log('Updated total_flat_rate FROM ELSE IN ZIP EXISTS: ' +parseFloat(price)+'---' +parseFloat(this.cart.subTotal.amount)+'$----'+ this.fixedrate.total);
+                                    this.getFixedRate(price);
+                                    zipFound = true;
+                                    break;
+                                }
+                                this.updateTotalFlatRate();
+                            }
 
-            // If newZip was not found, set this.fixedrate.price to 0
-            if (!zipFound) {
-                this.fixedrate.price = 'MYR'+' '+ 0.00;
-                document.getElementById('pincode_not_servicable').style.display = 'block';
-                this.serviceAvailable= false;
-                const cartTotalAmount = parseFloat(this.cart.subTotal.amount);
-                let newTotalAmount;
-                       // console.log('if CART COUP : ' + this.cart.coupon + ' COUP AMT : ' + this.cart.coupon.value.amount);
+                            // If newZip was not found, set this.fixedrate.price to 0
+                            if (!zipFound) {
+                                this.fixedrate.price = "MYR" + " " + 0.0;
+                                document.getElementById(
+                                    "pincode_not_servicable"
+                                ).style.display = "block";
+                                this.serviceAvailable = false;
+                                const cartTotalAmount = parseFloat(
+                                    this.cart.subTotal.amount
+                                );
+                                let newTotalAmount;
+                                // console.log('if CART COUP : ' + this.cart.coupon + ' COUP AMT : ' + this.cart.coupon.value.amount);
 
-                        if ($.isEmptyObject(this.cart.coupon)) {
-                            // Apply coupon discount if cartCouponAmount is defined
-                            newTotalAmount = cartTotalAmount  
-                            // console.log('inside if:',newTotalAmount);
+                                if ($.isEmptyObject(this.cart.coupon)) {
+                                    // Apply coupon discount if cartCouponAmount is defined
+                                    newTotalAmount = cartTotalAmount;
+                                    // console.log('inside if:',newTotalAmount);
+                                } else {
+                                    newTotalAmount =
+                                        cartTotalAmount -
+                                        parseFloat(
+                                            this.cart.coupon.value.amount
+                                        );
+                                }
+
+                                // console.log('newTotalAmount-from !zipfound', newTotalAmount);
+                                const formattedNewTotal =
+                                    "MYR " + newTotalAmount.toFixed(2);
+                                this.fixedrate.total = formattedNewTotal;
+                                // console.log(`Value for ${newZip} was not found. Setting price to 0.`);
+                                // console.log('!ZIPFOUND',this.fixedrate.total);
+                                this.getFixedRate(0);
+                                this.updateTotalFlatRate();
+                            }
+                            const priceFlatRate =
+                                document.getElementById("price_flat_rate");
+                            const totalFlatRate =
+                                document.getElementById("total_flat_rate");
+                            if (priceFlatRate) {
+                                document.getElementById(
+                                    "price_flat_rate"
+                                ).innerText = this.fixedrate.price;
+                            }
+                            if (totalFlatRate) {
+                                document.getElementById(
+                                    "total_flat_rate"
+                                ).innerText = this.fixedrate.total;
+                            }
+                            // console.log('test',document.getElementById('total_flat_rate').innerText);
                         } else {
-                            newTotalAmount = cartTotalAmount - parseFloat(this.cart.coupon.value.amount);
+                            console.log(
+                                "Invalid response or missing data in the response."
+                            );
                         }
-
-
-                // console.log('newTotalAmount-from !zipfound', newTotalAmount);
-                const formattedNewTotal = 'MYR ' + newTotalAmount.toFixed(2);
-                this.fixedrate.total = formattedNewTotal;
-                // console.log(`Value for ${newZip} was not found. Setting price to 0.`);
-                // console.log('!ZIPFOUND',this.fixedrate.total);
-                this.getFixedRate(0);
-                this.updateTotalFlatRate();
-            }
-            const priceFlatRate = document.getElementById('price_flat_rate');
-            const totalFlatRate = document.getElementById('total_flat_rate');
-            if(priceFlatRate){
-                document.getElementById('price_flat_rate').innerText = this.fixedrate.price;
-            }
-            if(totalFlatRate){
-                document.getElementById('total_flat_rate').innerText = this.fixedrate.total;
-            }
-           // console.log('test',document.getElementById('total_flat_rate').innerText);
-        } else {
-            console.log('Invalid response or missing data in the response.');
-        }
-    })
-    .catch(error => {
-        console.error(error);
-    });
-});
-} ,
-    updateTotalFlatRate() {
-       // console.log("HI FROM updateTotalFlatRate");
-        const totalFlatRateElement = document.getElementById('total_flat_rate');
-        this.totalFlatRateValue = this.fixedrate.total;
-        this.$nextTick(() => {
-        if (totalFlatRateElement) {
-            totalFlatRateElement.innerText =  this.totalFlatRateValue;
-            // this.getFixedRate(price);
-           // console.log('Updated total_flat_rate: ' + totalFlatRateElement.innerText);
-        } else {
-           // console.error("Element with ID 'total_flat_rate' not found.");
-        }
-    });
-    },
-  addNewBillingAddress() {
+                    })
+                    .catch((error) => {
+                        console.error(error);
+                    });
+            });
+        },
+        updateTotalFlatRate() {
+            // console.log("HI FROM updateTotalFlatRate");
+            const totalFlatRateElement =
+                document.getElementById("total_flat_rate");
+            this.totalFlatRateValue = this.fixedrate.total;
+            this.$nextTick(() => {
+                if (totalFlatRateElement) {
+                    totalFlatRateElement.innerText = this.totalFlatRateValue;
+                    // this.getFixedRate(price);
+                    // console.log('Updated total_flat_rate: ' + totalFlatRateElement.innerText);
+                } else {
+                    // console.error("Element with ID 'total_flat_rate' not found.");
+                }
+            });
+        },
+        addNewBillingAddress() {
             this.resetAddressErrors("billing");
 
             this.form.billing = {};
@@ -548,7 +625,10 @@ export default {
             if (!this.form.terms_and_conditions || this.placingOrder) {
                 return;
             }
-           console.log('it s placeorder function',RewardPointClaimingBar.form.redeemptionAmount)
+            console.log(
+                "it s placeorder function",
+                RewardPointClaimingBar.form.redeemptionAmount
+            );
             this.placingOrder = true;
 
             $.ajax({
@@ -561,10 +641,10 @@ export default {
                 },
             })
                 .then((response) => {
-                  console.log('response123',response);
+                    console.log("response123", response);
                     if (response.redirectUrl) {
                         window.location.href = response.redirectUrl;
-                    } else if (this.form.payment_method ==="razerpay") { 
+                    } else if (this.form.payment_method === "razerpay") {
                         console.log("confirmRazerpayPayment");
                         this.confirmRazerpayPayment(response);
                     } else {
@@ -578,7 +658,7 @@ export default {
                     if (xhr.status === 422) {
                         this.errors.record(xhr.responseJSON.errors);
                     }
-                    console.log('error',this.form.payment_method);
+                    console.log("error", this.form.payment_method);
                     this.$notify(xhr.responseJSON.message);
 
                     this.placingOrder = false;
@@ -586,7 +666,7 @@ export default {
         },
 
         confirmOrder(orderId, paymentMethod, params = {}) {
-            console.log('it s a confirm order function');
+            console.log("it s a confirm order function");
             $.ajax({
                 method: "GET",
                 url: route("checkout.complete.store", {
@@ -881,7 +961,7 @@ export default {
                 autoOpen: true,
             });
         },
-       
+
         confirmRazerpayPayment(response) {
             const {
                 amount,
@@ -895,10 +975,9 @@ export default {
                 redirectedurl,
                 ref,
                 vcode,
-                verifykey
+                verifykey,
             } = response;
-        
-          
+
             const url = `${redirectedurl}?amount=${amount}&country=${country}&bill_email=${bill_email}&bill_mobile=${bill_mobile}&bill_name=${bill_name}&currency=${currency}&key=${key}&orderid=${orderid}&ref=${ref}&vcode=${vcode}&verifykey=${verifykey}&callback=?`;
             window.location.href = url;
             // Make a GET request using the Fetch API and handle the response
@@ -918,37 +997,167 @@ export default {
             //         // Handle any errors here
             //         console.error(error);
             //     });
-        }
-        
-        ,
-        
+        },
+
         openModal(termsUrl) {
             // Make an AJAX request to the Laravel named route
             $.ajax({
                 method: "GET",
                 url: termsUrl,
-                success: (data)=>{
-                    let terms_condition_html = $(data).find('.custom-page-content').html();
+                success: (data) => {
+                    let terms_condition_html = $(data)
+                        .find(".custom-page-content")
+                        .html();
                     // Assign the HTML content to the Vue property
                     this.termsModalContent = terms_condition_html;
                     // Set showTermsModal to true to display the modal
                     // Show the modal
-                    $('#terms-modal').modal('show');
-                }
-                })
-              .catch((error) => {
+                    $("#terms-modal").modal("show");
+                },
+            }).catch((error) => {
                 console.error(error);
-              });
-          },
+            });
+        },
 
-          hideTermsModal(){
-            $('#terms-modal').modal('hide');
-          },
-          
-          redeemRewardPoints(){
-                // console.log('Redeem points', this.form.redeemptionAmount? this.form.redeemptionAmount:null);
-                console.log("redeemRewardPoints method Create");
-          },
+        hideTermsModal() {
+            $("#terms-modal").modal("hide");
+        },
 
+        // redeemRewardPoints() {
+        //     // console.log('Redeem points', this.form.redeemptionAmount? this.form.redeemptionAmount:null);
+        //     console.log("redeemRewardPoints method Create");
+        // },
+
+        // redeemRewardPoints() {
+        //     if (!this.hasRedemptionErrors()) {
+        //         console.log(
+        //             "this.reward.redemptionAmount",
+        //             this.reward.redemptionAmount
+        //         );
+        //         console.log(
+        //             "this.reward.redemptionAmount",
+        //             this.reward.isValidRedemption
+        //         );
+        //         console.log(
+        //             "cart.reward.redemptionAmount",
+        //             store.state.cart.rewardpoints.isValidRedemption
+        //         );
+        //         if (this.reward.redemptionAmount) {
+        //             // update the total order amount
+        //             store.state.cart.total.amount = this.reward.redemptionAmount
+        //                 ? store.state.cart.total.amount -
+        //                   this.reward.redemptionAmount
+        //                 : store.state.cart.total.amount;
+        //         }
+        //     }
+        // },
+
+        // calculateRedemptionAmount() {
+        //     this.reward.redemptionAmount =
+        //         this.rewardPoints.pointsEquolantCase *
+        //         this.rewardPoints.redeemedPoint;
+        // },
+
+        // hasRedemptionErrors() {
+        //     // isRedemptionNotNullNotEmpty() {
+        //     if (this.rewardPoints.redeemedPoint) {
+        //         this.rewardPoints.error = { status: false, message: "" };
+        //     } else {
+        //         this.rewardPoints.error = {
+        //             status: true,
+        //             message: "Redemption points are empty",
+        //         };
+        //         return true;
+        //     }
+        //     // isRedemptionNotExceedsAvailablePoints() {
+        //     if (
+        //         this.rewardPoints.redeemedPoint <=
+        //         this.rewardPoints.activeRewardPoints
+        //     ) {
+        //         this.rewardPoints.error = { status: false, message: "" };
+        //     } else {
+        //         this.rewardPoints.error = {
+        //             status: true,
+        //             message:
+        //                 "Your redemption points exceed the actual points you have.",
+        //         };
+        //         return true;
+        //     }
+        //     // isRedeedmedPointsWithInMaxLimit() {
+
+        //     if (
+        //         this.rewardPoints.error.status != true &&
+        //         this.rewardPoints.use_points_per_order >=
+        //             this.rewardPoints.redeemedPoint
+        //     ) {
+        //         this.rewardPoints.error = { status: false, message: "" };
+        //     } else {
+        //         this.rewardPoints.error = {
+        //             status: true,
+        //             message:
+        //                 "The redemption points exceed the allowed maximum limit.",
+        //         };
+        //         return true;
+        //     }
+        //     // },
+        //     // },
+        //     // isRedeedmedPointsAboveMinOrderLimit() {
+
+        //     if (
+        //         this.rewardPoints.error.status != true &&
+        //         store.state.cart.subTotal.amount >=
+        //             this.rewardPoints.min_order_cart_value_redemption
+        //     ) {
+        //         this.rewardPoints.error = { status: false, message: "" };
+        //     } else {
+        //         this.rewardPoints.error = {
+        //             status: true,
+        //             message:
+        //                 "The order amount is not sufficient to redeem your reward.",
+        //         };
+        //         return true;
+        //     }
+        //     // },
+        //     this.calculateRedemptionAmount();
+
+        //     // },
+        // },
+
+        // hasEnoughOrderAmounToRedeem() {
+        //     if (
+        //         !this.hasRedemptionErrors() &&
+        //         this.reward.redemptionAmount &&
+        //         store.state.cart.total.amount &&
+        //         this.reward.redemptionAmount <= store.state.cart.total.amount
+        //     ) {
+        //         this.rewardPoints.error = { status: false, message: "" };
+        //         this.reward.isValidRedemption = true; //when this value is true then
+        //         this.updateRedemptionAmountInCart("validUpdate"); //Here ends all the validation
+        //         console.log(store.state.cart);
+        //     } else {
+        //         this.rewardPoints.error = {
+        //             status: true,
+        //             message:
+        //                 "The order amount is not sufficient to redeem your reward.",
+        //         };
+        //         this.updateRedemptionAmountInCart();
+        //     }
+        // },
+        // updateRedemptionAmountInCart(type = null) {
+        //     if (type == "validUpdate") {
+        //         store.state.cart.rewardpoints = {
+        //             redemptionAmount: this.reward.redemptionAmount,
+        //             redeemedPoint: this.rewardPoints.redeemedPoint,
+        //             isValidRedemption: this.reward.isValidRedemption,
+        //         };
+        //         return false;
+        //     } else {
+        //         store.state.cart.rewardpoints = {
+        //             redemptionAmount: null,
+        //             redeemedPoint: null,
+        //         };
+        //         return true;
+        //     }
+        // },
     },
 };

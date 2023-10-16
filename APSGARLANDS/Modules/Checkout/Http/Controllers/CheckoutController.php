@@ -17,6 +17,7 @@ use Modules\Order\Http\Requests\StoreOrderRequest;
 use Modules\Cart\Http\Middleware\CheckCouponUsageLimit;
 use Modules\Cart\Http\Middleware\RedirectIfCartIsEmpty;
 use Illuminate\Support\Facades\DB;
+use Modules\RewardpointsGift\Entities\CustomerRewardPoint;
 class CheckoutController extends Controller
 {
     /**
@@ -48,6 +49,7 @@ class CheckoutController extends Controller
             'defaultAddress' => auth()->user()->defaultAddress ?? new DefaultAddress,
             'addresses' => $this->getAddresses(),
             'termsPageURL' => Page::urlForPage(setting('storefront_terms_page')),
+            'customerrewardpoints' => CustomerRewardPoint::getUserRewardPoints(),
         ]);
         
     }

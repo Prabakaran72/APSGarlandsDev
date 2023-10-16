@@ -73,6 +73,10 @@ class CustomerRewardPoint extends Model
             ->whereHas('user')
             ->groupBy('customer_id')
             ->newQuery();
+
+            // $query1 = str_replace(array('?'), array('\'%s\''), $query->toSql());
+            // $query1 = vsprintf($query1, $query->getBindings());
+            // dd($query1);
         return new CustomerRewardPointsTable($query);
     }
     
@@ -84,10 +88,25 @@ class CustomerRewardPoint extends Model
             ->selectRaw('SUM(reward_points_claimed) as  reward_points_claimed_total')
             ->selectRaw('SUM(CASE WHEN expiry_date IS NOT NULL AND expiry_date < NOW() THEN reward_points_earned ELSE 0 END) as expired_points')
             ->get();
-            dd($userRewardsLog);
     }
     public function getRewardSetting(){
         return Rewardpoints::where('id',1)->get();
     }
 
+    public static function getUserRewardPoints(){
+    $instance = [ 
+        'activeRewardPoints' => 250,
+        "use_points_per_order" => 500,
+        "redeemedPoint"=> 0, //User's 'inpu't
+        "pointsEquolantCase" => 1, //Ex 100 Points equal to 20MYR.SO 1pt  20/100 ie (.2)
+        "min_order_cart_value_redemption"=> '150',
+        "currency_value"=> 10, //if customer can earn rewardpoints, then currency 'rat'e
+        "point_value"=> 1, //if customer can earn rewardpoints, then point values per order 'amoun't
+        "redemption_point_value"=> 10,
+        "redemption_currency_value"=> 1,
+    ];
+    // dd($instance);
+    return $instance;
+
+    }
 }
