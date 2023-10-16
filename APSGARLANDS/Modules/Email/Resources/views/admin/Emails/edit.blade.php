@@ -74,7 +74,7 @@
                         <strong>Date *</strong>        
                     </div>
                     <div class="col-md-10">
-                        <input type='date' name='date' id='data' class='form-control' value="{{ $email->date !== null ? $email->date : '' }}"></input>        
+                        <input type='datetime-local' name='date' id='data' class='form-control' value="{{ $email->date !== null ? $email->date : '' }}"></input>        
                     </div>
                 </div>
                 

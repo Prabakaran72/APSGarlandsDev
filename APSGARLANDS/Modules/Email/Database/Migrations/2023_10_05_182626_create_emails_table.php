@@ -18,8 +18,8 @@ return new class extends Migration
             $table->json('subscribers');
             $table->string('subject');
             $table->string('template');            
-            $table->date('date');
-            $table->boolean('is_active');
+            $table->dateTime('date')->nullable();
+            $table->boolean('is_active')->nullable();
             $table->timestamps();
         });
     }
