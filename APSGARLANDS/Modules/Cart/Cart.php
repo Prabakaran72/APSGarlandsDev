@@ -7,10 +7,12 @@ use Modules\Support\Money;
 use Illuminate\Support\Collection;
 use Modules\Coupon\Entities\Coupon;
 use Modules\Product\Entities\Product;
+use Modules\RewardpointsGift\Entities\CustomerRewardPoint;
 use Modules\Shipping\Facades\ShippingMethod;
 use Darryldecode\Cart\Cart as DarryldecodeCart;
 use Modules\Product\Services\ChosenProductOptions;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+
 
 class Cart extends DarryldecodeCart implements JsonSerializable
 {
@@ -57,9 +59,9 @@ class Cart extends DarryldecodeCart implements JsonSerializable
             'price' => $product->selling_price->amount(),
             'quantity' => $qty,
             'attributes' => [
-                'product' => $product,
-                'options' => $chosenOptions->getEntities(),
-                'created_at' => time(),
+            'product' => $product,
+            'options' => $chosenOptions->getEntities(),
+            'created_at' => time(),
             ],
         ]);
     }
@@ -258,6 +260,7 @@ class Cart extends DarryldecodeCart implements JsonSerializable
 
         return new CartCoupon($this, $coupon, $couponCondition);
     }
+   
 
     public function discount()
     {
@@ -400,8 +403,9 @@ class Cart extends DarryldecodeCart implements JsonSerializable
     {
         return $this->subTotal()
             ->add($this->shippingMethod()->cost())
-            ->subtract($this->coupon()->value())
-            ->add($this->tax());
+            ->subtract($this->rewardpoints())
+            ->subtract($this->coupon()->value());
+            // ->add($this->tax());
     }
 
     public function toArray()
@@ -414,6 +418,7 @@ class Cart extends DarryldecodeCart implements JsonSerializable
             'shippingMethodName' => $this->shippingMethod()->name(),
             'shippingCost' => $this->shippingCost(),
             'coupon' => $this->coupon(),
+            'rewardpoints'=>$this->rewardpoints(),
             'taxes' => $this->taxes(),
             'total' => $this->total(),
         ];
@@ -427,5 +432,21 @@ class Cart extends DarryldecodeCart implements JsonSerializable
     public function __toString()
     {
         return json_encode($this->jsonSerialize());
+    }
+
+    public function rewardpoints($redeemedpoints=0)
+    {
+        $currnecy = new Money($redeemedpoints, "MYR");
+        return $currnecy;
+        
+        // if (!$this->hasCoupon()) {
+        //     return new NullCartCoupon();
+        // }
+
+        // $couponCondition = $this->getConditionsByType('coupon')->first();
+        // $coupon = Coupon::with('products', 'categories')->find($couponCondition->getAttribute('coupon_id'));
+
+        // return new CartCoupon($this, $coupon, $couponCondition);
+        // return CustomerRewardPoint::getUserRewardPoints();
     }
 }

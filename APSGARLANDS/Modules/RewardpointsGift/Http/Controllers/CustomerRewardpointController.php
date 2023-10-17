@@ -10,8 +10,12 @@ use Modules\Product\Http\Controllers\ProductSearch;
 use Modules\Rewardpoints\Entities\Rewardpoints;
 use Carbon\Carbon;
 use Modules\Admin\Traits\HasCrudActions;
+use Modules\Core\Http\Requests\Request;
+use Illuminate\Routing\Controller;
+use Modules\Cart\Facades\Cart;
 
-class CustomerRewardpointController
+
+class CustomerRewardpointController extends Controller
 {
     use HasCrudActions;
 
@@ -24,12 +28,11 @@ class CustomerRewardpointController
 
     public function index()
     {
-        dd("index Function");
-    }
-
-    public function create( $request = null , $reward_type = null)
-    {
         
+    }
+//create an entry for manual offered rewardpoints
+    public function create( $request = null , $reward_type = null)
+    {  
         $customerRewardPoints = new $this->model();
         $getRewardExpiaryTimeSpan = $this->getRewardExpiaryTimeSpan();    
         if( $reward_type =='manualoffer'){
@@ -42,6 +45,13 @@ class CustomerRewardpointController
             $customerRewardPoints->save();
         }
     }
+
+
+    public function store(Request $request){
+        dd(Cart::rewardpoints($request));
+    }
+
+
     // public function update($request = null, $reward_type = null)
     // {
     //     $customerRewardPoints = $this->model::where('customer_id',$request->user_id)->where("reward_type", $reward_type)->latest()->get();

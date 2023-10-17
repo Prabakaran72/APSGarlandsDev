@@ -36,16 +36,6 @@
                     <span class="price-amount" v-html="'(-) ' + cart.coupon.value.inCurrentCurrency.formatted">
                     </span>
                 </li>
-                <li> <span v-html="cart?.rewardpoints?.isValidRedemption"></li>
-                {{-- <li v-if="cart?.rewardpoints?.isValidRedemption" >{{ "cart.rewardpoints.isValidRedemption :"}}<span v-html="cart?.rewardpoints?.isValidRedemption"></span></li>  --}}
-                <li v-if="store.state.cart?.rewardpoints?.isValidRedemption" >
-                    <h6>{{ trans('storefront::cart.reward_points') }}</h6>
-                </li>
-                <li v-if="cart?.rewardpoints?.isValidRedemption">
-                    <label>{{ trans('storefront::cart.redeemed_amount') }}
-                        <span v-html="cart?.rewardpoints?.isValidRedemption">
-                    </label>
-                </li>
             </ul>
 
             <div class="shipping-methods" v-if="hasShippingMethod" v-cloak>
