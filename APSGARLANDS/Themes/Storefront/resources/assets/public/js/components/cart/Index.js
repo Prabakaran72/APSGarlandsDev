@@ -45,6 +45,7 @@ export default {
         },
 
         updateQuantity(cartItem, qty) {
+            alert("praveen");
             if (qty < 1 || this.exceedsMaxStock(cartItem, qty)) {
                 return;
             }
@@ -60,7 +61,11 @@ export default {
             $.ajax({
                 method: 'PUT',
                 url: route('cart.items.update', { cartItemId: cartItem.id }),
-                data: { qty: qty || 1 },
+                data: { qty: qty || 1,
+                    product_id: cartItem.product.id,
+                    product_name : cartItem.product.slug,
+                    unitPrice : cartItem.unitPrice.amount,
+                },
             }).then((cart) => {
                 store.updateCart(cart);
             }).catch((xhr) => {
@@ -77,7 +82,7 @@ export default {
         remove() { 
             var cartItem_copy=$('#cartItem_copy').val();
         let deleteReason = $('#deleteReason').val();
-var cartItem=JSON.parse(cartItem_copy);
+        var cartItem=JSON.parse(cartItem_copy);
 
             this.loadingOrderSummary = true;
 
@@ -91,14 +96,10 @@ var cartItem=JSON.parse(cartItem_copy);
                     type:'POST',
                     datatype:"application/JSON",
                     method: 'DELETE',
-                    url: route('cart.items.destroy', { cartItemId: cartItem.id+'$$##$$'+cartItem.product.slug+'$$##$$'+cartItem.product.id+'$$##$$'+cartItem.qty+'$$##$$'+cartItem.unitPrice.amount+'$$##$$'+deleteReason,
+                    url: route('cart.items.destroy', { cartItemId: cartItem.id+'##'+cartItem.product.slug+'##'+cartItem.product.id+'##'+cartItem.qty+'##'+cartItem.unitPrice.amount+'##'+deleteReason,
              
                     }),
-                    data:{product_id:JSON.stringify(cartItem.product.id),
-                        product_slug:JSON.stringify(cartItem.product.slug),
-                        product_amount:JSON.stringify(cartItem.unitPrice.inCurrentCurrency.formatted),
-                        product_qty:JSON.stringify(cartItem.qty),
-                        cartdata_full:JSON.stringify(cartItem)}
+                   
             }).then((cart) => {
                 store.updateCart(cart);
             }).catch((xhr) => {
@@ -107,7 +108,7 @@ var cartItem=JSON.parse(cartItem_copy);
                 this.loadingOrderSummary = false;
             });
             $('#deleteItemModal').modal('hide');
-$('#deleteReason').val('');
+            $('#deleteReason').val('');
         
     },
        
@@ -140,12 +141,14 @@ const value_arr=idProductValue+"@@@"+idSlugValue+"@@@"+idQtyValue+"@@@"+idUnitVa
                 data:{cartItemListNewArray:newArrayvalue,reason_destroy:deleteReasonOverall},
 
             }).then((cart) => {
+                store.clearCart();
                 store.updateCart(cart);
+                location.reload();
             }).catch((xhr) => {
                 this.$notify(xhr.responseJSON.message);
             });
-            store.clearCart();
-            location.reload();
+            //store.clearCart();
+           
 
 
     },

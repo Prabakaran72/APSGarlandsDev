@@ -65,12 +65,13 @@ export default {
                    console.log(arr);
                    
                    
-                   console.log(arr[1]);
+                   //console.log(arr[1]);
                    item_qty = arr[1];
-                   console.log("item_qty12345"+item_qty);
+                   //console.log("item_qty12345"+item_qty);
                    
                
                console.log("item_qty"+item_qty);
+               //console.log("product.price : "+product.price);
                //alert(item_qty);
                
                 if(item_qty!=0){
@@ -92,12 +93,14 @@ export default {
                    this.addingToCart = false;
                }
                else{
-
+          // console.log("product Price: "+this.product.formatted_price);
             $.ajax({
                 method: "POST",
                 url: route("cart.items.store", {
                     product_id: this.product.id,
                     qty: 1,
+                    product_name: this.product.name,
+                    formatted_price: this.product.formatted_price,
                 }),
             })
                 .then((cart) => {

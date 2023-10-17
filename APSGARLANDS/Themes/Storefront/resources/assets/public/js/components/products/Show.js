@@ -252,11 +252,13 @@ export default {
                    this.addingToCart = false;
                }
                else{
-
+                //console.log(this.cartItemForm);
             $.ajax({
                 method: 'POST',
                 url: route('cart.items.store', this.cartItemForm),
             }).then((cart) => {
+                //console.log("cart")
+                //console.log(cart)
                 store.updateCart(cart);
 
                 $('.header-cart').trigger('click');
