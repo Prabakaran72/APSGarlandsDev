@@ -12,6 +12,8 @@ use Modules\Shipping\Facades\ShippingMethod;
 use Darryldecode\Cart\Cart as DarryldecodeCart;
 use Modules\Product\Services\ChosenProductOptions;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Modules\Cart\Entities\UserCart;
+use Modules\Cart\Entities\CartProduct;
 
 class Cart extends DarryldecodeCart implements JsonSerializable
 {
@@ -22,7 +24,9 @@ class Cart extends DarryldecodeCart implements JsonSerializable
      */
     public function instance()
     {
+       //dd($this);
         return $this;
+        //$this->cart_products();
     }
 
     /**
@@ -48,9 +52,15 @@ class Cart extends DarryldecodeCart implements JsonSerializable
      */
     public function store($productId, $qty, $options = [])
     {
+        //dd($options);
         $options = array_filter($options);
+        //dd($options);
         $product = Product::with('files', 'categories')->findOrFail($productId);
+        //dd($product);
+        //exit;
         $chosenOptions = new ChosenProductOptions($product, $options);
+
+        //dd($chosenOptions);
 
         $this->add([
             'id' => md5("product_id.{$product->id}:options." . serialize($options)),
@@ -417,6 +427,7 @@ class Cart extends DarryldecodeCart implements JsonSerializable
             'coupon' => $this->coupon(),
             'taxes' => $this->taxes(),
             'total' => $this->total(),
+            'cart_products' => $this->cart_products(),
         ];
     }
 
@@ -429,4 +440,63 @@ class Cart extends DarryldecodeCart implements JsonSerializable
     {
         return json_encode($this->jsonSerialize());
     }
+
+    public function cart_products(){
+        parent::clear();
+
+        $this->clearCartConditions();
+
+        if (!empty((auth()->user()))) {
+            $customer_id = auth()->user()->id;
+            $first_name = auth()->user()->first_name;
+            $last_name = auth()->user()->last_name;
+       
+       
+        $UserCartList = UserCart::where([
+            'customer_id' => $customer_id,
+                  
+     ])->first();
+        $cart_id       = $UserCartList->id;
+
+        $CartProductSelect = CartProduct::where([            
+            'cart_id' => $cart_id,  
+            
+            'deleted_at' => NULL,               
+        ])->get();
+
+        // dd($CartProductSelect);
+        // fetch data from cart_products
+       foreach($CartProductSelect as $CartProduct)
+       {
+        
+
+        $productId = $CartProduct->product_id;
+        $qty = $CartProduct->qty;
+        
+        $options = [];
+
+        $options = array_filter($options);
+        //dd($options);
+        $product = Product::with('files', 'categories')->findOrFail($productId);
+        //dd($product);
+        //exit;
+        $chosenOptions = new ChosenProductOptions($product, $options);
+
+        // dd($chosenOptions);
+
+        $this->add([
+            'id' => md5("product_id.{$product->id}:options." . serialize($options)),
+            'name' => $product->name,
+            'price' => $product->selling_price->amount(),
+            'quantity' => $qty,
+            'attributes' => [
+                'product' => $product,
+                'options' => $chosenOptions->getEntities(),
+                'created_at' => time(),
+            ],
+        ]);
+       // return Cart::instance();
+       }
+    }
+   }
 }
