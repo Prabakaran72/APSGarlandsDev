@@ -45,7 +45,7 @@ export default {
         },
 
         updateQuantity(cartItem, qty) {
-            alert("praveen");
+           
             if (qty < 1 || this.exceedsMaxStock(cartItem, qty)) {
                 return;
             }

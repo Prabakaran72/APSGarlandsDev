@@ -171,8 +171,8 @@ class CartItemController extends Controller
                 'deleted_at' => NULL,          
          ])->first();
     
-            //$last_qty       = $CartProductList->qty;
-            $last_qty       = 1;
+            $last_qty       = $CartProductList->qty;
+            //$last_qty       = 1;
             $re_qty         = $qty+$last_qty;
             CartProduct::
             where([
