@@ -16,10 +16,11 @@ use Illuminate\Support\Facades\Route;
 //     'middleware' => 'can:public.customerrewardspoints.create',
 // ]);
 
-Route::post('customerrewardspoints', [
-    'as' => 'public.customerrewardspoints.store',
-    'uses' => 'CustomerRewardpointController@store',
-    'middleware' => 'can:public.customerrewardspoints.create',
-]);
+// Route::post('customerrewardspoints', [
+//     'as' => 'public.customerrewardspoints.store',
+//     'uses' => 'CustomerRewardpointController@store'
+// ]);
+
+Route::post('customerrewardspoints', 'CustomerRewardpointController@store')->name('customerrewardspoints.store');
 
 

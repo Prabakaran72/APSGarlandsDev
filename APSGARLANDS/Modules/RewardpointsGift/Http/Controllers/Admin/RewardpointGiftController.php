@@ -93,7 +93,7 @@ class RewardpointGiftController extends Controller
         $entity->update(
             $this->getRequest('update')->except(['_token', '_method'])
         );
-        $entity = CustomerRewardpointController::find($entity->customer_reward_id);
+        $entity = CustomerRewardpoint::find($entity->customer_reward_id);
         $entity->update(
             $this->getRequest('update')->except(['_token', '_method'])
         );

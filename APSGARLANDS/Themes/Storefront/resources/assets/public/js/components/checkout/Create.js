@@ -3,10 +3,10 @@ import store from "../../store";
 import Errors from "../../Errors";
 import CartHelpersMixin from "../../mixins/CartHelpersMixin";
 import ProductHelpersMixin from "../../mixins/ProductHelpersMixin";
-// import RewardPointClaimingBar from "../layout/RewardPointClaimingBar";
+import RewardPointClaimingBar from "../layout/RewardPointClaimingBar";
 
 export default {
-    mixins: [CartHelpersMixin, ProductHelpersMixin],
+    mixins: [CartHelpersMixin, ProductHelpersMixin,RewardPointClaimingBar],
 
     props: [
         "customerEmail",
@@ -57,25 +57,6 @@ export default {
             stripeError: null,
             authorizeNetToken: null,
             termsModalContent: "", //For Terms and Conditions Modal popup
-
-            // reward: {
-            //     show: false,
-            //     redemptionAmount: 0,
-            //     isValidRedemption: false,
-            // },
-
-            // rewardPoints: {
-            //     activeRewardPoints: this.customerrewardpoints.activeRewardPoints,
-            //     use_points_per_order: this.customerrewardpoints.use_points_per_order,
-            //     redeemedPoint: this.customerrewardpoints.redeemedPoint, //User's input
-            //     pointsEquolantCase: this.customerrewardpoints.pointsEquolantCase, //Ex 100 Points equal to 20MYR.SO 1pt :this.customerrewardpoints./100 ie (.2)
-            //     min_order_cart_value_redemption: this.customerrewardpoints.min_order_cart_value_redemption,
-            //     currency_value: this.customerrewardpoints.currency_value, //if customer can earn rewardpoints, then currency rate
-            //     point_value: this.customerrewardpoints.point_value, //if customer can earn rewardpoints, then point values per order amount
-            //     redemption_point_value: this.customerrewardpoints.redemption_point_value,
-            //     redemption_currency_value: this.customerrewardpoints.redemption_currency_value,
-            //     error: { status: false, message: "" },
-            // },
         };
     },
 

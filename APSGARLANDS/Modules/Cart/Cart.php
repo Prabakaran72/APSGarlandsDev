@@ -436,6 +436,7 @@ class Cart extends DarryldecodeCart implements JsonSerializable
 
     public function rewardpoints($redeemedpoints=0)
     {
+        return "Test".$redeemedpoints;
         $currnecy = new Money($redeemedpoints, "MYR");
         return $currnecy;
         

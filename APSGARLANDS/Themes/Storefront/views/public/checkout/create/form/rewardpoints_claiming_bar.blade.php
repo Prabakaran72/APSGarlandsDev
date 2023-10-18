@@ -1,9 +1,6 @@
-@php
-echo setting('rewardpoints_enabled');
-@endphp
 @if (setting('rewardpoints_enabled') )
     <rewardpoints-claiming :customerrewardpoints ={{ json_encode($customerrewardpoints)}} inline-template>
-        <div class="rewardpoint-bar-wrap" :class="{ show: show }" class="show">
+        <div class="rewardpoint-bar-wrap" :class="{ show: show }" >
             <div class="container d-flex justify-content-center">
                 <div class="col-xl-10 col-lg-12">
                     <div class="row justify-content-center">

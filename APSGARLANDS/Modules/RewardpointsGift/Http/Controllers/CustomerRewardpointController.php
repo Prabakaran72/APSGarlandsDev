@@ -10,7 +10,7 @@ use Modules\Product\Http\Controllers\ProductSearch;
 use Modules\Rewardpoints\Entities\Rewardpoints;
 use Carbon\Carbon;
 use Modules\Admin\Traits\HasCrudActions;
-use Modules\Core\Http\Requests\Request;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Modules\Cart\Facades\Cart;
 
@@ -39,7 +39,7 @@ class CustomerRewardpointController extends Controller
             $customerRewardPoints->customer_id = $request->user_id;
             $customerRewardPoints->reward_type =$reward_type;
             $customerRewardPoints->reward_points_earned = $request->reward_point_value;
-            $customerRewardPoints->expairy_date = $getRewardExpiaryTimeSpan;
+            $customerRewardPoints->expiry_date = $getRewardExpiaryTimeSpan;
             $customerRewardPoints->updated_at = Carbon::now();
             $customerRewardPoints->created_at = Carbon::now();
             $customerRewardPoints->save();
@@ -47,8 +47,10 @@ class CustomerRewardpointController extends Controller
     }
 
 
-    public function store(Request $request){
-        dd(Cart::rewardpoints($request));
+    public function store($request){
+        dd($request);
+        $cart = Cart::instance();
+        dd($cart->rewardpoints($request));
     }
 
 
