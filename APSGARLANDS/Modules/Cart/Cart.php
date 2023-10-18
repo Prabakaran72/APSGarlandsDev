@@ -479,9 +479,9 @@ class Cart extends DarryldecodeCart implements JsonSerializable
 
         if($option_id!=0){
             if($option_id==6)
-            $options = [$option_id => '8'];
+            $options = [$option_id => '8'];// '8' is static value, have to assing dynamically
             else if($option_id==8)
-            $options = [$option_id => '10'];
+            $options = [$option_id => '10'];// '10' is staqtic value, have to assing dynamically
         }
         else{
         $options = [];
