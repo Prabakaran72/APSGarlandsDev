@@ -96,7 +96,7 @@ export default {
                     type:'POST',
                     datatype:"application/JSON",
                     method: 'DELETE',
-                    url: route('cart.items.destroy', { cartItemId: cartItem.id+'##'+cartItem.product.slug+'##'+cartItem.product.id+'##'+cartItem.qty+'##'+cartItem.unitPrice.amount+'##'+deleteReason,
+                    url: route('cart.items.destroy', { cartItemId: cartItem.id+'##'+cartItem.product.slug+'##'+cartItem.product.id+'##'+cartItem.qty+'##'+cartItem.unitPrice.amount+'##'+deleteReason+'##'+cartItem.option,
              
                     }),
                    

@@ -472,8 +472,23 @@ class Cart extends DarryldecodeCart implements JsonSerializable
 
         $productId = $CartProduct->product_id;
         $qty = $CartProduct->qty;
+        $option_id = $CartProduct->option_id;
+        $CartProduct_id = $CartProduct->id;
+         
         
+
+        if($option_id!=0){
+            if($option_id==6)
+            $options = [$option_id => '8'];
+            else if($option_id==8)
+            $options = [$option_id => '10'];
+        }
+        else{
         $options = [];
+        }
+       
+       // dd($options);
+
 
         $options = array_filter($options);
         //dd($options);

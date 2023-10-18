@@ -120,7 +120,17 @@ class CartItemController extends Controller
            
             if (count($options) != '0')
             {
+
+                $CartProductOptionInsertId = CartProductOption::insertGetId([               
+                    'cart_product_id' => $cart_products_id,               
+                    'option_id' => $option_id, 
+                   
+                ]); 
                 
+                $CartProductOption_id = $CartProductOptionInsertId;
+                //dd($CartProductOption_id);
+
+
             if (count($options) == count($options, COUNT_RECURSIVE)) 
             {
                 
@@ -128,8 +138,8 @@ class CartItemController extends Controller
                  $option = array_key_first($options);
                  $option_value = $options[$option];
 
-                 $CartProductInsert = CartProductOptionsValue::insert([               
-                    'cart_product_id' => $cart_products_id,               
+                 $CartProductInsert = CartProductOptionValue::insert([               
+                    'cart_product_option_id' => $CartProductOption_id,               
                     'option_value_id' => $option_value, 
                    
                 ]);
@@ -145,8 +155,8 @@ class CartItemController extends Controller
 		   
 		    foreach($options[$keys[$i]] as $key => $value) {
 		         //dd($value) ;
-                 $CartProductInsert = CartProductOptionsValue::insert([               
-                    'cart_product_id' => $cart_products_id,               
+                 $CartProductInsert = CartProductOptionValue::insert([               
+                    'cart_product_option_id' => $CartProductOption_id,               
                     'option_value_id' => $value, 
                    
                 ]);
@@ -288,6 +298,8 @@ class CartItemController extends Controller
         $qty = $cartItemRef[3];
         $unitprice = $cartItemRef[4];
         $reason_destroy = $cartItemRef[5];
+       // $option = $cartItemRef[6];
+        //dd($option);
          
        //Need Update Query
 
@@ -318,20 +330,21 @@ class CartItemController extends Controller
         ])->first();
             $cart_id       = $UserCartList->id;
 
-        $options = $request->options ?? [];
+        //$options = $option ?? [];
+
+        //dd($options);
            
-        $option = array_key_first($options);
+        //$option = array_key_first($options);
     
-        if($option == null)
-            $option_id = 0;
-        else
-            $option_id = $option;
+       // if($option == null)
+       //     $option_id = 0;
+       // else
+       //     $option_id = $option;
 
         CartProduct::
         where([
             'cart_id'    => $cart_id,
-            'product_id' => $product_id_val, 
-            'option_id'  => $option_id,
+            'product_id' => $product_id_val,             
             'deleted_at' => NULL,           
         ])
         ->update(['reason' => $reason_destroy]);
@@ -339,7 +352,7 @@ class CartItemController extends Controller
         
         CartProduct::where( ['cart_id' => $cart_id,
         'product_id' => $product_id_val,
-        'option_id'  => $option_id,
+       
         'deleted_at' => NULL, ] )->delete();
 
         Cart::remove($cart_item_id_val);
