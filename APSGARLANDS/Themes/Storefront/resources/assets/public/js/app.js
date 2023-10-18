@@ -37,6 +37,8 @@ import CompareIndex from "./components/compare/Index";
 import MyWishlist from "./components/account/wishlist/Index";
 import MyAddresses from "./components/account/addresses/Index";
 import Counter from "./components/Counter.vue";
+import LikeComponent from "./components/blogs/LikeComponent.vue";
+
 Vue.prototype.route = route;
 Vue.prototype.$notify = notify;
 Vue.prototype.$trans = trans;
@@ -77,6 +79,7 @@ Vue.component("compare-index", CompareIndex);
 Vue.component("my-wishlist", MyWishlist);
 Vue.component("my-addresses", MyAddresses);
 Vue.component("counter", Counter);
+Vue.component('like-component', LikeComponent);
 new Vue({
     el: "#app",
 

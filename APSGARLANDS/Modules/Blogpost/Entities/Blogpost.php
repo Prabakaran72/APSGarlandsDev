@@ -7,6 +7,9 @@ use Modules\Support\Eloquent\Model;
 use Modules\Meta\Eloquent\HasMetaData;
 // use Modules\Support\Eloquent\Translatable;
 use Modules\Blogcategory\Entities\Blogcategory;
+use Modules\Blogpost\Entities\Blogpostlikesdislikes;
+use Modules\Blogpost\Entities\Blogpostcomments;
+
 use Modules\Blogtag\Entities\Blogtag;
 use Modules\User\Entities\User;
 
@@ -26,7 +29,7 @@ class Blogpost extends Model
      *
      * @var array
      */
-    protected $fillable = ['post_title','post_body','post_status','tag_id','category_id','author_id','approved_date','approved_by'];
+    protected $fillable = ['post_title','post_body','post_status','tag_id','category_id','author_id','approved_date','approved_by','like','dislike'];
 
     /**
      * The attributes that should be cast to native types.
@@ -97,8 +100,24 @@ class Blogpost extends Model
     {
         return $this->belongsTo(Blogtag::class,'tag_id');
     }
+    public function tags()
+    {
+        return $this->belongsToMany(Blogtag::class); // Assuming 'Tag' is your related model name
+    }
     public function users()
     {
         return $this->belongsTo(User::class,'author_id');
     }
+    public function likes(){
+
+        return $this->hasMany(Blogpostlikesdislikes::class,'post_id')->sum('likes');
+    }
+    // Dislikes
+    public function dislikes(){
+        return $this->hasMany(Blogpostlikesdislikes::class,'post_id')->sum('dislikes');
+    }
+    public function blogcomments()
+{
+    return $this->hasMany(Blogpostcomments::class,'post_id');
+}
 }

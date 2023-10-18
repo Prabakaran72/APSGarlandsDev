@@ -50,22 +50,28 @@
                                 {{ trans('storefront::account.pages.my_reviews') }}
                             </a>
                         </li>
-                        @if (setting('my_testimonial_enabled'))
+                        {{-- @if (setting('my_testimonial_enabled'))
                         <li class="{{ request()->routeIs('account.testimonials.index') ? 'active' : '' }}">
                             <a href="{{ route('account.testimonials.index') }}">
                                 <i class="las la-quote-left"></i>
                                 {{ trans('storefront::account.pages.my_testimonials') }}
                             </a>
                         </li>
-                        @endif
+                        @endif --}}
                         <li class="{{ request()->routeIs('account.addresses.index') ? 'active' : '' }}">
                             <a href="{{ route('account.addresses.index') }}">
                                 <i class="las la-address-book"></i>
                                 {{ trans('storefront::account.pages.my_addresses') }}
                             </a>
                         </li>
+                        <li>
+                                  <li class="{{ request()->routeIs('account.blogform.index') ? 'active' : '' }}">
+                            <a href="{{ route('account.blogform.index') }}"> <i class="las la-rss"></i>
 
-                       
+                                {{ trans('storefront::account.pages.my_blogform') }}
+                            </a>
+                        </li>
+
                     </ul>
                 </div>
 

@@ -16,6 +16,8 @@ return [
         'my_testimonials' => 'My Testimonials',
         'my_addresses' => 'My Addresses',
         'my_profile' => 'My Profile',
+        'my_blogform' => 'My Blogs',
+
         'logout' => 'Logout',
     ],
     'dashboard' => [
@@ -68,9 +70,21 @@ return [
     'reviews' => [
         'rating' => 'RATING',
         'no_reviews' => 'You haven\'t reviewed any product yet.',
+
     ],
     'testimonials' => [
         'no_testimonials' => 'You don\'t have a Testimonial',
+    ],
+    'blogform' => [
+        'no_blogform' => 'You haven\'t created any blogs yet',
+        'post_description'=>'Description',
+        'post_title'=>'Post Title',
+        'post_status'=>'Status',
+        'date'=>'Date',
+        'category_name'=>'Category',
+        'select_category'=>'Select Category',
+        'edit'=>'Edit/Delete'
+
     ],
     'addresses' => [
         'confirm' => 'Are you sure want to delete this address?',
@@ -103,4 +117,5 @@ return [
         'save_changes' => 'SAVE CHANGES',
         'image_url' => 'Upload Image',
     ],
+
 ];
