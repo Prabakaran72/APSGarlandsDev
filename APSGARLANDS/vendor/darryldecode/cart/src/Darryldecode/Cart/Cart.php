@@ -1,4 +1,6 @@
-<?php namespace Darryldecode\Cart;
+<?php
+
+namespace Darryldecode\Cart;
 
 use Darryldecode\Cart\Exceptions\InvalidConditionException;
 use Darryldecode\Cart\Exceptions\InvalidItemException;
@@ -64,13 +66,13 @@ class Cart
 
     /**
      * This holds the currently added item id in cart for association
-     * 
+     *
      * @var
      */
     protected $currentItemId;
 
     /**
-     * our object constructor
+     *  our object constructor
      *
      * @param $session
      * @param $events
@@ -361,6 +363,7 @@ class Cart
      */
     public function condition($condition)
     {
+
         if (is_array($condition)) {
             foreach ($condition as $c) {
                 $this->condition($c);
@@ -574,13 +577,17 @@ class Cart
      * @param bool $formatted
      * @return float
      */
-    public function getSubTotal($formatted = true)
+    public function getSubTotal($formatted = true, $recurringOrderCount = 0)
     {
         $cart = $this->getContent();
 
         $sum = $cart->sum(function (ItemCollection $item) {
             return $item->getPriceSumWithConditions(false);
         });
+        if($recurringOrderCount>0)
+        {
+            $sum = $sum*$recurringOrderCount;
+        }
 
         // get the conditions that are meant to be applied
         // on the subtotal and apply it here before returning the subtotal
@@ -672,8 +679,8 @@ class Cart
      */
     public function getContent()
     {
-        return (new CartCollection($this->session->get($this->sessionKeyCartItems)))->reject(function($item) {
-            return ! ($item instanceof ItemCollection);
+        return (new CartCollection($this->session->get($this->sessionKeyCartItems)))->reject(function ($item) {
+            return !($item instanceof ItemCollection);
         });
     }
 

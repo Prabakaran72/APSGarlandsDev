@@ -3,6 +3,13 @@ import store from "../../store";
 import Errors from "../../Errors";
 import CartHelpersMixin from "../../mixins/CartHelpersMixin";
 import ProductHelpersMixin from "../../mixins/ProductHelpersMixin";
+// import Datepicker from 'vuejs-datepicker';
+import Datepicker from 'vue2-datepicker';
+import 'vue2-datepicker/index.css';
+// import { format } from 'date-fns';
+// import dateFns from 'date-fns'; // Import date-fns library for date formatting
+import { addDays, isBefore } from 'date-fns';
+
 
 export default {
     mixins: [CartHelpersMixin, ProductHelpersMixin],
@@ -15,17 +22,21 @@ export default {
         "addresses",
         "countries",
     ],
+    components: {
+        Datepicker
+    },
 
     data() {
+
         return {
             form: {
                 customer_email: this.customerEmail,
                 customer_phone: this.customerPhone,
                 billing: {
-                    zip: '' ,
+                    zip: '',
                 },
                 shipping: {
-                    zip: '' 
+                    zip: ''
                 },
                 billingAddressId: null,
                 shippingAddressId: null,
@@ -36,18 +47,19 @@ export default {
             },
             fixedrate: {
                 price: 0,
-                total:0,
+                total: 0,
             },
             totalFlatRateValue: 0,
             serviceAvailable: true,
             states: {
                 billing: {
-                    zip: '' ,
+                    zip: '',
                 },
                 shipping: {
-                    zip: '' ,
+                    zip: '',
                 },
             },
+
             placingOrder: false,
             errors: new Errors(),
             stripe: null,
@@ -55,17 +67,42 @@ export default {
             stripeError: null,
             authorizeNetToken: null,
             termsModalContent: "",   //For Terms and Conditions Modal popup
+
+            //RECURRING ORDER
+            isCheckedRecurringOrder: false,
+            recurring_order_dates: [],
+            recurring_selected_dates: [], // To store recurring selected dates
+            recurring_formart_order_dates: [],
+            maxPreparingDays: 5, // Your max preparing days
+            currentDate: new Date(),
+            recurring_time: "", // Initialize with the current time
+            UpdateRecurringSubTotAmt: "",
+            recurring_selected_date_count: 0,
+            inialSubTotalAmount: 0,
+            recurringTotalAmount: 0,
+            recurringTotalAmountFormatted: "",
         };
     },
 
+    mounted() {
+        // Set the initial value of recurring_time to the current time
+        this.setCurrentTime();
+
+    },
+
     computed: {
+
+        RecurringAvailableStartDate() {
+            return addDays(this.currentDate, this.maxPreparingDays);
+        },
+
         shouldDisableCheckbox() {
             // Check if the conditions for disabling the checkbox are met
             return (
-              this.form.shipping_method === 'flat_rate' && !this.serviceAvailable
+                this.form.shipping_method === 'flat_rate' && !this.serviceAvailable
             );
-          },
-        
+        },
+
         hasAddress() {
             return Object.keys(this.addresses).length !== 0;
         },
@@ -91,7 +128,7 @@ export default {
         },
 
         shouldShowPaymentInstructions() {
-            return ["bank_transfer", "check_payment","razerpay"].includes(
+            return ["bank_transfer", "check_payment", "razerpay"].includes(
                 this.form.payment_method
             );
         },
@@ -105,12 +142,27 @@ export default {
     },
 
     watch: {
+
+        isCheckedRecurringOrder(newVal) {
+            if (!newVal) {
+                // Uncheck the isCheckedRecurringOrder checkbox
+                this.isCheckedRecurringOrder = false;
+                this.recurring_order_dates = [];
+                this.recurring_selected_dates = [];
+                // this.recurringTotalAmountCalc();
+            }else{
+                // this.recurringTotalAmountCalc();
+            }
+            // this.recurringTotalAmountCalc();
+        },
+
         shouldDisableCheckbox(newVal) {
             if (newVal && this.form.terms_and_conditions) {
-              // If the checkbox was checked and now becomes disabled, uncheck it
-              this.form.terms_and_conditions = false;
+                // If the checkbox was checked and now becomes disabled, uncheck it
+                this.form.terms_and_conditions = false;
             }
-          },
+        },
+
         "form.billingAddressId": function () {
             this.mergeSavedBillingAddress();
         },
@@ -132,29 +184,29 @@ export default {
         },
 
         "form.billing.zip": function (newZip) {
-            if(this.form.newBillingAddress == true) {
+            if (this.form.newBillingAddress == true) {
                 this.zipExists(newZip);
             } else {
                 this.zipExists(newZip);
             }
-           // console.log("billing zip"+ this.form.billing.zip);
+            // console.log("billing zip"+ this.form.billing.zip);
             // if (newZip) {
             //     this.addTaxes();
             // }
         },
 
         "form.shipping.zip": function (newZip) {
-            if(this.form.newShippingAddress == true) {
+            if (this.form.newShippingAddress == true) {
                 this.zipExists(newZip);
             } else {
                 this.zipExists(newZip);
             }
-           // console.log("shipping zip"+ this.form.shipping.zip);
+            // console.log("shipping zip"+ this.form.shipping.zip);
             // if (newZip) {
             //     this.addTaxes();
             // }
         },
-        "newzip": function(newZip){
+        "newzip": function (newZip) {
             this.zipExists(newZip);
         },
 
@@ -196,9 +248,11 @@ export default {
                 this.stripeError = "";
             }
         },
+
     },
 
     created() {
+
         if (this.defaultAddress.address_id) {
             this.form.billingAddressId = this.defaultAddress.address_id;
             this.form.shippingAddressId = this.defaultAddress.address_id;
@@ -230,179 +284,252 @@ export default {
 
     methods: {
 
+        setCurrentTime() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            this.recurring_time = `${hours}:${minutes}`;
+        },
+
+        recurringDateCalc() {
+
+            this.recurring_order_dates = this.recurring_order_dates || [];
+
+            // Check if this.recurring_order_dates is an array before using .length
+            if (Array.isArray(this.recurring_order_dates) && this.recurring_order_dates.length === 0) {
+                // document.getElementById('productSubTotal').innerHTML = "MYR&nbsp;" + (this.cart.subTotal.amount).toFixed(2);
+                return; // Do nothing if recurring_order_dates is an empty array
+            }
+
+            this.recurring_selected_dates = this.recurring_order_dates.slice();
+
+            const formattedDates = this.recurring_selected_dates.map(date => {
+                const adjustedDate = addDays(date, 1); // Add one day
+                return adjustedDate.toISOString().substring(0, 10); // Format as "YYYY-MM-DD"
+            });
+
+            this.recurring_formart_order_dates = formattedDates.join(", ");
+            this.recurring_selected_date_count = formattedDates.length;
+
+
+
+            //TO DISPLAY THE SELECTED DATES
+            document.getElementById('formattedSelectedDates').innerHTML =
+                (this.recurring_selected_date_count) + " - " + (this.recurring_formart_order_dates);
+            this.recurringTotalAmountCalc();
+        },
+
+        recurringTotalAmountCalc() {
+
+            const recurringDateCount = this.recurring_selected_date_count;
+            let recurringSubTotAmt;
+            let recurringSubTotAmt1="100";
+            //TO CALCULATE THE SUB TOTAL AMOUNT
+            if (recurringDateCount == 1 || recurringDateCount == 0 || !this.isCheckedRecurringOrder) {
+                this.inialSubTotalAmount = (this.cart.subTotal.amount);
+                recurringSubTotAmt = '0';
+            } else {
+                this.UpdateRecurringSubTotAmt = (this.recurring_selected_date_count * this.inialSubTotalAmount);
+                recurringSubTotAmt = (this.UpdateRecurringSubTotAmt).toString();
+            }
+            console.log("create js - recurringTotalAmountCalc() - recurringSubTotAmt",recurringSubTotAmt);
+
+            //TO UPDATE THE SUB TOTAL AMOUNT
+
+            $.ajax({
+                method: "POST",
+                url: route("recurring.subtotal.update", { recurringSubTotAmt: recurringDateCount }),
+                // data: data,
+            })
+                .then((cart) => {
+                    console.log("create js - recurringTotalAmountCalc() - cart",cart);
+                    store.updateCart(cart);
+                })
+                .catch((xhr) => {
+                    // this.$notify(xhr.responseJSON.message);
+                })
+                .always(() => {
+                    // this.loadingOrderSummary = false;
+                });
+        },
+
+        RecurringDisabledDates(date) {
+            // Disable dates that are before the available start date
+            return isBefore(date, this.RecurringAvailableStartDate);
+        },
+
         getFixedRate(price) {
             $.ajax({
                 method: "GET",
                 url: route("admin.fixedrates.getfixedrates", { price: price }),
                 success: (data) => {
                     this.$nextTick(() => {
-                    if (price === 0) {
-                        document.getElementById('pincode_not_servicable').style.display = 'block';
-                        this.serviceAvailable= false;
-                        const cartTotalAmount = parseFloat(this.cart.subTotal.amount);
-                        let newTotalAmount;
-                        if ($.isEmptyObject(this.cart.coupon)) {
 
-                            newTotalAmount = cartTotalAmount  
-                            // console.log('inside if:',newTotalAmount);
+                        if (price === 0) {
+                            document.getElementById('pincode_not_servicable').style.display = 'block';
+                            this.serviceAvailable = false;
+                            const cartTotalAmount = parseFloat(this.cart.subTotal.amount);
+                            let newTotalAmount;
+                            if ($.isEmptyObject(this.cart.coupon)) {
+                                newTotalAmount = cartTotalAmount;
+                            } else {
+                                newTotalAmount = cartTotalAmount - parseFloat(this.cart.coupon.value.amount);
+                            }
+
+                            // console.log('newTotalAmount', newTotalAmount);
+                            const formattedNewTotal = 'MYR ' + newTotalAmount.toFixed(2);
+
+                            this.fixedrate.total = formattedNewTotal;
+                            // Update the elements in the DOM
+                            const priceFlatRate = document.getElementById('price_flat_rate');
+                            const totalFlatRate = document.getElementById('total_flat_rate');
+                            if (priceFlatRate) {
+                                document.getElementById('price_flat_rate').innerText = 'MYR 0.00';
+
+                            } if (totalFlatRate) {
+                                document.getElementById('total_flat_rate').innerText = this.fixedrate.total;
+                            }
+                            // console.log('Updated total_flat_rate IF CONDITION: ' + this.fixedrate.total);
+                            this.updateTotalFlatRate();
                         } else {
-                            newTotalAmount = cartTotalAmount - parseFloat(this.cart.coupon.value.amount);
-                        }
 
-                        // console.log('newTotalAmount', newTotalAmount);
-                        const formattedNewTotal = 'MYR ' + newTotalAmount.toFixed(2);
-                        
-                        this.fixedrate.total = formattedNewTotal;
-                        // Update the elements in the DOM
-                        const priceFlatRate = document.getElementById('price_flat_rate');
-                        const totalFlatRate = document.getElementById('total_flat_rate');
-                        if(priceFlatRate){
-                            document.getElementById('price_flat_rate').innerText = 'MYR 0.00';
+                            document.getElementById('pincode_not_servicable').style.display = 'none';
+                            this.serviceAvailable = true;
+                            const formattedPrice = 'MYR ' + parseFloat(price).toFixed(2);
+                            const cartTotalAmount = parseFloat(this.cart.subTotal.amount);
+                            let newTotalAmount;
 
-                        }if(totalFlatRate){
-                            document.getElementById('total_flat_rate').innerText = this.fixedrate.total;
-                        }
-                        // console.log('Updated total_flat_rate IF CONDITION: ' + this.fixedrate.total);
-                        this.updateTotalFlatRate();
-                    } else {
-                        document.getElementById('pincode_not_servicable').style.display = 'none';
-                        this.serviceAvailable= true;
-                        const formattedPrice = 'MYR ' + parseFloat(price).toFixed(2);
-                        const cartTotalAmount = parseFloat(this.cart.subTotal.amount);
-                        let newTotalAmount;
+                            if ($.isEmptyObject(this.cart.coupon)) {
+                                newTotalAmount = cartTotalAmount + parseFloat(price);
+                            } else {
+                                // Apply coupon discount if cartCouponAmount is defined
+                                newTotalAmount = (cartTotalAmount + parseFloat(price)) - parseFloat(this.cart.coupon.value.amount);
+                                // console.log('inside else coupon exists:',newTotalAmount);
+                            }
 
-                        if($.isEmptyObject(this.cart.coupon)) {
-                            newTotalAmount  =   cartTotalAmount + parseFloat(price);
-                        } else {
-                            // Apply coupon discount if cartCouponAmount is defined
-                            newTotalAmount  =  ( cartTotalAmount + parseFloat(price)) - parseFloat(this.cart.coupon.value.amount);
-                            // console.log('inside else coupon exists:',newTotalAmount);
+                            // console.log('newTotalAmount', newTotalAmount);
+                            const formattedNewTotal = 'MYR ' + newTotalAmount.toFixed(2);
+                            this.fixedrate.price = formattedPrice;
+                            this.fixedrate.total = formattedNewTotal;
+                            const priceFlatRate = document.getElementById('price_flat_rate');
+                            const totalFlatRate = document.getElementById('total_flat_rate');
+                            if (priceFlatRate) {
+                                document.getElementById('price_flat_rate').innerText = this.fixedrate.price;
+                            }
+                            if (totalFlatRate) {
+                                document.getElementById('total_flat_rate').innerText = this.fixedrate.total;
+                            }
+                            // console.log('Updated total_flat_rate FROM ELSE: ' +parseFloat(price)+'---' +parseFloat(this.cart.subTotal.amount)+'----'+ this.fixedrate.total);
+                            this.updateTotalFlatRate();
                         }
-
-                        // console.log('newTotalAmount', newTotalAmount);
-                        const formattedNewTotal = 'MYR ' + newTotalAmount.toFixed(2);
-                        this.fixedrate.price =formattedPrice;
-                        this.fixedrate.total=formattedNewTotal ;
-                        const priceFlatRate = document.getElementById('price_flat_rate');
-                        const totalFlatRate = document.getElementById('total_flat_rate');
-                        if(priceFlatRate){
-                            document.getElementById('price_flat_rate').innerText = this.fixedrate.price;
-                        }
-                        if(totalFlatRate){
-                            document.getElementById('total_flat_rate').innerText = this.fixedrate.total;
-                        }
-                        // console.log('Updated total_flat_rate FROM ELSE: ' +parseFloat(price)+'---' +parseFloat(this.cart.subTotal.amount)+'----'+ this.fixedrate.total);
-                        this.updateTotalFlatRate();
-                    }
-                });
+                    });
                 },
-                error: function(error) {
+                error: function (error) {
                     console.error(error);
                 }
             });
         }
         ,
-        
+
 
         zipExists(newZip) {
             this.$nextTick(() => {
-            $.ajax({
-                method: "GET",
-                url: route("admin.fixedrates.getpincode"),
-                data: '',
-            })
-            .then(response => {
-           
-          if (response && typeof response === 'object') {
-            let zipFound = false;
-            // Iterate through the keys of the response object
-            for (const key in response) {
-                if (key == newZip) {
-                    const price = response[key];
-                    const cartTotalAmount = parseFloat(this.cart.subTotal.amount);
-                    document.getElementById('pincode_not_servicable').style.display = 'none';
-                    this.serviceAvailable= true;
-                    let newTotalAmount;
+                $.ajax({
+                    method: "GET",
+                    url: route("admin.fixedrates.getpincode"),
+                    data: '',
+                })
+                    .then(response => {
 
-                    if($.isEmptyObject(this.cart.coupon)) {
-                        newTotalAmount  =   cartTotalAmount + parseFloat(price);
-                    } else {
-                        // Apply coupon discount if cartCouponAmount is defined
-                        newTotalAmount  =  ( cartTotalAmount + parseFloat(price)) - parseFloat(this.cart.coupon.value.amount);
-                        // console.log('inside else coupon exists:',newTotalAmount);
-                    }
-                    const formattedPrice = 'MYR ' + parseFloat(price).toFixed(2);
-                    const formattedNewTotal = 'MYR ' + newTotalAmount.toFixed(2);
-                    this.fixedrate.price =formattedPrice;
-                    this.fixedrate.total=formattedNewTotal ;
-                    // console.log('Updated total_flat_rate FROM ELSE IN ZIP EXISTS: ' +parseFloat(price)+'---' +parseFloat(this.cart.subTotal.amount)+'$----'+ this.fixedrate.total);
-                    this.getFixedRate(price);                    
-                    zipFound = true;                
-                    break;
-                }
-                this.updateTotalFlatRate();
-                
-            }
+                        if (response && typeof response === 'object') {
+                            let zipFound = false;
+                            // Iterate through the keys of the response object
+                            for (const key in response) {
+                                if (key == newZip) {
+                                    const price = response[key];
+                                    const cartTotalAmount = parseFloat(this.cart.subTotal.amount);
+                                    document.getElementById('pincode_not_servicable').style.display = 'none';
+                                    this.serviceAvailable = true;
+                                    let newTotalAmount;
+                                    if ($.isEmptyObject(this.cart.coupon)) {
+                                        newTotalAmount = cartTotalAmount + parseFloat(price);
+                                    } else {
+                                        // Apply coupon discount if cartCouponAmount is defined
+                                        newTotalAmount = (cartTotalAmount + parseFloat(price)) - parseFloat(this.cart.coupon.value.amount);
+                                        // console.log('inside else coupon exists:',newTotalAmount);
+                                    }
+                                    const formattedPrice = 'MYR ' + parseFloat(price).toFixed(2);
+                                    const formattedNewTotal = 'MYR ' + newTotalAmount.toFixed(2);
+                                    this.fixedrate.price = formattedPrice;
+                                    this.fixedrate.total = formattedNewTotal;
+                                    // console.log('Updated total_flat_rate FROM ELSE IN ZIP EXISTS: ' +parseFloat(price)+'---' +parseFloat(this.cart.subTotal.amount)+'$----'+ this.fixedrate.total);
+                                    this.getFixedRate(price);
+                                    zipFound = true;
+                                    break;
+                                }
+                                this.updateTotalFlatRate();
 
-            // If newZip was not found, set this.fixedrate.price to 0
-            if (!zipFound) {
-                this.fixedrate.price = 'MYR'+' '+ 0.00;
-                document.getElementById('pincode_not_servicable').style.display = 'block';
-                this.serviceAvailable= false;
-                const cartTotalAmount = parseFloat(this.cart.subTotal.amount);
-                let newTotalAmount;
-                       // console.log('if CART COUP : ' + this.cart.coupon + ' COUP AMT : ' + this.cart.coupon.value.amount);
+                            }
 
-                        if ($.isEmptyObject(this.cart.coupon)) {
-                            // Apply coupon discount if cartCouponAmount is defined
-                            newTotalAmount = cartTotalAmount  
-                            // console.log('inside if:',newTotalAmount);
+                            // If newZip was not found, set this.fixedrate.price to 0
+                            if (!zipFound) {
+                                this.fixedrate.price = 'MYR' + ' ' + 0.00;
+                                document.getElementById('pincode_not_servicable').style.display = 'block';
+                                this.serviceAvailable = false;
+                                const cartTotalAmount = parseFloat(this.cart.subTotal.amount);
+                                let newTotalAmount;
+
+                                // console.log('if CART COUP : ' + this.cart.coupon + ' COUP AMT : ' + this.cart.coupon.value.amount);
+
+                                if ($.isEmptyObject(this.cart.coupon)) {
+                                    // Apply coupon discount if cartCouponAmount is defined
+                                    newTotalAmount = cartTotalAmount
+                                    // console.log('inside if:',newTotalAmount);
+                                } else {
+                                    newTotalAmount = cartTotalAmount - parseFloat(this.cart.coupon.value.amount);
+                                }
+
+
+                                // console.log('newTotalAmount-from !zipfound', newTotalAmount);
+                                const formattedNewTotal = 'MYR ' + newTotalAmount.toFixed(2);
+                                this.fixedrate.total = formattedNewTotal;
+                                // console.log(`Value for ${newZip} was not found. Setting price to 0.`);
+                                // console.log('!ZIPFOUND',this.fixedrate.total);
+                                this.getFixedRate(0);
+                                this.updateTotalFlatRate();
+                            }
+                            const priceFlatRate = document.getElementById('price_flat_rate');
+                            const totalFlatRate = document.getElementById('total_flat_rate');
+                            if (priceFlatRate) {
+                                document.getElementById('price_flat_rate').innerText = this.fixedrate.price;
+                            }
+                            if (totalFlatRate) {
+                                document.getElementById('total_flat_rate').innerText = this.fixedrate.total;
+                            }
+                            // console.log('test',document.getElementById('total_flat_rate').innerText);
                         } else {
-                            newTotalAmount = cartTotalAmount - parseFloat(this.cart.coupon.value.amount);
+                            console.log('Invalid response or missing data in the response.');
                         }
-
-
-                // console.log('newTotalAmount-from !zipfound', newTotalAmount);
-                const formattedNewTotal = 'MYR ' + newTotalAmount.toFixed(2);
-                this.fixedrate.total = formattedNewTotal;
-                // console.log(`Value for ${newZip} was not found. Setting price to 0.`);
-                // console.log('!ZIPFOUND',this.fixedrate.total);
-                this.getFixedRate(0);
-                this.updateTotalFlatRate();
-            }
-            const priceFlatRate = document.getElementById('price_flat_rate');
-            const totalFlatRate = document.getElementById('total_flat_rate');
-            if(priceFlatRate){
-                document.getElementById('price_flat_rate').innerText = this.fixedrate.price;
-            }
-            if(totalFlatRate){
-                document.getElementById('total_flat_rate').innerText = this.fixedrate.total;
-            }
-           // console.log('test',document.getElementById('total_flat_rate').innerText);
-        } else {
-            console.log('Invalid response or missing data in the response.');
-        }
-    })
-    .catch(error => {
-        console.error(error);
-    });
-});
-} ,
-    updateTotalFlatRate() {
-       // console.log("HI FROM updateTotalFlatRate");
-        const totalFlatRateElement = document.getElementById('total_flat_rate');
-        this.totalFlatRateValue = this.fixedrate.total;
-        this.$nextTick(() => {
-        if (totalFlatRateElement) {
-            totalFlatRateElement.innerText =  this.totalFlatRateValue;
-            // this.getFixedRate(price);
-           // console.log('Updated total_flat_rate: ' + totalFlatRateElement.innerText);
-        } else {
-           // console.error("Element with ID 'total_flat_rate' not found.");
-        }
-    });
-    },
-  addNewBillingAddress() {
+                    })
+                    .catch(error => {
+                        console.error(error);
+                    });
+            });
+        },
+        updateTotalFlatRate() {
+            const totalFlatRateElement = document.getElementById('total_flat_rate');
+            this.totalFlatRateValue = this.fixedrate.total;
+            this.$nextTick(() => {
+                if (totalFlatRateElement) {
+                    totalFlatRateElement.innerText = this.totalFlatRateValue;
+                    // this.getFixedRate(price);
+                    // console.log('Updated total_flat_rate: ' + totalFlatRateElement.innerText);
+                } else {
+                    // console.error("Element with ID 'total_flat_rate' not found.");
+                }
+            });
+        },
+        addNewBillingAddress() {
             this.resetAddressErrors("billing");
 
             this.form.billing = {};
@@ -546,7 +673,17 @@ export default {
             if (!this.form.terms_and_conditions || this.placingOrder) {
                 return;
             }
-        //    console.log('it s placeorder function',this.form.payment_method)
+
+            // Check if isCheckedRecurringOrder is enabled
+            if (this.isCheckedRecurringOrder) {
+                // Fields are mandatory, focus on the first one
+                if (this.recurring_order_dates.length === 0 && Array.isArray(this.recurring_order_dates)) {
+                    this.$refs.recurring_order_dates.focus();
+                    return;
+                }
+            }
+
+            //    console.log('it s placeorder function',this.form.payment_method)
             this.placingOrder = true;
 
             $.ajax({
@@ -556,13 +693,15 @@ export default {
                     ...this.form,
                     ship_to_a_different_address:
                         +this.form.ship_to_a_different_address,
+
                 },
+
             })
                 .then((response) => {
-                //   console.log('response123',response);
+
                     if (response.redirectUrl) {
                         window.location.href = response.redirectUrl;
-                    } else if (this.form.payment_method ==="razerpay") { 
+                    } else if (this.form.payment_method === "razerpay") {
                         //console.log("confirmRazerpayPayment");
                         this.confirmRazerpayPayment(response);
                     } else {
@@ -576,7 +715,7 @@ export default {
                     if (xhr.status === 422) {
                         this.errors.record(xhr.responseJSON.errors);
                     }
-                   // console.log('error',this.form.payment_method);
+                    // console.log('error',this.form.payment_method);
                     this.$notify(xhr.responseJSON.message);
 
                     this.placingOrder = false;
@@ -584,7 +723,7 @@ export default {
         },
 
         confirmOrder(orderId, paymentMethod, params = {}) {
-           // console.log('it s a confirm order function');
+            // console.log('it s a confirm order function');
             $.ajax({
                 method: "GET",
                 url: route("checkout.complete.store", {
@@ -879,7 +1018,7 @@ export default {
                 autoOpen: true,
             });
         },
-       
+
         confirmRazerpayPayment(response) {
             const {
                 amount,
@@ -895,8 +1034,8 @@ export default {
                 vcode,
                 verifykey
             } = response;
-        
-          
+
+
             const url = `${redirectedurl}?amount=${amount}&country=${country}&bill_email=${bill_email}&bill_mobile=${bill_mobile}&bill_name=${bill_name}&currency=${currency}&key=${key}&orderid=${orderid}&ref=${ref}&vcode=${vcode}&verifykey=${verifykey}&callback=?`;
             window.location.href = url;
             // Make a GET request using the Fetch API and handle the response
@@ -917,15 +1056,15 @@ export default {
             //         console.error(error);
             //     });
         }
-        
+
         ,
-        
+
         openModal(termsUrl) {
             // Make an AJAX request to the Laravel named route
             $.ajax({
                 method: "GET",
                 url: termsUrl,
-                success: (data)=>{
+                success: (data) => {
                     let terms_condition_html = $(data).find('.custom-page-content').html();
                     // Assign the HTML content to the Vue property
                     this.termsModalContent = terms_condition_html;
@@ -933,16 +1072,16 @@ export default {
                     // Show the modal
                     $('#terms-modal').modal('show');
                 }
-                })
-              .catch((error) => {
-                console.error(error);
-              });
-          },
+            })
+                .catch((error) => {
+                    console.error(error);
+                });
+        },
 
-          hideTermsModal(){
+        hideTermsModal() {
             $('#terms-modal').modal('hide');
-          },
-        
+        },
+
 
     },
 };
