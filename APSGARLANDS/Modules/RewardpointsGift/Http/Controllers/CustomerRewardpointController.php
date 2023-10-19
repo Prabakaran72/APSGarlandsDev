@@ -47,10 +47,10 @@ class CustomerRewardpointController extends Controller
     }
 
 
-    public function store($request){
-        dd($request);
-        $cart = Cart::instance();
-        dd($cart->rewardpoints($request));
+    public function store(){
+        //  Cart::instance();
+        Cart::redeemRewardPoints(request()->redeemedAmount);
+        return Cart::instance();
     }
 
 

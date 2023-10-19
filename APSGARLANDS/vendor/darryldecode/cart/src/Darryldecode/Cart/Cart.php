@@ -605,6 +605,7 @@ class Cart
 
             $newTotal = $cond->applyCondition($toBeCalculated);
 
+            
             $process++;
         });
 

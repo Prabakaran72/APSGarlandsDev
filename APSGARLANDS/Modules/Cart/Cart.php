@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 class Cart extends DarryldecodeCart implements JsonSerializable
 {
+    protected $redemptionRewardAmount=0;
     /**
      * Get the current instance.
      *
@@ -59,9 +60,9 @@ class Cart extends DarryldecodeCart implements JsonSerializable
             'price' => $product->selling_price->amount(),
             'quantity' => $qty,
             'attributes' => [
-            'product' => $product,
-            'options' => $chosenOptions->getEntities(),
-            'created_at' => time(),
+                'product' => $product,
+                'options' => $chosenOptions->getEntities(),
+                'created_at' => time(),
             ],
         ]);
     }
@@ -260,7 +261,7 @@ class Cart extends DarryldecodeCart implements JsonSerializable
 
         return new CartCoupon($this, $coupon, $couponCondition);
     }
-   
+
 
     public function discount()
     {
@@ -405,7 +406,7 @@ class Cart extends DarryldecodeCart implements JsonSerializable
             ->add($this->shippingMethod()->cost())
             ->subtract($this->rewardpoints())
             ->subtract($this->coupon()->value());
-            // ->add($this->tax());
+        // ->add($this->tax());
     }
 
     public function toArray()
@@ -418,7 +419,7 @@ class Cart extends DarryldecodeCart implements JsonSerializable
             'shippingMethodName' => $this->shippingMethod()->name(),
             'shippingCost' => $this->shippingCost(),
             'coupon' => $this->coupon(),
-            'rewardpoints'=>$this->rewardpoints(),
+            'redemptionRewardPoints' => $this->rewardpoints(),
             'taxes' => $this->taxes(),
             'total' => $this->total(),
         ];
@@ -434,20 +435,15 @@ class Cart extends DarryldecodeCart implements JsonSerializable
         return json_encode($this->jsonSerialize());
     }
 
-    public function rewardpoints($redeemedpoints=0)
+    public function rewardpoints()
     {
-        return "Test".$redeemedpoints;
-        $currnecy = new Money($redeemedpoints, "MYR");
+        $currnecy = new Money($this->redemptionRewardAmount, "MYR");
+        $this->session->put('redemptionRewardPoints', $currnecy);
         return $currnecy;
-        
-        // if (!$this->hasCoupon()) {
-        //     return new NullCartCoupon();
-        // }
-
-        // $couponCondition = $this->getConditionsByType('coupon')->first();
-        // $coupon = Coupon::with('products', 'categories')->find($couponCondition->getAttribute('coupon_id'));
-
-        // return new CartCoupon($this, $coupon, $couponCondition);
-        // return CustomerRewardPoint::getUserRewardPoints();
+    }
+    public function redeemRewardPoints($redeemedpoints = 0)
+    {
+        $this->redemptionRewardAmount = $redeemedpoints;
+        $this->rewardpoints($redeemedpoints);
     }
 }

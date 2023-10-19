@@ -3,10 +3,9 @@ export default {
     props: ["customerrewardpoints"],
     data() {
         return {
-            storeCart: null,
             show: true,
             reward: {
-                redemptionAmount: 50,
+                redemptionAmount: 0,
                 isValidRedemption: false,
             },
             rewardPoints: {
@@ -21,105 +20,28 @@ export default {
                 redemption_currency_value: 1,
                 error: { status: false, message: "" },
             },
-            totalObject: {
-                amount: 0,
-                currency: "MYR",
-                formatted: "MYR 0",
-                inCurrentCurrency: {
-                    amount: 0,
-                    currency: "MYR",
-                    formatted: "MYR 0",
-                },
-            },
-            totalAfterRedemption: null,
-            totalCurrency: null,
         };
     },
 
     mounted() {
         setTimeout(() => {
             this.reward.show = true;
-            this.storeCart = store.state.cart;
-            this.totalCurrency = store.state.cart.total.currency;
         });
     },
 
     watch: {
-        'totalAfterRedemption': function () {
-            console.log("watch totalAfterRedemption");
-            this.totalObject = {
-                amount: this.totalAfterRedemption,
-                currency: this.totalCurrency,
-                formatted:
-                    "" +
-                    this.totalCurrency +
-                    " " +
-                    this.totalAfterRedemption,
-                inCurrentCurrency: {
-                    amount: this.totalAfterRedemption,
-                    currency: this.totalCurrency,
-                    formatted:
-                    "" +
-                        this.totalCurrency +
-                        " " +
-                        this.totalAfterRedemption,
-                },
-            };
-            console.log("totalObject",this.totalObject);
-        },
-        'totalObject.amount': function(){
-            if(this.totalObject.amount){
-                this.updateCartTotal();
-            }
+        'reward.redemptionAmount':function(){
+            this.hasEnoughOrderAmounToRedeem();
         },
     },
     
     methods: {
-        updateCartTotal(){
-            this.storeCart.total = this.totalObject;
-            store.updateCart(this.storeCart);
-        },
-        updatetotalAfterRedemption() {
-     
-            // update the total order amount
-            this.totalAfterRedemption = this.reward.redemptionAmount
-                ? this.storeCart.total.amount - this.reward.redemptionAmount
-                : this.storeCart.total.amount;
-        },
         redeemRewardPoints() {
-            $.ajax({
-                method: "POST",
-                url: route("public.customerrewardspoints.store"),
-                data: {redeemedAmount : 25},
-                success: (data) => {
-                console.log('data', data);
-                },
-                error: function (error) {
-                    console.error(error);
-                },
-            });
-            
-return true;
             if (!this.hasRedemptionErrors()) {
                 if (this.reward.redemptionAmount) {
-                    console.log("this.storeCart.total.", this.storeCart.total);
-                    this.updatetotalAfterRedemption();
-                    console.log(
-                        "after update this.storeCart.total.",
-                        this.storeCart.total
-                    );
-                    // store.state.cart.total.amount = this.reward.redemptionAmount
-                    //     ? store.state.cart.total.amount -
-                    //       this.reward.redemptionAmount
-                    //     : store.state.cart.total.amount;
+                  
                 }
             }
-        },
-
-        calculateRedemptionAmount() {
-            this.reward.redemptionAmount =
-                this.rewardPoints.pointsEquolantCase *
-                this.rewardPoints.redeemedPoint;
         },
 
         hasRedemptionErrors() {
@@ -186,6 +108,12 @@ return true;
 
             // },
         },
+        
+        calculateRedemptionAmount() {
+            this.reward.redemptionAmount =
+                this.rewardPoints.pointsEquolantCase *
+                this.rewardPoints.redeemedPoint;
+        },
 
         hasEnoughOrderAmounToRedeem() {
             if (
@@ -209,23 +137,24 @@ return true;
             }
         },
         updateRedemptionAmountInCart(type = null) {
+            console.log("this.reward.redemptionAmount",this.reward.redemptionAmount);
             if (type == "validUpdate") {
-                // store.state.cart.rewardpoints = {
-                //     redemptionAmount: this.reward.redemptionAmount,
-                //     redeemedPoint: this.rewardPoints.redeemedPoint,
-                //     isValidRedemption: this.reward.isValidRedemption,
-                // };
                 $.ajax({
                     method: "POST",
-                    url: route("public.customerrewardspoints.store"),
-                    data: this.reward.redemptionAmount,
+                    url: route("customerrewardspoints.store"),
+                    data: {redeemedAmount : this.reward.redemptionAmount},
+                    success: (cart) => {
+                    console.log('data', cart);
+                    store.updateCart(cart);
+                    },
+                    error: function (error) {
+                        console.error(error);
+                    },
                 });
                 return false;
             } else {
-                // store.state.cart.rewardpoints = {
-                //     redemptionAmount: null,
-                //     redeemedPoint: null,
-                // };
+               this.reward.redeemedAmount = 0;
+               this.rewardPoints.redeemedPoint=0;
                 return true;
             }
         },
