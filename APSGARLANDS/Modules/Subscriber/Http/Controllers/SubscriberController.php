@@ -46,43 +46,59 @@ class SubscriberController
     //     //     ], 403);
     //     // }
     // }
+
     public function store(StoreSubscriberRequest $request)
-    { 
-        $email = $request->input('email');
-   // dd( $email);
-        // Find the existing subscriber by email
-        $existingSubscriber = Subscriber::where('email', $email)->first();
-        
-        if (!$existingSubscriber) {
-            // If the email doesn't exist, create a new subscriber record with 'is_active' set to true
-            Subscriber::create([
-                'email' => $email,
-                'is_active' => true,
-                // You can set other attributes here as needed
-            ]);
-    
-            return response()->json([
-                'message' => 'new',
-            ]);
-        } else {
-           
-            // If the subscriber exists but is not active, update 'is_active' to true
-            if ($existingSubscriber->is_active) {
-               
+    {      
+        $email = $request->input('email');          
+        $subscribe = Newsletter::subscribeOrUpdate($email);
+
+        if(!$subscribe){    
+            if(! Newsletter::lastActionSucceeded()) {                
                 return response()->json([
-                    'message' => 'already_subscribed',
-                ]);
-            } else {
-                // Subscriber already exists and is active
-                //dd($existingSubscriber);
-                $existingSubscriber->is_active = true;
-                $existingSubscriber->save();
-    
-                return response()->json([
-                    'message' => 'subscription_enabled',
-                ]);
-            }
-        }
+                    'message' => str_after(Newsletter::getLastError(), '400: '),
+                ], 403);   
+            }                           
+        }                                 
+        else {
+                // Find the existing subscriber by email
+                $existingSubscriber = Subscriber::where('email', $email)->first();
+                
+                // dd($existingSubscriber);
+                if (!$existingSubscriber) {
+                    // If the email doesn't exist, create a new subscriber record with 'is_active' set to true
+
+                    Subscriber::create([
+                        'email' => $email,
+                        'is_active' => true,
+                        // You can set other attributes here as needed
+                    ]);           
+            
+                    return $subscribe['id'];  
+                    // return response()->json([
+                    //     'message' => 'new',
+                    // ]);
+                } else {
+                
+                    // dd('fail');
+                    // If the subscriber exists but is not active, update 'is_active' to true
+                    if ($existingSubscriber->is_active) {
+                    
+                        return response()->json([
+                            'message' => 'already_subscribed',
+                        ]);
+                    } else {
+                        // Subscriber already exists and is active                
+                        $existingSubscriber->is_active = true;
+                        $existingSubscriber->save();
+            
+                        return response()->json([
+                            'message' => 'subscription_enabled',
+                        ]);
+                    }
+                }        
+            
+            
+        }               
     }
    
     public function delete(Request $request)

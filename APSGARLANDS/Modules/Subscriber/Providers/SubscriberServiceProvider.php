@@ -25,8 +25,12 @@ class SubscriberServiceProvider extends ServiceProvider
         TabManager::register('subscribers', SubscriberTabs::class);
 
         $this->registerSubscriberRoute();
+   
+        if (config('app.installed')) {
+            $this->app['config']->set('newsletter.apiKey', setting('mailchimp_api_key'));
+            $this->app['config']->set('newsletter.lists.subscribers.id', setting('mailchimp_list_id'));
+        }
     }
-
     private function registerSubscriberRoute()
     {
         // $this->app->booted(function () {
