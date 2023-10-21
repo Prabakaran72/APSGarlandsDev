@@ -606,10 +606,6 @@ export default {
             if (!this.form.terms_and_conditions || this.placingOrder) {
                 return;
             }
-            console.log(
-                "it s placeorder function",
-                RewardPointClaimingBar.form.redeemptionAmount
-            );
             this.placingOrder = true;
 
             $.ajax({

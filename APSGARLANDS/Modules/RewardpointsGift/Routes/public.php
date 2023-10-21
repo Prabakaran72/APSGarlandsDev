@@ -22,5 +22,4 @@ use Illuminate\Support\Facades\Route;
 // ]);
 
 Route::post('customerrewardspoints', 'CustomerRewardpointController@store')->name('customerrewardspoints.store');
-
-
+Route::delete('customerrewardspoints', 'CustomerRewardpointController@delete')->name('customerrewardspoints.delete');

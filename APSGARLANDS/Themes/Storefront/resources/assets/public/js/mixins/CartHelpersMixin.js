@@ -37,6 +37,9 @@ export default {
         hasCoupon() {
             return store.state.cart.coupon.code !== undefined;
         },
+        hasRewardPointsRedemption() {
+            return store.state.cart.redemptionRewardPoints.amount;
+        },
        
     },
 

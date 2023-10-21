@@ -53,6 +53,12 @@ class CustomerRewardpointController extends Controller
         return Cart::instance();
     }
 
+    public function delete(){
+        //  Cart::instance();
+        // Cart::redeemRewardPoints();
+        Cart::clearRedemption();
+        return Cart::instance();
+    }
 
     // public function update($request = null, $reward_type = null)
     // {

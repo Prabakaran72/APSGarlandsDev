@@ -7,19 +7,10 @@ export default {
             reward: {
                 redemptionAmount: 0,
                 isValidRedemption: false,
+                redeemedPoint: null,
+                error: { status: false, message: "" }
             },
-            rewardPoints: {
-                activeRewardPoints: 250,
-                use_points_per_order: 500,
-                redeemedPoint: 0, //User's input
-                pointsEquolantCase: 1, //Ex 100 Points equal to 20MYR.SO 1pt :  20/100 ie (.2)
-                min_order_cart_value_redemption: 150,
-                currency_value: 10, //if customer can earn rewardpoints, then currency rate
-                point_value: 1, //if customer can earn rewardpoints, then point values per order amount
-                redemption_point_value: 10,
-                redemption_currency_value: 1,
-                error: { status: false, message: "" },
-            },
+            settings: this.customerrewardpoints,
         };
     },
 
@@ -27,29 +18,26 @@ export default {
         setTimeout(() => {
             this.reward.show = true;
         });
+        console.log('customerrewardpoints',this.customerrewardpoints);
     },
 
     watch: {
-        'reward.redemptionAmount':function(){
+        "reward.redemptionAmount": function () {
             this.hasEnoughOrderAmounToRedeem();
         },
     },
-    
+
     methods: {
         redeemRewardPoints() {
-            if (!this.hasRedemptionErrors()) {
-                if (this.reward.redemptionAmount) {
-                  
-                }
-            }
+            this.hasRedemptionErrors();
         },
 
         hasRedemptionErrors() {
             // isRedemptionNotNullNotEmpty() {
-            if (this.rewardPoints.redeemedPoint) {
-                this.rewardPoints.error = { status: false, message: "" };
+            if (this.reward.redeemedPoint) {
+                this.reward.error = { status: false, message: "" };
             } else {
-                this.rewardPoints.error = {
+                this.reward.error = {
                     status: true,
                     message: "Redemption points are empty",
                 };
@@ -57,12 +45,12 @@ export default {
             }
             // isRedemptionNotExceedsAvailablePoints() {
             if (
-                this.rewardPoints.redeemedPoint <=
-                this.rewardPoints.activeRewardPoints
+                this.reward.redeemedPoint <=
+                this.settings.activeRewardPoints
             ) {
-                this.rewardPoints.error = { status: false, message: "" };
+                this.reward.error = { status: false, message: "" };
             } else {
-                this.rewardPoints.error = {
+                this.reward.error = {
                     status: true,
                     message:
                         "Your redemption points exceed the actual points you have.",
@@ -72,13 +60,13 @@ export default {
             // isRedeedmedPointsWithInMaxLimit() {
 
             if (
-                this.rewardPoints.error.status != true &&
-                this.rewardPoints.use_points_per_order >=
-                    this.rewardPoints.redeemedPoint
+                this.reward.error.status != true &&
+                this.settings.use_points_per_order >=
+                    this.reward.redeemedPoint
             ) {
-                this.rewardPoints.error = { status: false, message: "" };
+                this.reward.error = { status: false, message: "" };
             } else {
-                this.rewardPoints.error = {
+                this.reward.error = {
                     status: true,
                     message:
                         "The redemption points exceed the allowed maximum limit.",
@@ -90,13 +78,13 @@ export default {
             // isRedeedmedPointsAboveMinOrderLimit() {
 
             if (
-                this.rewardPoints.error.status != true &&
+                this.reward.error.status != true &&
                 // store.state.cart.subTotal.amount >=
-                this.rewardPoints.min_order_cart_value_redemption
+                this.settings.min_order_cart_value_redemption
             ) {
-                this.rewardPoints.error = { status: false, message: "" };
+                this.reward.error = { status: false, message: "" };
             } else {
-                this.rewardPoints.error = {
+                this.reward.error = {
                     status: true,
                     message:
                         "The order amount is not sufficient to redeem your reward.",
@@ -108,27 +96,24 @@ export default {
 
             // },
         },
-        
+
         calculateRedemptionAmount() {
             this.reward.redemptionAmount =
-                this.rewardPoints.pointsEquolantCase *
-                this.rewardPoints.redeemedPoint;
+                this.settings.pointsEquolantCase *
+                this.reward.redeemedPoint;
         },
 
         hasEnoughOrderAmounToRedeem() {
-            if (
-                !this.hasRedemptionErrors() &&
-                this.reward.redemptionAmount
-                // &&
-                // store.state.cart.total.amount &&
-                // this.reward.redemptionAmount <= store.state.cart.total.amount
+            console.log(' this.reward.redemptionAmount', this.reward.redemptionAmount);
+            console.log('store.state.cart.total.amount', store.state.cart.total.amount);
+            if (this.reward.redemptionAmount &&
+                this.reward.redemptionAmount <= store.state.cart.total.amount
             ) {
-                this.rewardPoints.error = { status: false, message: "" };
+                this.reward.error = { status: false, message: "" };
                 this.reward.isValidRedemption = true; //when this value is true then
-                this.updateRedemptionAmountInCart("validUpdate"); //Here ends all the validation
-                // console.log(store.state.cart);
+                this.updateRedemptionAmountInCart(true); //Here ends all the validation
             } else {
-                this.rewardPoints.error = {
+                this.reward.error = {
                     status: true,
                     message:
                         "The order amount is not sufficient to redeem your reward.",
@@ -136,16 +121,16 @@ export default {
                 this.updateRedemptionAmountInCart();
             }
         },
-        updateRedemptionAmountInCart(type = null) {
-            console.log("this.reward.redemptionAmount",this.reward.redemptionAmount);
-            if (type == "validUpdate") {
+        updateRedemptionAmountInCart(type = false) {
+            console.log("updateRedemptionAmountInCart - type - ", type);
+            if (type) {
                 $.ajax({
                     method: "POST",
                     url: route("customerrewardspoints.store"),
-                    data: {redeemedAmount : this.reward.redemptionAmount},
+                    data: { redeemedAmount: this.reward.redemptionAmount },
                     success: (cart) => {
-                    console.log('data', cart);
-                    store.updateCart(cart);
+                        console.log("data", cart);
+                        store.updateCart(cart);
                     },
                     error: function (error) {
                         console.error(error);
@@ -153,10 +138,28 @@ export default {
                 });
                 return false;
             } else {
-               this.reward.redeemedAmount = 0;
-               this.rewardPoints.redeemedPoint=0;
+                this.reward.redeemedAmount = 0;
+                this.reward.redeemedPoint = 0;
                 return true;
             }
+        },
+
+        removeReward(){
+            $.ajax({
+                method: "delete",
+                url: route("customerrewardspoints.delete"),
+                success: (cart) => {
+                    console.log("data", cart);
+                    store.updateCart(cart);
+                    this.reward.redeemedAmount = 0;
+                    this.reward.redeemedPoint = null;
+                    this.reward.isValidRedemption = false;
+                },
+                error: function (error) {
+                    console.error(error);
+                },
+            });
+            console.log("after clear reward this.reward.redeemedPoint", this.reward.redeemedPoint);
         },
     },
 };
