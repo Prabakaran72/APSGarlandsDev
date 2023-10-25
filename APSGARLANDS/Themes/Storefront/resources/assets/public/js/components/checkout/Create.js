@@ -314,9 +314,9 @@ export default {
 
 
             //TO DISPLAY THE SELECTED DATES
-            document.getElementById('formattedSelectedDates').innerHTML =
-                (this.recurring_selected_date_count) + " - " + (this.recurring_formart_order_dates);
-            this.recurringTotalAmountCalc();
+            // document.getElementById('formattedSelectedDates').innerHTML =
+            //     (this.recurring_selected_date_count) + " - " + (this.recurring_formart_order_dates);
+            // this.recurringTotalAmountCalc();
         },
 
         recurringTotalAmountCalc() {
