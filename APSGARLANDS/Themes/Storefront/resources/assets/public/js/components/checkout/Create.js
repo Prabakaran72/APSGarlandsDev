@@ -6,7 +6,7 @@ import ProductHelpersMixin from "../../mixins/ProductHelpersMixin";
 import RewardPointClaimingBar from "../layout/RewardPointClaimingBar";
 
 export default {
-    mixins: [CartHelpersMixin, ProductHelpersMixin,RewardPointClaimingBar],
+    mixins: [CartHelpersMixin, ProductHelpersMixin, RewardPointClaimingBar],
 
     props: [
         "customerEmail",
@@ -608,14 +608,17 @@ export default {
             }
             this.placingOrder = true;
 
+            let sendData = {
+                ...this.form,
+                ship_to_a_different_address:
+                    +this.form.ship_to_a_different_address,
+                redemptionRewardPoints: store.state.cart.redemptionRewardPoints,
+                redemptionRewardAmount: store.state.cart.redemptionRewardAmount,
+            };
             $.ajax({
                 method: "POST",
                 url: route("checkout.create"),
-                data: {
-                    ...this.form,
-                    ship_to_a_different_address:
-                        +this.form.ship_to_a_different_address,
-                },
+                data: sendData,
             })
                 .then((response) => {
                     console.log("response123", response);

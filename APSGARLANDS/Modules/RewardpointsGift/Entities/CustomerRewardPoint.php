@@ -97,8 +97,8 @@ class CustomerRewardPoint extends Model
     $instance = [ 
         'activeRewardPoints' => 250,
         "use_points_per_order" => 500,
-        "redeemedPoint"=> 0, //User's 'inpu't
-        "pointsEquolantCase" => 1, //Ex 100 Points equal to 20MYR.SO 1pt  20/100 ie (.2)
+        "redeemedPoint"=> 0, //User's 'input
+        "pointsEquolantCase" => .1, //Ex 100 Points equal to 20MYR.SO 1pt  20/100 ie (.2)
         "min_order_cart_value_redemption"=> '150',
         "currency_value"=> 10, //if customer can earn rewardpoints, then currency 'rat'e
         "point_value"=> 1, //if customer can earn rewardpoints, then point values per order 'amoun't

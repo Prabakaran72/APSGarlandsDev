@@ -78,6 +78,8 @@ class CheckoutController extends Controller
      */
     public function store(StoreOrderRequest $request, CustomerService $customerService, OrderService $orderService)
     {
+        // dd($request->redemptionRewardPoints); //both details received
+        // dd($request->redemptionRewardAmount);
         if (auth()->guest() && $request->create_an_account) {
             $customerService->register($request)->login();
         }

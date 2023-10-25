@@ -49,7 +49,6 @@ class CartCouponController
             ->then(function ($coupon) {
                 Cart::applyCoupon($coupon);
             });
-
         return Cart::instance();
     }
 

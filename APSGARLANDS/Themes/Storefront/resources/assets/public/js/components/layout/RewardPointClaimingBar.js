@@ -104,8 +104,6 @@ export default {
         },
 
         hasEnoughOrderAmounToRedeem() {
-            console.log(' this.reward.redemptionAmount', this.reward.redemptionAmount);
-            console.log('store.state.cart.total.amount', store.state.cart.total.amount);
             if (this.reward.redemptionAmount &&
                 this.reward.redemptionAmount <= store.state.cart.total.amount
             ) {
@@ -122,26 +120,30 @@ export default {
             }
         },
         updateRedemptionAmountInCart(type = false) {
-            console.log("updateRedemptionAmountInCart - type - ", type);
+            var sendDataTosend=null;
             if (type) {
-                $.ajax({
-                    method: "POST",
-                    url: route("customerrewardspoints.store"),
-                    data: { redeemedAmount: this.reward.redemptionAmount },
-                    success: (cart) => {
-                        console.log("data", cart);
-                        store.updateCart(cart);
-                    },
-                    error: function (error) {
-                        console.error(error);
-                    },
-                });
-                return false;
+                sendDataTosend = { redeemedAmount: this.reward.redemptionAmount, redeemedPoint:this.reward.redeemedPoint};
+                
             } else {
                 this.reward.redeemedAmount = 0;
                 this.reward.redeemedPoint = 0;
-                return true;
+                sendDataTosend = { redeemedAmount: 0, redeemedPoint: 0};
             }
+            $.ajax({
+                method: "POST",
+                url: route("customerrewardspoints.store"),
+                data: sendDataTosend,
+                success: (cart) => {
+                    // console.log("data", cart);
+                    // cart = {...cart, redemptionRewardPoints: {...cart.redemptionRewardPoints, points: this.reward.redeemedPoint}}
+                    console.log("cart", cart);
+                    store.updateCart(cart);
+                },
+                error: function (error) {
+                    console.error(error);
+                },
+            });
+            return false;
         },
 
         removeReward(){
@@ -149,7 +151,7 @@ export default {
                 method: "delete",
                 url: route("customerrewardspoints.delete"),
                 success: (cart) => {
-                    console.log("data", cart);
+                    // console.log("data", cart);
                     store.updateCart(cart);
                     this.reward.redeemedAmount = 0;
                     this.reward.redeemedPoint = null;

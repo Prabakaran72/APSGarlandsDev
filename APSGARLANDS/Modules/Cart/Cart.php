@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 class Cart extends DarryldecodeCart implements JsonSerializable
 {
     protected $redemptionRewardAmount = 0;
+    protected $redeemedpoints = 0;
     /**
      * Get the current instance.
      *
@@ -422,7 +423,8 @@ class Cart extends DarryldecodeCart implements JsonSerializable
             'shippingMethodName' => $this->shippingMethod()->name(),
             'shippingCost' => $this->shippingCost(),
             'coupon' => $this->coupon(),
-            'redemptionRewardPoints' => $this->rewardpoints(),
+            'redemptionRewardAmount' => $this->rewardpoints(),
+            'redemptionRewardPoints' => $this->getrewardpoints(),
             'taxes' => $this->taxes(),
             'total' => $this->total(),
         ];
@@ -458,17 +460,23 @@ class Cart extends DarryldecodeCart implements JsonSerializable
         
     }
         $this->session->put('redemptionRewardAmount', $currency);
+        $this->session->put('redeemedpoints', $this->redeemedpoints);
         return $currency;
     }
-    public function redeemRewardPoints($redeemedpoints = 0)
+    public function redeemRewardPoints($redeemedAmount = 0, $redeemedpoints = 0)
     {
         // dd('redeemRewardPoints()');
-        $this->redemptionRewardAmount = $redeemedpoints;
+        $this->redemptionRewardAmount = $redeemedAmount;
+        $this->redeemedpoints = $redeemedpoints;
         $this->rewardpoints();
     }
     public function clearRedemption(){
         $this->redemptionRewardAmount=0;
         $this->session->forget('redemptionRewardAmount');
         $this->rewardpoints();
+    }
+    public function getrewardpoints(){
+        return  $this->redeemedpoints;
+        return $this->session('redeemedpoints');
     }
 }

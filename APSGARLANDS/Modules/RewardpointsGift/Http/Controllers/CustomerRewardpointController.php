@@ -49,7 +49,7 @@ class CustomerRewardpointController extends Controller
 
     public function store(){
         //  Cart::instance();
-        Cart::redeemRewardPoints(request()->redeemedAmount);
+        Cart::redeemRewardPoints(request()->redeemedAmount, request()->redeemedPoint);
         return Cart::instance();
     }
 
