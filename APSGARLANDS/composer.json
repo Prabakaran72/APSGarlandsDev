@@ -10,6 +10,7 @@
     ],
     "require": {
         "php": "^8.0.2",
+        "alaouy/youtube": "^2.2",
         "cache/predis-adapter": "^1.0",
         "doctrine/dbal": "^2.10",
         "guzzlehttp/guzzle": "^7.2",

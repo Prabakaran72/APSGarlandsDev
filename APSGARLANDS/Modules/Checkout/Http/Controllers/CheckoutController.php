@@ -49,6 +49,7 @@ class CheckoutController extends Controller
             'addresses' => $this->getAddresses(),
             'termsPageURL' => Page::urlForPage(setting('storefront_terms_page')),
         ]);
+        
     }
 
     /**
@@ -94,23 +95,23 @@ class CheckoutController extends Controller
         }
         return response()->json($response);
     }
-    public function setDeliveryDate(Request $request)
-    {
-        $productDeliveryDate = $request->input('productDeliveryDate');
+//     public function setDeliveryDate(Request $request)
+//     {
+//         $productDeliveryDate = $request->input('productDeliveryDate');
 
-    // Now, $productDeliveryDate is an array that you can iterate through
-    foreach ($productDeliveryDate as $item) {
-        $productId = $item['product_id'];
-        $deliveryDate = $item['delivery_date'];
-        $orderId = $item['orderid'];
-echo $orderId;
-DB::table('order_products')
-->where('order_id', $orderId)
-->where('product_id', $productId)
-->update(['delivery_date' => $deliveryDate]);
-        // Perform your processing here
-        // Example: YourModel::create(['product_id' => $productId, 'delivery_date' => $deliveryDate]);
-    }
+//     // Now, $productDeliveryDate is an array that you can iterate through
+//     foreach ($productDeliveryDate as $item) {
+//         $productId = $item['product_id'];
+//         $deliveryDate = $item['delivery_date'];
+//         $orderId = $item['orderid'];
+// echo $orderId;
+// DB::table('order_products')
+// ->where('order_id', $orderId)
+// ->where('product_id', $productId)
+// ->update(['delivery_date' => $deliveryDate]);
+//         // Perform your processing here
+//         // Example: YourModel::create(['product_id' => $productId, 'delivery_date' => $deliveryDate]);
+//     }
 
-    }
+//     }
 }

@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('pickupstores', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name');
-            $table->string('tagline')->nullable()->change();
+            $table->string('tagline')->nullable();
             $table->string('email');
             $table->string('phone');
             $table->string('address_1');

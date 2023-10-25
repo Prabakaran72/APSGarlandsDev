@@ -19,6 +19,8 @@ class Cart extends DarryldecodeCart implements JsonSerializable
      *
      * @return $this
      */
+    public $recurringOrderCount=1;
+
     public function instance()
     {
         return $this;
@@ -276,7 +278,7 @@ class Cart extends DarryldecodeCart implements JsonSerializable
                 'value' => $this->getCouponValue($coupon),
                 'order' => 2,
                 'attributes' => [
-                    'coupon_id' => $coupon->id,
+                'coupon_id' => $coupon->id,
                 ],
             ]),
         );
@@ -378,7 +380,7 @@ class Cart extends DarryldecodeCart implements JsonSerializable
 
     public function subTotal()
     {
-        return Money::inDefaultCurrency($this->getSubTotal())->add($this->optionsPrice());
+        return Money::inDefaultCurrency($this->getSubTotal(true, $this->recurringOrderCount))->add($this->optionsPrice());
     }
 
     private function optionsPrice()
@@ -400,8 +402,8 @@ class Cart extends DarryldecodeCart implements JsonSerializable
     {
         return $this->subTotal()
             ->add($this->shippingMethod()->cost())
-            ->subtract($this->coupon()->value())
-            ->add($this->tax());
+            ->subtract($this->coupon()->value());
+            // ->add($this->tax());
     }
 
     public function toArray()
@@ -427,5 +429,11 @@ class Cart extends DarryldecodeCart implements JsonSerializable
     public function __toString()
     {
         return json_encode($this->jsonSerialize());
+    }
+    public function recurringsubTotal($count){
+        $this->recurringOrderCount=$count;
+    }
+    public function getRecurringOrderCount(){
+        return $this->recurringOrderCount;
     }
 }

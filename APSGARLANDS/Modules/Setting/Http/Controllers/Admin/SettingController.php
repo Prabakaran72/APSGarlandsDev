@@ -11,7 +11,7 @@ class SettingController
     /**
      * Show the form for editing the specified resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\Responsek
      */
     public function edit()
     {

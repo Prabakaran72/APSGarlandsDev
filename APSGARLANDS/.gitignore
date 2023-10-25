@@ -3,15 +3,70 @@
 *.sublime-project
 .DS_Store
 
-node_modules/
-/vendor/
-
 /storage/logs/*
 public/phplog
+.env
+#to avoid builded js and css files
+public/modules/
+Themes/Storefront/assets/public/js/app.js
+# node_modules/
+# vendor/
+storage/logs/
+
+#avoid tracking node modules in all directories and subdirectories in this project
+
 
 /.meta
 mix-manifest.json
 npm-debug.log
 yarn-error.log
 *.map
+
+#to avoid npm mix js and css files
+APSGARLANDS/Modules/Admin/Assets/js/admin.js
+APSGARLANDS/Modules/Brand/Assets/admin/js/brand.js      
+APSGARLANDS/Modules/Category/Assets/admin/js/jstree.js  
+APSGARLANDS/Modules/Currency/Assets/admin/js/currency.js
+APSGARLANDS/Modules/Import/Assets/admin/js/importer.js  
+APSGARLANDS/Modules/Media/Assets/admin/js/media.js      
+APSGARLANDS/Modules/Menu/Assets/admin/js/menu.js        
+APSGARLANDS/Modules/Order/Assets/admin/js/order.js      
+APSGARLANDS/Modules/Report/Assets/admin/js/report.js
+APSGARLANDS/Modules/Setting/Assets/admin/js/setting.js
+APSGARLANDS/Modules/Translation/Assets/admin/css/translation.css
+APSGARLANDS/Modules/Translation/Assets/admin/css/translation.rtl.css
+APSGARLANDS/Modules/Translation/Assets/admin/js/translation.js
+APSGARLANDS/Modules/User/Assets/admin/js/login.js
+APSGARLANDS/Modules/User/Assets/admin/js/user.js
+APSGARLANDS/public/modules/admin/js/admin.js
+APSGARLANDS/public/modules/brand/admin/js/brand.js
+APSGARLANDS/public/modules/category/admin/js/jstree.js
+APSGARLANDS/public/modules/currency/admin/js/currency.js
+APSGARLANDS/public/modules/import/admin/js/importer.js
+APSGARLANDS/public/modules/media/admin/js/media.js
+APSGARLANDS/public/modules/menu/admin/js/menu.js
+APSGARLANDS/public/modules/order/admin/js/order.js
+APSGARLANDS/public/modules/report/admin/js/report.js
+APSGARLANDS/public/modules/setting/admin/js/setting.js
+APSGARLANDS/public/modules/translation/admin/css/translation.css
+APSGARLANDS/public/modules/translation/admin/css/translation.rtl.css
+APSGARLANDS/public/modules/translation/admin/js/translation.js
+APSGARLANDS/public/modules/user/admin/js/login.js
+APSGARLANDS/public/modules/user/admin/js/user.js
+APSGARLANDS/public/themes/storefront/admin/js/storefront.js
+APSGARLANDS/public/themes/storefront/public/css/app.css
+APSGARLANDS/public/themes/storefront/public/css/app.rtl.css
+APSGARLANDS/public/themes/storefront/public/js/app.js
+APSGARLANDS/storage/logs/laravel.log
+
+APSGARLANDS/Modules/Admin/node_modules/
+APSGARLANDS/Modules/Category/node_modules/
+APSGARLANDS/Modules/Media/node_modules/
+APSGARLANDS/Modules/Menu/node_modules/
+APSGARLANDS/Modules/Translation/node_modules/
+APSGARLANDS/Themes/Storefront/node_modules/
+APSGARLANDS/mix-manifest.json
+APSGARLANDS/storage/logs/
+APSGARLANDS/vendor/
+APSGARLANDS/node_modules/
 

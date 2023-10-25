@@ -30,11 +30,13 @@ trait HasCrudActions
         }
 
         if ($request->has('table')) {
+            // if($this->getResourceName() == 'rewardpointsGift')
+            // {
+            //     return $this->getModel()->tableDummy($request);
+            // }
             return $this->getModel()->table($request);
         }
-         return view("{$this->viewPath}.index");
-        // dd($this->getModel());
-       
+        return view("{$this->viewPath}.index");
     }
     
     public function getpincode()
@@ -263,7 +265,7 @@ trait HasCrudActions
     {
         return trans($this->label);
     }
-
+   
     /**
      * Get route prefix of the resource.
      *

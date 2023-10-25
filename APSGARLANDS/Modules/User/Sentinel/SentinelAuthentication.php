@@ -130,7 +130,7 @@ class SentinelAuthentication implements Authentication
         if (Sentinel::guest()) {
             return false;
         }
-
+        
         $permissions = is_array($permissions) ? $permissions : func_get_args();
 
         return Sentinel::hasAccess($permissions);

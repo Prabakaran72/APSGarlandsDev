@@ -196,7 +196,7 @@ class SettingTabs extends Tabs
         return tap(new Tab('razerpay', trans('setting::settings.tabs.razerpay')), function (Tab $tab) {
             $tab->weight(64);
 
-            $tab->fields(['razerpay_enabled', 'razerpay_label', 'razerpay_description', 'razerpay_key_id', 'razerpay_key_secret']);
+            $tab->fields(['razerpay_enabled', 'razerpay_label', 'razerpay_description','razerpay_test_mode', 'razerpay_key_id', 'razerpay_key_secret','razerpay__url','razerpay_merchant_id','razerpay_instructions']);
 
             $tab->view('setting::admin.settings.tabs.razerpay');
         });

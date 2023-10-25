@@ -1,0 +1,9 @@
+{
+    "name": "Galleries",
+    "alias": "galleries",
+    "description": "The Galleries Module.",
+    "priority": 80,
+    "providers": [
+        "Modules\\Galleries\\Providers\\GalleriesServiceProvider"
+    ]
+}

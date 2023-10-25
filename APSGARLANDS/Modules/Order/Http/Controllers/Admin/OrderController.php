@@ -21,7 +21,7 @@ class OrderController
      *
      * @var array
      */
-    protected $with = ['products', 'coupon', 'taxes'];
+    protected $with = ['products', 'coupon'];
 
     /**
      * Label of the resource.

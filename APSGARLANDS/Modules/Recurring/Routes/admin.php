@@ -23,7 +23,7 @@ Route::get('recurrings/create', [
 Route::get('recurringSubOrder/{id}/edit', [
     'as' => 'admin.recurrings.edit',
     'uses' => 'RecurringSubOrderController@edit',
-    'middleware' => 'can:admin.recurringSubOrder.index',
+    'middleware' => 'can:admin.recurrings.index',
 ]);
 
 Route::delete('recurrings/{ids?}', [

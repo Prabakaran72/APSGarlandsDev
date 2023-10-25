@@ -29,7 +29,8 @@ class AccountOrdersController
     {
         $order = auth()->user()
             ->orders()
-            ->with(['products', 'coupon', 'taxes'])
+            // ->with(['products', 'coupon', 'taxes'])
+            ->with(['products', 'coupon'])
             ->where('id', $id)
             ->firstOrFail();
 

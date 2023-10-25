@@ -31,13 +31,6 @@
         const currentCharCount = commentInput.value.length;
         charCountElement.textContent = `${currentCharCount} / 200 characters`;
     }
-    // function updateCharCount() {
-    //     const commentInput = document.getElementById('comment');
-    //     const charCountElement = document.getElementById('char-count');
-    //     const currentText = commentInput.value.replace(/\n/g, ''); // Remove newline characters
-    //     const currentCharCount = currentText.length;
-    //     charCountElement.textContent = `${currentCharCount} / 200 characters`;
-    // }
 </script>
 
 @endsection

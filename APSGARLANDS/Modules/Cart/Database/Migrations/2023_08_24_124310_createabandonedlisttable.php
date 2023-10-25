@@ -23,7 +23,8 @@ return new class extends Migration
             $table->string('first_name');
             $table->string('last_name');
             $table->longText('reason');
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrentOnUpdate()->nullable();
         });
     }
 

@@ -12,6 +12,7 @@ trait InputFields
 {
     protected function inputField($name, $value, $class, $attributes, $options)
     {
+
         $readonly = array_pull($options, 'readonly', false);
         $disabled = array_get($options, 'disabled', false);
 
@@ -111,7 +112,6 @@ trait InputFields
     protected function field($name, $title, $errors, $entity, $options, callable $fieldCallback, ...$args)
     {
         $value = $this->getValue($entity, $name);
-
         if (is_string($value)) {
             $value = e($value);
         }
@@ -120,7 +120,6 @@ trait InputFields
         $name = array_get($options, 'multiple', false) ? "{$name}[]" : $name;
         $required = array_pull($options, 'required', false);
         $help = array_pull($options, 'help', false);
-
         $params = array_merge([
             $name,
             $value,
@@ -156,7 +155,6 @@ trait InputFields
         if (starts_with($name, 'translatable[')) {
             return 'translatable.' . str_between($name, 'translatable[', ']');
         }
-
         return $name;
     }
 

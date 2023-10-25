@@ -27,7 +27,7 @@
     <script>
         // DataTable.setRoutes('#recurrings-table .table', {
         //     index: '{{ 'admin.recurrings.index' }}',
-        //     edit: '{{ 'admin.recurringSubOrder.index' }}',
+        //     edit: '{{ 'admin.recurrings.index' }}',
         // });
 
         new DataTable('#recurrings-table .table', {

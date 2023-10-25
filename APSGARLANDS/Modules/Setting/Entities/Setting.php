@@ -139,11 +139,12 @@ class Setting extends Model
      */
     public function getValueAttribute()
     {
+        
         if ($this->is_translatable) {
             return $this->translateOrDefault(locale())->value ?? null;
-        }
-
-        return unserialize($this->plain_value);
+        }       
+            return unserialize($this->plain_value);
+       
     }
 
     /**

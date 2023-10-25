@@ -70,8 +70,8 @@
         <div class="order-summary-bottom">
             <div class="form-group checkout-terms-and-conditions">
                 <div class="form-check">
-                    <input type="checkbox" v-model="form.terms_and_conditions" id="terms-and-conditions" :disabled="form.shipping_method === 'flat_rate' && !serviceAvailable">
-
+                    <input type="checkbox" v-model="form.terms_and_conditions" id="terms-and-conditions" :disabled="shouldDisableCheckbox">
+                    {{-- <input type="checkbox" v-model="form.terms_and_conditions" id="terms-and-conditions" :disabled="form.shipping_method === 'flat_rate' && !serviceAvailable"> --}}
                     <label for="terms-and-conditions" class="form-check-label">
                         {{ trans('storefront::checkout.i_agree_to_the') }}
                         {{-- <a href="{{ $termsPageURL }}">

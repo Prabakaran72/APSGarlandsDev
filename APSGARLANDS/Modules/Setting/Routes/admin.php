@@ -8,8 +8,8 @@ Route::get('settings', [
     'middleware' => 'can:admin.settings.edit',
 ]);
 
-Route::put('settings', [
-    'as' => 'admin.settings.update',
-    'uses' => 'SettingController@update',
-    'middleware' => 'can:admin.settings.edit',
-]);
+    Route::put('settings', [
+        'as' => 'admin.settings.update',
+        'uses' => 'SettingController@update',
+        'middleware' => 'can:admin.settings.edit',
+    ]);

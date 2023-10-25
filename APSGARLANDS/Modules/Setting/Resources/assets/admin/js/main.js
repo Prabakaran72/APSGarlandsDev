@@ -47,6 +47,9 @@ $("#paytm_enabled").on("change", () => {
 $("#razorpay_enabled").on("change", () => {
     $("#razorpay-fields").toggleClass("hide");
 });
+$("#razerpay_enabled").on("change", () => {
+    $("#razerpay-fields").toggleClass("hide");
+});
 
 $("#instamojo_enabled").on("change", () => {
     $("#instamojo-fields").toggleClass("hide");

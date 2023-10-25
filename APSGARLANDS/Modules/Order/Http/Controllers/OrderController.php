@@ -26,7 +26,6 @@ class OrderController
     
     public function updateshipping()
     {
-        dd('sdfsdf');
         return view('order::show');
     }
 }

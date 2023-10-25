@@ -183,7 +183,12 @@ class Money implements JsonSerializable
 
         $numberFormatter = new NumberFormatter($locale, NumberFormatter::CURRENCY);
 
-        $amount = $numberFormatter->formatCurrency($this->amount, $currency);
+        if (!is_null($this->amount) && is_numeric($this->amount)) {
+            $amount = $numberFormatter->formatCurrency((float)$this->amount, $currency);
+        } else {
+            // Handle the case where $this->amount is not a valid float
+            return ''; // Or some default value or error handling
+        }
         
 
         /**

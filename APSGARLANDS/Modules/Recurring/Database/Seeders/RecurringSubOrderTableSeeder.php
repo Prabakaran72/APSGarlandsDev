@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Modules\Order\Entities\Order;
+use Modules\Recurring\Entities\Recurring;
 use Modules\User\Entities\User;
 
 class RecurringSubOrderTableSeeder extends Seeder
@@ -22,7 +23,7 @@ class RecurringSubOrderTableSeeder extends Seeder
     {
         // Sample data for the recurring_sub_orders table
         DB::table('recurring_sub_orders')->insert([
-            'recurring_id' => 1,
+            'recurring_id' => Recurring::all()->random()->id,
             'order_id' => Order::all()->random()->id,
             'selected_date' => Carbon::now()->toDateString(),
             'delivery_date' => Carbon::tomorrow()->toDateString(),
