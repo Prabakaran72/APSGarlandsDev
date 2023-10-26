@@ -7,6 +7,7 @@ use Modules\Order\Entities\Order;
 use Modules\Payment\Facades\Gateway;
 use Modules\Checkout\Events\OrderPlaced;
 use Modules\Checkout\Services\OrderService;
+use Modules\Cart\Facades\Cart;
 
 class CheckoutCompleteController
 {
@@ -28,6 +29,8 @@ class CheckoutCompleteController
 
         try {
             $response = $gateway->complete($order);
+            //Clear claimed rewardpointsAmount and Rewardpoints
+            Cart::clearRedemption();
         } catch (Exception $e) {
             $orderService->delete($order);
 

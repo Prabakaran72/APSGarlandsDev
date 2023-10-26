@@ -473,6 +473,8 @@ class Cart extends DarryldecodeCart implements JsonSerializable
     public function clearRedemption(){
         $this->redemptionRewardAmount=0;
         $this->session->forget('redemptionRewardAmount');
+        $this->session->forget('redeemedpoints');
+        $this->redeemedpoints = 0;
         $this->rewardpoints();
     }
     public function getrewardpoints(){
