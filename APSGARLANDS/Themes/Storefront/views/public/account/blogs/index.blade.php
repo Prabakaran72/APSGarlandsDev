@@ -1,4 +1,6 @@
-
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
 @extends('public.account.layout')
 @section('title', trans('storefront::account.pages.my_blogform'))
 
@@ -52,8 +54,7 @@
                     @break
 
                     @default
-                            <img src="{{ asset('storage/profile/1/65019e30ab593.png') }}" alt="User Profile Image" class="profile-image"/><b>{{ $comment->users->first_name }}</b>
-                            @endswitch
+                    <i class="las la-user-circle"></i>@endswitch
                             {{ $comment->users->user_name }}<li>{{ $comment->comments }}</li>
         @endforeach
     </ul>
@@ -85,7 +86,6 @@
         </div>
     </div>
 </div>
-<script src="{{ asset('js/app.js') }}"></script>
 @endsection
 
 <style>

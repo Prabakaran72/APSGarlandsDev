@@ -15,8 +15,8 @@ class CreateBlogfeedbackTable extends Migration
     {
         Schema::create('blogfeedback', function (Blueprint $table) {
             $table->increments('id');
-            $table->boolean('like');
-            $table->boolean('dislike');
+            $table->boolean('likes');
+            $table->boolean('dislikes');
             $table->integer('post_id')->unsigned();
             $table->integer('author_id')->unsigned();
             $table->foreign('post_id')->references('id')->on('blogposts')->onDelete('cascade');
@@ -35,6 +35,6 @@ class CreateBlogfeedbackTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('blogposts');
+        Schema::dropIfExists('blogfeedback');
     }
 }

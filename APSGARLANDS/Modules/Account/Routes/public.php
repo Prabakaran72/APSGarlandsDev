@@ -15,10 +15,20 @@ Route::middleware('auth')->group(function () {
     Route::get('account/downloads/{id}', 'AccountDownloadsController@show')->name('account.downloads.show');
 
     Route::get('account/wishlist', 'AccountWishlistController@index')->name('account.wishlist.index');
+    Route::get('account/testimonials', 'AccountTestimonialController@index')->name('account.testimonials.index');
 
     Route::get('account/reviews', 'AccountReviewController@index')->name('account.reviews.index');
-
-    Route::get('account/testimonials', 'AccountTestimonialController@index')->name('account.testimonials.index');
+    Route::get('account/blogs', 'AccountBlogformController@testindex')->name('account.blogs.index');
+    Route::post('account/blogs/like/{id}', 'AccountBlogformController@handleLike')->name('account.blogs.handleLike');
+    Route::post('account/blogs/dislike/{id}', 'AccountBlogformController@handleDislike')->name('account.blogs.handleDislike');
+    Route::post('account/blogs/comments', 'AccountBlogformController@commentsstore')->name('account.blogs.commentsstore');
+    Route::get('account/blogform', 'AccountBlogformController@index')->name('account.blogform.index');
+    Route::get('account/blogform/create', 'AccountBlogformController@create')->name('account.blogform.create');
+    Route::post('account/blogform/create1', 'AccountBlogformController@store')->name('account.blogform.store');
+    Route::put('account/blogform/update/{id}', 'AccountBlogformController@update')->name('account.blogform.update');
+    Route::delete('account/blogform/{id}', 'AccountBlogformController@destroy')->name('account.blogform.destroy');
+    Route::get('account/blogform/edit/{id}', 'AccountBlogformController@edit')->name('account.blogform.edit');
+    Route::get('account/blogs/blogsingle/{id}','AccountBlogformController@showMore')->name('account.blogs.blogSingle');
 
     Route::get('addresses', 'AccountAddressController@index')->name('account.addresses.index');
     Route::post('addresses', 'AccountAddressController@store')->name('account.addresses.store');

@@ -11,7 +11,11 @@
 
     <div class="row justify-content-center align-items-center min-vh-80">
         <div class="row">
-            
+       @empty($blogpost)
+
+                <div class="empty-message">
+                    <h3>{{ trans('storefront::account.blogform.no_blogform') }}</h3>
+                </div>  @else
             <div class="col-md-12">
                 <div class="card">
 
@@ -50,14 +54,17 @@
                             <img src="{{ $comment->users->image_url }}" alt="User Profile Image" class="profile-image" /><b>{{ $comment->users->first_name }}</b>
                     @break
                     @default
-                            <img src="{{ asset('storage/profile/1/65019e30ab593.png') }}" alt="User Profile Image" class="profile-image"/><b>{{ $comment->users->first_name }}</b>
-                            @endswitch
+                    <i class="las la-user-circle"></i> @endswitch
                             {{ $comment->users->user_name }}<li>{{ $comment->comments }}</li>
        
     </ul>
       @endforeach
     </div>
+<button class="addshow-comments-btn" data-post-id="{{ $blogpost->id }}" onclick="addtoggleCommentsblogs(this)">Add Comments</button>
+                    <div class="addcomments-section" id="addcomments-section-{{ $blogpost->id }}" style="display: none;">
+                    <form method="POST" action="{{ route('account.blogs.commentsstore') }}">
 
+                        @csrf
                     <h4>Add comment</h4>
 
                     <form method="POST" action="{{ route('account.blogs.commentsstore') }}">
@@ -80,12 +87,10 @@
 
                     </form></div>
             </div>
-          
+          @endif
         </div>
     </div>
 </div>
-<script src="{{ asset('js/app.js') }}"></script>
-@livewireScripts
 @endsection
 
 <style>
@@ -126,4 +131,15 @@
         commentsSection.style.display = 'none';
     }
 }
+function addtoggleCommentsblogs(button) {
+    var postId = button.getAttribute('data-post-id');
+    var addcommentsSection = document.getElementById('addcomments-section-' + postId);
+
+    if (addcommentsSection.style.display === 'none' || addcommentsSection.style.display === '') {
+        addcommentsSection.style.display = 'block';
+    } else {
+        addcommentsSection.style.display = 'none';
+    }
+}  
+
 </script>

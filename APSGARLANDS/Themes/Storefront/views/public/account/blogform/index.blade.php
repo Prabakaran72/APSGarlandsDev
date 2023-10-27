@@ -10,7 +10,7 @@
     <div class="panel">
         <div class="panel-header">
             <h4>{{ trans('storefront::account.pages.my_blogform') }}</h4>
-                <button type="button" class="btn btn-primary" onclick="window.location='{{ route('account.blogform.create') }}'" >Create BlogPost</button>
+                <button type="button" class="btn btn-primary" onclick="window.location.href='{{ route('account.blogform.create') }}'" >Create BlogPost</button>
 
         </div>
 

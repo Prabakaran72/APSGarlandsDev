@@ -15,7 +15,10 @@
     </title>
 
     @stack('meta')
-
+    <!--- for like icon and select2 box suppoted link--->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/css/select2.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<!--- -------------------->
     <link href="https://fonts.googleapis.com/css?family=Rubik:300,400,500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
     <link rel="stylesheet"
@@ -114,7 +117,14 @@
     @stack('scripts')
 
     {!! setting('custom_footer_assets') !!}
-
+    <!--- for like icon and select2 box suppoted link--->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-rc.0/js/select2.full.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.select2').select2(); // Apply Select2 to all elements with the class 'select2'
+    });
+</script>
+<!--- end--->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
 
     @if (setting('testimonial_slider_enabled'))
@@ -157,8 +167,7 @@
         </script>
     @endif
 
-=======
->>>>>>> abandoned_wishlist_report_with_filter
+
 </body>
 
 </html>

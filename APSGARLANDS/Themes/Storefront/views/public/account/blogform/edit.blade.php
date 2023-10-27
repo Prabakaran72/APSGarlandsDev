@@ -35,6 +35,7 @@
             <select id="tag_id" name="tag_id[]" class="form-control select2" multiple>
                 @php
                 $selectedTags = explode(',', $Blogpost->tag_id);
+               
             @endphp
             @foreach ($Blogtag as $Blogtags)
             <option value="{{ $Blogtags->id }}"

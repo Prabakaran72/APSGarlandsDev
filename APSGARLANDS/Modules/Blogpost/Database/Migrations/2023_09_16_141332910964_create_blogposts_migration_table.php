@@ -18,7 +18,7 @@ class CreateBlogpostsMigrationTable extends Migration
             $table->string('post_title',50)->unique();
             $table->longText('post_body');
             $table->integer('category_id')->unsigned();
-            $table->integer('tag_id')->unsigned();
+            $table->string('tag_id',100);
             $table->integer('author_id')->unsigned();
             $table->enum('post_status',['pending', 'approved','rejected']) -> default('pending');
             $table->integer('approved_by')->unsigned()->nullable();
