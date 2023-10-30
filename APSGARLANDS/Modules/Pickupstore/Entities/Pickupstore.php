@@ -7,6 +7,8 @@ use Modules\Support\Eloquent\Model;
 use Modules\Meta\Eloquent\HasMetaData;
 use Modules\Support\Eloquent\Sluggable;
 use Modules\Support\Eloquent\Translatable;
+use Modules\Support\Country;
+use Modules\Support\State;
 
 class Pickupstore extends Model
 {
@@ -80,5 +82,13 @@ class Pickupstore extends Model
     public function table()
     {
         return new AdminTable($this->newQuery()->withoutGlobalScope('active'));
+    }
+    public function getPickupStoreCountryNameAttribute()
+    {
+        return Country::name($this->store_country);
+    }
+    public function getPickupStoreStateNameAttribute()
+    {
+        return State::name($this->store_country, $this->store_state);
     }
 }

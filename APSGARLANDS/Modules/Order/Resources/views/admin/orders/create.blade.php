@@ -7,8 +7,13 @@
     <li class="active">{{ trans('admin::resource.create', ['resource' => trans('order::orders.orders')]) }}</li>
 @endcomponent
 @section('content')
+<div style="background-color: white;">
+
+    @include('order::admin.orders.tabs.general')
+
+</div>
    
-        @include('order::admin.orders.tabs.general')
+       
         {{-- {!! $tabs->render(compact('product')) !!} --}}
         {{-- {!! $tabs->render(compact('orders')) !!} --}}
         

@@ -13,6 +13,10 @@ use Modules\Support\State;
 use Modules\Product\Entities\Product;
 use Illuminate\Http\Request;
 use Modules\Coupon\Entities\Coupon;
+use Modules\Shipping\Facades\ShippingMethod;
+use Modules\Support\Money;
+use Modules\Currency\Entities\CurrencyRate;
+
 
 class OrderController
 {
@@ -68,11 +72,15 @@ class OrderController
 
         $countries =   Country::all();
         
-         $products = Product::select('id','slug','price')->get();
+         $products = Product::select('id','slug','price','prepare_days','is_preorder_status','manage_stock','qty','in_stock')->get();
+
+          $shippingMethods =  ShippingMethod::availableShippingMannual();
+          $minimumAmount = Money::inDefaultCurrency(setting('free_shipping_min_amount'));   
+
         // $query = str_replace(array('?'), array('\'%s\''), $products->toSql());
         // $query = vsprintf($query, $products->getBindings());
         // return  response()->json(['user' => $users ]) ;
-         return view("{$this->viewPath}.create", compact('users','date','countries','products'));
+         return view("{$this->viewPath}.create", compact('users','date','countries','products','shippingMethods','minimumAmount'));
     }
 
     public function details($id){
@@ -101,13 +109,12 @@ class OrderController
         }
             return  response()->json([
             'data' => $data,
-            
            ]);
     }
 
 
     public function store(Request $request){
-        $countries =new  Country;
+        $countries = new  Country;
         $state = new State;
         $s_code = '';
         $data = $request->data; // Assuming $request->data is already an array or object
@@ -124,6 +131,15 @@ class OrderController
        $data['billing_state'] = $state_code;
        $data['shipping_country'] = $country;
        $data['shipping_state'] = $state_code;
+        $data['total'] =  Money::inDefaultCurrency($data['total']);
+        $data['sub_total'] =  Money::inDefaultCurrency($data['sub_total']);
+        $data['discount'] =  Money::inDefaultCurrency($data['discount']);
+        $data['currency'] =  currency();
+        $data['currency_rate'] = CurrencyRate::for(currency());
+        $data['locale'] =  locale();
+        $data['shipping_cost'] =  Money::inDefaultCurrency($data['shipping_cost']);
+
+
 
         $obj = new Order;
         $insert = $obj->create($data);

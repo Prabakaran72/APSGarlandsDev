@@ -213,7 +213,7 @@ class Product extends Model
     // }
     public function preOrderProduct()
     {
-        dd($this->id);
+        // dd($this->id);
         return $this->hasMany(Preorder::class);
     }
 
@@ -592,7 +592,7 @@ class Product extends Model
 
         $translations = $this->translations()
             ->withoutGlobalScope('locale')
-            ->get(['name', 'descrip    tion', 'short_description']);
+            ->get(['name', 'description', 'short_description']);
 
         return ['id' => $this->id, 'translations' => $translations];
     }

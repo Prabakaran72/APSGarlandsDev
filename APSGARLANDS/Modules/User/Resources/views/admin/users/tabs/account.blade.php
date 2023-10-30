@@ -22,6 +22,14 @@
                 return $address->user_type == 1;
             })->first();
             // $filteredAddressJson = $filteredAddress ? json_encode($filteredAddress) : null;
+            if(isset(  $filteredAddress)){
+                echo '<script>
+                const oldState = \'' . json_encode($filteredAddress->state) . '\';
+                var oldStateObject = JSON.parse(oldState);
+                </script>';
+
+            }
+            
         @endphp
         <input type="number" value={{ isset($filteredAddress) ? $filteredAddress->id : '' }} name="user_address"
         id="user_address" hidden>
@@ -44,7 +52,6 @@
     const hiddenCheckbox = document.getElementById("hidden_checkbox");
     const form = document.querySelector("form");
     const userAddress = document.getElementById('user_address');
-    
 
 
     user_type.addEventListener('change', () => {
@@ -74,12 +81,19 @@
                     stateSelect.appendChild(noStatesOption);
                 } else {
                     // Populate the state select with the new options
+                    // console.log('states object is empty');
                     for (const code in states) {
                         const option = document.createElement("option");
                         option.value = code;
                         option.textContent = states[code];
                         stateSelect.appendChild(option);
+                        // console.log('option.value',option.value);
+                        if (option.value === oldStateObject) {
+                                option.selected = true;
+                        }
                     }
+                    // console.log('oldStateObject',oldStateObject);
+
                 }
 
                 // Show the state select

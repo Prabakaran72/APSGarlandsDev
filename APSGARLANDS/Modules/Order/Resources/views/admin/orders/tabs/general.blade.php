@@ -1,10 +1,21 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
 <form class="form-horizontal" id="order_create_form" enctype="multipart/form-data" novalidate>
     {{ csrf_field() }}
     <div class="row">
-        <div class="col-md-8">
+        <h3 style="
+    border-bottom: 1px solid black;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+    margin-left: 23px;
+    padding-top: 15px;
+    padding-left: 15px;
+    
+        ">User Details</h3>
+        <div class="col-md-8" style="width: 100%;padding-left: 38px">
             <div class="box-content clearfix">
 
-
+                
                 <div class="row">
 
                     <div class="col-md-5">
@@ -103,11 +114,20 @@
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="date" class="col-md-3 control-label text-left">Customer Group</label>
+                            <label for="user" class="col-md-3 control-label text-left">Payment Method <span
+                                    class="m-l-5 text-red">*</span></label>
                             <div class="col-md-9">
-                                <input type="text" class="form-control" value="Register" readonly>
+
+                                <input name="payment_method" class="form-control " id="payment_method" value="cod"
+                                    type="text" readonly>
+                                {{-- <select name="payment_method" class="form-control custom-select-black " id="payment_method">
+                                <option value="0">Select Option</option>
+                                <option value="COD" {{ isset($order) && $order->payment_method === 'COD' ? 'selected' : '' }}>COD</option>
+                            </select> --}}
+                                <span id="payment_method_error" class="text-red"></span>
                             </div>
                         </div>
+                        
                     </div>
 
 
@@ -117,22 +137,6 @@
 
                 <div class="row">
                     <div class="col-md-5">
-                        <div class="form-group">
-                            <label for="user" class="col-md-3 control-label text-left">Payment Method <span
-                                    class="m-l-5 text-red">*</span></label>
-                            <div class="col-md-9">
-
-                                <input name="payment_method" class="form-control " id="payment_method" value="COD"
-                                    type="text" readonly>
-                                {{-- <select name="payment_method" class="form-control custom-select-black " id="payment_method">
-                                <option value="0">Select Option</option>
-                                <option value="COD" {{ isset($order) && $order->payment_method === 'COD' ? 'selected' : '' }}>COD</option>
-                            </select> --}}
-                                <span id="payment_method_error" class="text-red"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
                         <div class="form-group">
                             <label for="user" class="col-md-3 control-label text-left">Order Status<span
                                     class="m-l-5 text-red">*</span></label>
@@ -153,6 +157,14 @@
 
                 </div>
 
+               
+
+
+
+
+
+
+
                 <input name="user_type" id="user_type" value="{{ isset($order) ? $order->user_type : '' }}"
                     labelcol="3" type="text" hidden>
 
@@ -168,108 +180,19 @@
                 <input name="discount_amt" id="discount_amt" value="" labelcol="3" type="text" hidden>
 
                 <input name="discount_type" id="discount_type" value="" labelcol="3" type="text" hidden>
+                <input name="shippment_value" id="shippment_value" value="" labelcol="3" type="text"
+                    hidden>
+
 
                 <input name="sub_amt_coupon" id="sub_amt_coupon" value="" labelcol="3" type="text"
                     style="display: none;">
 
 
-                <div class="address-information-wrapper" id="addressInformationWrapper">
-                    <h3 class="section-title">Address Information</h3>
-                    <hr>
-                    <div class="other_address" style="display:none">
-                        <input type="checkbox" id="other_address" name="other_address" value="1">
-                        <label for="myCheckbox">ship to different address ?</label>
-
-                    </div>
-                    <div class="row address">
-
-                        <div class="col-md-6">
-                            <div class="billing-address" id="billing-address"
-                                style="
-                        display: inline-flex;
-                        flex-wrap: nowrap;
-                        flex-direction: column;
-                    ">
-                                <h4 class="pull-left">Billing Address</h4>
-
-                                <div class="form-radio">
-
-                                    <label for="billing-address_input">
-                                        <span>
-                                            <hr>
-                                            @if (isset($order))
-                                                <br>
-                                                {{ $order->billing_address_1 }}
-                                                <br>
-
-                                                @if ($order->billing_address_2)
-                                                    {{ $order->billing_address_2 }}
-                                                    <br>
-                                                @endif
-
-                                                {{ $order->billing_city }}
-                                                <br>
-                                                {{ $order->billing_zip }}
-                                                <br>
-                                                {{ $order->shipping_state_name }}
-                                                <br>
-                                                {{ $order->billing_country_name }}
-                                            @else
-                                            @endif
-                                        </span>
-                                    </label>
-                                </div>
-
-                            </div>
-                        </div>
-
-
-
-                        <div class="col-md-6">
-
-                            <div class="shipping-address" id="shipping-address"
-                                style="display:none; flex-wrap: nowrap;
-                        flex-direction: column;">
-                                <h4 class="pull-left">Shipping Address</h4>
-                                {{-- <div class="form-radio-shipping">
-                                <input type="radio" id="shipping-address_input" value="1" hidden> --}}
-                                <label for="shipping-address_input">
-                                    <span>
-                                        <hr>
-                                        @if (isset($order))
-                                            <br>
-                                            {{ $order->shipping_address_1 }}
-                                            <br>
-
-                                            @if ($order->shipping_address_2)
-                                                {{ $order->shipping_address_2 }}
-                                                <br>
-                                            @endif
-
-                                            {{ $order->shipping_city }}
-                                            <br>
-                                            {{ $order->shipping_zip }}
-                                            <br>
-                                            {{ $order->shipping_state_name }}
-                                            <br>
-                                            {{ $order->shipping_country_name }}
-                                        @else
-                                        @endif
-                                    </span>
-                                </label>
-                                {{-- </div> --}}
-                            </div>
-
-
-
-                        </div>
-
-                    </div>
-                </div>
+                
             </div>
 
             <div class="items-ordered-wrapper">
-                <h3 class="section-title">Items Ordered</h3>
+                <h3 class="section-title" style="border-bottom: 1px solid black;">Items Ordered</h3>
 
                 <div class="row">
                     <div class="col-md-12">
@@ -282,82 +205,63 @@
                                             <th>{{ trans('order::orders.create_product_sublist.unit_price') }}</th>
                                             <th>{{ trans('order::orders.create_product_sublist.quantity') }}</th>
                                             <th>{{ trans('order::orders.create_product_sublist.line_total') }}</th>
-                                            <th>Action</th>
+                                            <th><i class="fa-solid  fa-square-plus fa-2x add-row" id="add_product"
+                                                    style="color: #0068e1;"></i></th>
                                         </tr>
                                     </thead>
 
                                     <tbody id="productTableBody">
-                                        @if (isset($order))
-                                            @if (isset($order))
-                                                @foreach ($order->products as $index => $pro)
-                                                    <tr>
-                                                        <td>
-                                                            <select name="order_products{{ $index }}"
-                                                                class="order-product" data-info="0"
-                                                                id="order_products{{ $index }}">
-                                                                <option value="0">Select Option</option>
-                                                                @foreach ($products as $product)
-                                                                    <option value="{{ $product->id }}"
-                                                                        data-info="{{ $product->price }}"
-                                                                        @if ($order->products->contains('product_id', $product->id) && $pro->product_id == $product->id) selected="selected" @endif>
-                                                                        {{ $product->slug }}
-                                                                    </option>
-                                                                @endforeach
-                                                            </select>
-                                                            <div> <span id="order_products_error{{ $index }}"
-                                                                    class="text-red"></span></div>
-                                                        </td>
+                                        <tr>
+                                            <td>
 
-                                                        <td>{{ $pro->unit_price->format() }}</td>
-                                                        <td><input type="text" name="qty{{ $index }}"
-                                                                id="qty{{ $index }}" class="quantity"
-                                                                value="{{ $pro->qty }}">
-                                                            <div> <span id="qty_error{{ $index }}"
-                                                                    class="text-red"></span></div>
-                                                        </td>
-                                                        <td>{{ $pro->line_total->format() }}</td>
-                                                        <td>
-                                                            <button class="btn btn-primary add-row"
-                                                                id="add_product{{ $index }}">Add</button>
-                                                            <button class="btn btn-danger delete-row"
-                                                                id="delete_product{{ $index }}">Delete</button>
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-                                            @endif
-                                        @else
-                                            <tr>
-                                                <td>
+                                                <select name="order_products" class="order-product" data-info="0"
+                                                    id="order_products">
+                                                    <option value="0">Select Option</option>
+                                                    @foreach ($products as $product)
+                                                        <option value="{{ $product->id }}"
+                                                            data-info="{{ $product->price }}"
+                                                            data-prepare_days = "{{ $product->prepare_days }}"
+                                                            data-is_preorder_status = "{{ $product->is_preorder_status }}"
+                                                            data-in_stock = "{{ $product->in_stock }}"
+                                                            data-manage_stock = "{{ $product->manage_stock }}"
+                                                            data-qty = "{{ $product->qty }}"
 
-                                                    <select name="order_products" class="order-product"
-                                                        data-info="0" id="order_products">
-                                                        <option value="0">Select Option</option>
-                                                        @foreach ($products as $product)
-                                                            <option value="{{ $product->id }}"
-                                                                data-info="{{ $product->price }}">
-                                                                {{ $product->slug }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                    <div> <span id="order_products_error" class="text-red"></span>
-                                                    </div>
-                                                </td>
 
-                                                <td>MYR&nbsp;0.00</td>
-                                                <td><input type="text" name="qty" id="qty"
-                                                        class="quantity">
-                                                    <div> <span id="qty_error" class="text-red"></span></div>
-                                                </td>
-                                                <td>MYR&nbsp;0.00</td>
-                                                <td>
-                                                    <button class="btn btn-primary add-row"
-                                                        id="add_product">Add</button>
-                                                    <button class="btn btn-danger delete-row"
-                                                        id="delete_product">Delete</button>
-                                                </td>
-                                            </tr>
+                                                            
+                                                            >
 
-                                        @endif
+                                                            {{ $product->slug }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                <div> <span id="order_products_error" class="text-red"></span>
+                                                </div>
+                                            </td>
+
+                                            <td>MYR&nbsp;0.00</td>
+                                            <td>
+                                                
+                                                    
+
+                                              
+                                               
+                                                <input type="number" name="qty" id="qty" class="quantity" min='1' style="background-color: transparent;
+                                                ;text-align: center;" > 
+
+                                               
+                                            
+                                               
+                                                
+                                                <div> <span id="qty_error" class="text-red"></span></div>
+
+                                            </td>
+                                            <td>MYR&nbsp;0.00</td>
+                                            <td>
+
+                                                <i class="fa-solid fa-trash fa-lg delete-row"
+                                                    style="color: #dc3545;"></i>
+                                            </td>
+                                        </tr>
 
                                     </tbody>
 
@@ -365,30 +269,65 @@
                                         <tr class="subtotal-row">
                                             <td></td>
                                             <td></td>
-                                            <td>SubTotal:</td>
-                                            <td> MYR {{ isset($order) ? $order->sub_total : '' }}</td>
+                                            <td style="
+                                            font-weight: 500;
+                                        ">SubTotal:</td>
+                                            <td style="
+                                            font-weight: 500;
+                                        "> MYR 0.00{{ isset($order) ? $order->sub_total : '' }}</td>
                                             <td></td>
                                         </tr>
-                                        <tr class="discount-row" style="display: none;">
+                                        <tr class="discount-row" style="display:none">
                                             <td></td>
                                             <td></td>
                                             <td></td>
-                                            <td>MYR: </td>
+                                            <td style="
+                                            font-weight: 500;
+                                        ">MYR: </td>
                                             <td></td>
 
                                         </tr>
-                                        <tr class="total-row">
-                                            <td>
-                                                <input type="text" class="coupon" id="coupon" name="coupon"
+                                        @isset($shippingMethods)
+                                            @php
+                                                $arrays = json_decode($shippingMethods, true);
+                                            @endphp
+                                            <tr class="shipping-row">
+                                                <td>
+                                                    <input type="text" class="coupon" id="coupon" name="coupon"
                                                     placeholder="Enter coupon code">
                                                 <button class="btn btn-primary coupon_btn" id="coupon_btn"
                                                     name="coupon_btn">Apply Coupon</button>
                                                 <br>
-                                                <span id="coupon_error" class="text-red"></span>
-                                            </td>
+                                                <span id="coupon_error" class="text-green" style="color:green;"></span>
+                                                </td>
+                                                <td></td>
+                                                <td colspan="2">
+                                                    <h5 style="font-weight: 500;margin-bottom: 13px;">Shipping Method</h5>
+                                                    @foreach ($arrays as $array)
+                                                        <div class="form-radio">
+                                                            <input type="radio" name="shipping_method"
+                                                                id="{{ $array['name'] }}" value="{{ $array['name'] }}" {{ $array['name'] === 'flat_rate' ? 'checked' : '' }}>
+                                                            <label for="{{ $array['name'] }}">{{ $array['label'] }}</label>
+                                                            <span id="price_{{ $array['name'] }}"
+                                                                class="price-amount" style="
+                                                                font-weight: 500;
+                                                            ">{{ $array['cost']['inCurrentCurrency']['formatted'] }}</span>
+                                                        </div>
+                                                    @endforeach
+
+
+                                                </td>
+                                                
+
+
+                                            </tr>
+                                        @endisset
+
+                                        <tr class="total-row">
                                             <td></td>
-                                            <td>Total:</td>
-                                            <td> MYR {{ isset($order) ? $order->total : '' }}</td>
+                                            <td></td>
+                                            <td style="font-weight: 500;">Total:</td>
+                                            <td style="font-weight: 500;"> MYR 0.00 {{ isset($order) ? $order->total : '' }}</td>
                                             <td></td>
                                         </tr>
                                     </tfoot>
@@ -402,10 +341,134 @@
                     </div>
                 </div>
             </div>
+
+            <div class="row" style="margin-bottom: 43px">
+
+                <div class="col-md-4">
+                    <div class="pre_order">
+                        <input type="checkbox" id="preorderCheckbox" name="preorderCheckbox">
+                        <label for="preorderCheckbox" class="control-label">Preorder</label>
+
+                    </div>
+
+                </div>
+                <div class="col-md-4">
+                    <div class="pre_order_calender" style="display: none" >
+                        <input type="date" id="pre_order_calender" name="pre_order_calender" style="background-color: transparent;border: none;">
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="address-information-wrapper" id="addressInformationWrapper">
+                <h3 class="section-title" style="border-bottom: 1px solid black;">Address Information</h3>
+                <hr>
+                <div class="other_address" style="display:none">
+                    <input type="checkbox" id="other_address" name="other_address" value="1">
+                    <label for="myCheckbox">ship to different address ?</label>
+
+                </div>
+                <div class="row address" style="margin-top: 40px;">
+
+                    <div class="col-md-6">
+                        <div class="billing-address" id="billing-address"
+                            style="
+                    display: inline-flex;
+                    flex-wrap: nowrap;
+                    flex-direction: column;
+                    margin-left: 20px;
+                    line-height: 26px;
+                ">
+                            <h4 class="pull-left">Billing Address</h4>
+
+                            <div class="form-radio">
+
+                                <label for="billing-address_input">
+                                    <span>
+                                        <hr>
+                                        @if (isset($order))
+                                            <br>
+                                            {{ $order->billing_address_1 }}
+                                            <br>
+
+                                            @if ($order->billing_address_2)
+                                                {{ $order->billing_address_2 }}
+                                                <br>
+                                            @endif
+
+                                            {{ $order->billing_city }}
+                                            <br>
+                                            {{ $order->billing_zip }}
+                                            <br>
+                                            {{ $order->shipping_state_name }}
+                                            <br>
+                                            {{ $order->billing_country_name }}
+                                        @else
+                                        @endif
+                                    </span>
+                                </label>
+                            </div>
+
+                        </div>
+                    </div>
+
+
+
+                    <div class="col-md-6">
+
+                        <div class="shipping-address" id="shipping-address"
+                            style="display:none; flex-wrap: nowrap; flex-direction: column;line-height: 26px;">
+                            <h4 class="pull-left">Shipping Address</h4>
+                            {{-- <div class="form-radio-shipping">
+                            <input type="radio" id="shipping-address_input" value="1" hidden> --}}
+                            <label for="shipping-address_input">
+                                <span>
+                                    <hr>
+                                    @if (isset($order))
+                                        <br>
+                                        {{ $order->shipping_address_1 }}
+                                        <br>
+
+                                        @if ($order->shipping_address_2)
+                                            {{ $order->shipping_address_2 }}
+                                            <br>
+                                        @endif
+
+                                        {{ $order->shipping_city }}
+                                        <br>
+                                        {{ $order->shipping_zip }}
+                                        <br>
+                                        {{ $order->shipping_state_name }}
+                                        <br>
+                                        {{ $order->shipping_country_name }}
+                                    @else
+                                    @endif
+                                </span>
+                            </label>
+                            {{-- </div> --}}
+                        </div>
+
+                        {{-- pickup store  --}}
+                        <div class="pickup-store" id="pickup-store"
+                            style="display:none; flex-wrap: nowrap; flex-direction: column;line-height: 26px;">
+
+                        </div>
+
+
+
+                    </div>
+
+                </div>
+            </div>
+
+           
+
+            
         </div>
     </div>
     <div class="form-group">
-        <div class="col-md-offset-3 col-md-10">
+        <div class="col-md-offset-5 col-md-10" style="margin-top: 53px;">
             <button id="{{ isset($order) ? 'editForm' : 'submitForm' }}" class="btn btn-primary">
                 {{ trans('order::orders.buttons.save') }}
             </button>
@@ -414,6 +477,10 @@
 </form>
 
 <script>
+    let backendData = @json($minimumAmount);
+    const thirdTD = document.querySelector('tfoot .shipping-row td:nth-child(3) ');
+    const firstFormRadio = thirdTD.querySelector('.form-radio');
+    firstFormRadio.style.display = 'none';
     const user = document.getElementById('user');
     const textInput = document.getElementById('customer_id');
     const emailInput = document.getElementById('customer_email');
@@ -425,9 +492,19 @@
     // const formRadio_shipping = document.querySelector('.form-radio-shipping input');
     const addressDiv = document.getElementById('address-information-wrapper');
     const other_address = document.querySelector('.other_address');
+    const other_address_input = document.querySelector('#other_address');
     const other_address_value = other_address.value;
     let original_billing_address = {};
     let original_shipping_address = {};
+    let productData = {
+        product_id: "",
+        unit_price: "",
+        qty: "",
+        line_total: ""
+    };
+    const productDataArray = [];
+    let shippmentValue = document.getElementById('shippment_value');
+    let discountAmt = document.getElementById('discount_amt');
 
     user.addEventListener('change', function() {
         textInput.value = user.value;
@@ -471,18 +548,18 @@
                     });
 
 
-                    other_address.style.display = '';
+                    // other_address.style.display = '';
 
-                    const other_address_input = document.getElementById('other_address');
-                    other_address_input.addEventListener('change', function() {
-                        const shippingAddress = document.getElementById('shipping-address');
-                        if (this.checked) {
+                    // const other_address_input = document.getElementById('other_address');
+                    // other_address_input.addEventListener('change', function() {
+                    //     const shippingAddress = document.getElementById('shipping-address');
+                    //     if (this.checked) {
 
-                            shippingAddress.style.display = 'inline-flex';
-                        } else {
-                            shippingAddress.style.display = 'none';
-                        }
-                    });
+                    //         shippingAddress.style.display = 'inline-flex';
+                    //     } else {
+                    //         shippingAddress.style.display = 'none';
+                    //     }
+                    // });
 
 
 
@@ -561,6 +638,7 @@
             let formRadio = '';
             let span = '';
             let billingLines = [];
+            let shippingData =  {};
             const formRadioElements = billingAddressContainer.querySelectorAll('.form-radio');
 
             formRadioElements.forEach((formRadio) => {
@@ -582,32 +660,45 @@
                     radioInput.id = `billing-address-${item.id}`;
                     radioInput.value = `${item.id}`;
                     radioInput.checked = true;
+
                     label = document.createElement('label');
+                    label.appendChild(radioInput);
                     label.htmlFor = `billing-address-${item.id}`;
-                    const addressDetails = ["address_1", "address_2", "city", "zip", "state_name",
+                    const addressDetails = ["full_name","address_1", "address_2", "city", "zip", "state_name",
                         "country_name"
                     ];
                     addressDetails.forEach((detailKey) => {
+
+                        const itemValue = item[detailKey];
+
+                        if (itemValue === null) {
+                            return; // Skip this iteration if itemValue is null
+                        }
+                        
                         const span = document.createElement('span');
                         span.textContent = `${item[detailKey]}`;
+                        span.id = `${detailKey}`;
                         label.appendChild(span);
-                        if (index < addressDetails.length - 1) {
-                            const lineBreak = document.createElement('br');
-                            label.appendChild(
-                            lineBreak); // Append a line break after each <span> except the last one
-                        }
+                        // if (index < addressDetails.length - 1) {
+                        //     const lineBreak = document.createElement('br');
+                        //     label.appendChild(
+                        //         lineBreak
+                        //     ); // Append a line break after each <span> except the last one
+                        // }
 
                     });
 
                     // span = document.createElement('span');
                     // label.appendChild(span);
-                    formRadio.appendChild(radioInput);
+
                     formRadio.appendChild(label);
                     billingAddressContainer.appendChild(formRadio);
                     radioInput.addEventListener('change', function() {
                         if (this.checked) {
                             original_billing_address = {};
+                            // original_shipping_address = {};
                             billingLines = [];
+                            shippingData =  {};
                             // const shippingAddressDisplay = document.getElementById('shipping-address');
                             // const shippingformRadioElements = shippingAddressDisplay.querySelectorAll('.form-radio');
                             // shippingformRadioElements.forEach((formRadio) => {
@@ -619,27 +710,39 @@
                             //    const shippingformRadio = document.createElement('div');
                             //    shippingformRadio.classList.add('form-radio');
                             spanTags.forEach((spanTag) => {
-                                // const clonedSpan = spanTag.cloneNode(true);
-                                // shippingformRadio.appendChild(clonedSpan);
-                                // const data = spanTag.innerText;
-                                const data = spanTag.textContent;
-                                billingLines.push(data);
-                                original_billing_address = {
-                                    'billing_address_1': billingLines[0],
-                                    'billing_address_2': billingLines[1],
-                                    'billing_city': billingLines[2],
-                                    'billing_zip': billingLines[5],
-                                    'billing_state': billingLines[4],
-                                    'billing_country': billingLines[3]
+                                if(spanTag.id === 'state_name'){
+                                    spanTag.id = 'state'
                                 }
+                                else if(spanTag.id === 'country_name'){
+                                    spanTag.id = 'country'
+                                }
+                                const spanId = 'billing_'+spanTag.id;
+                                const data = spanTag.textContent;
+                                shippingData[spanId] = data;
+                                billingLines.push(data);
+                                // original_billing_address = {
+                                //     'billing_address_1': billingLines[0],
+                                //     'billing_address_2': billingLines[1],
+                                //     'billing_city': billingLines[2],
+                                //     'billing_zip': billingLines[5],
+                                //     'billing_state': billingLines[4],
+                                //     'billing_country': billingLines[3]
+                                // }
+                                original_billing_address = shippingData;
                             });
 
                             //   shippingAddressDisplay.appendChild(shippingformRadio);
-                            console.log('Addressdata', original_billing_address);
+                            if(this.checked && other_address_input.checked == false){
+                                console.log('original_billing_address.billing_zip', original_billing_address.billing_zip);
+                                zipExists(parseInt(original_billing_address.billing_zip));
+                            }
+                              
+                            console.log('original_billing_address->shipping', original_shipping_address);
+
 
                         }
                     });
-                   
+
 
                 });
 
@@ -647,6 +750,8 @@
                 billinaAddressDiv.forEach((element) => {
                     const clonedElement = element.cloneNode(true);
                     const clonedInput = clonedElement.querySelector('input');
+                    clonedInput.checked = false;
+                    clonedInput.checked = true;
                     const clonedLabel = clonedElement.querySelector('label');
                     const label = clonedLabel.getAttribute('for');
                     const currentLabel = label.replace('billing', 'shipping');
@@ -663,7 +768,7 @@
 
                 });
                 // billingLines = [];
-                // original_shipping_address = {};
+                //  original_shipping_address = {};
                 const inputTag = shippingAddressContainer.querySelectorAll('input');
                 inputTag.forEach((element) => {
                     element.addEventListener('change', function() {
@@ -671,27 +776,47 @@
                             const checkedId = this.id;
                             original_shipping_address = {};
                             billingLines = [];
+                            shippingData =  {};
                             const labels = document.querySelector(`label[for="${checkedId}"]`);
                             const spanTags = labels.querySelectorAll('span');
                             spanTags.forEach((spanTag) => {
-                                const data = spanTag.textContent;
-                                billingLines.push(data);
-                                original_shipping_address = {
-                                    'shipping_address_1': billingLines[0],
-                                    'shipping_address_2': billingLines[1],
-                                    'shipping_city': billingLines[2],
-                                    'shipping_zip': billingLines[5],
-                                    'shipping_state': billingLines[4],
-                                    'shipping_country': billingLines[3],
-                                    'shipping_cost': 0.0000
+                                if(spanTag.id === 'state_name'){
+                                    spanTag.id = 'state'
                                 }
+                                else if(spanTag.id === 'country_name'){
+                                    spanTag.id = 'country'
+                                }
+                                const spanId = 'shipping_'+spanTag.id;
+                                const data = spanTag.textContent;
+                                shippingData[spanId] = data;
+
+                                // console.log('spanId:', spanId);
+                                
+                               
+                                billingLines.push(data);
+                                original_shipping_address = shippingData;
+                                // original_shipping_address = {
+                                //     'shipping_address_1': billingLines[0],
+                                //     'shipping_address_2': billingLines[1],
+                                //     'shipping_city': billingLines[2],
+                                //     'shipping_zip': billingLines[5],
+                                //     'shipping_state': billingLines[4],
+                                //     'shipping_country': billingLines[3],
+                                //     'shipping_cost': 0.0000
+                                // }
                             });
-                            console.log('Addressdata', original_shipping_address);
+                            // console.log('shippingData before update:', shippingData);
+                            console.log('shippingAddress', original_shipping_address);
+                            if(this.checked && other_address_input.checked == true){
+                                console.log('original_shipping_address.shipping_zip',original_shipping_address.shipping_zip);
+                                zipExists(parseInt(original_shipping_address.shipping_zip));
+                            }
+                            //  zipExists(parseInt(original_shipping_address.shipping_country));
                         }
                     });
                 });
 
-                
+
 
 
             } else {
@@ -719,7 +844,7 @@
                     if (index < addressDetails.length - 1) {
                         const lineBreak = document.createElement('br');
                         label.appendChild(
-                        lineBreak); // Append a line break after each <span> except the last one
+                            lineBreak); // Append a line break after each <span> except the last one
                     }
 
                 });
@@ -770,14 +895,16 @@
             }
 
 
-                        // Trigger change event on the initially selected radio input for billing address
-            const initiallySelectedBillingRadio = document.querySelector('input[name="billing-address"]:checked');
+            // Trigger change event on the initially selected radio input for billing address
+            const initiallySelectedBillingRadio = document.querySelector(
+                'input[name="billing-address"]:checked');
             if (initiallySelectedBillingRadio) {
                 initiallySelectedBillingRadio.dispatchEvent(new Event('change'));
             }
 
             // Trigger change event on the initially selected radio input for shipping address
-            const initiallySelectedShippingRadio = document.querySelector('input[name="shipping-address"]:checked');
+            const initiallySelectedShippingRadio = document.querySelector(
+                'input[name="shipping-address"]:checked');
             if (initiallySelectedShippingRadio) {
                 initiallySelectedShippingRadio.dispatchEvent(new Event('change'));
             }
@@ -798,6 +925,7 @@
             // Get the selected option
 
             const selectedOption = this.options[this.selectedIndex];
+            console.log('selectedOption',selectedOption);
             // Find the closest parent row element
             const row = this.closest('tr');
 
@@ -813,7 +941,7 @@
 
     let sub = '';
 
-    function updateTotal(discountamount = null) {
+    function updateTotal(discountamount = null, spanValue = null) {
         const tableBody = document.getElementById('productTableBody');
         const rows = tableBody.querySelectorAll('tr');
         const t_amt = document.getElementById('total_amt');
@@ -822,6 +950,7 @@
         const subtotal_amt = st_amt.value;
         let total;
         let sub_total;
+        let shippmentCost = 0.00;
         if (subtotal_amt === '') {
             sub_total = 0;
         } else {
@@ -830,6 +959,7 @@
         if (total_amt === '') {
             total = 0;
         } else {
+
             total = parseFloat(total_amt);
         }
 
@@ -849,6 +979,11 @@
             total += lineTotal;
             sub_total += lineTotal;
         });
+        if (shippmentValue.value !== '') {
+            total += parseFloat(shippmentValue.value);
+            //  console.log('shippmentValue.value',parseFloat(shippmentValue.value));
+        }
+        // console.log('total',total);
 
         // const r = document.querySelector('tfoot .total-row td:nth-child(4) ');
         // console.log('r',r.textContent);
@@ -860,6 +995,12 @@
         const totalFooter = document.querySelector('tfoot .total-row td:nth-child(4)');
         totalFooter.textContent = `MYR ${total.toFixed(2)}`;
         // sub =  document.getElementById('sub_amt_coupon');
+        if (sub_total >= parseInt(backendData.amount)) {
+            firstFormRadio.style.display = '';
+        } else {
+            firstFormRadio.style.display = 'none';
+        }
+
         return sub_total.toFixed(2);
         // const discountRow = document.querySelector('.discount-row');
         // const thirdtd = discountRow.querySelector('td:nth-child(3)');
@@ -882,27 +1023,7 @@
         priceDisplay.textContent = `MYR ${unitPrice}`;
     }
 
-    function test(tr) {
-        const quantity = tr.querySelector('.quantity').value;
-        const selectedOption = tr.querySelector('.order-product option:checked');
-        // const csrfToken = "{{ csrf_token() }}";
-        //   fetch(route('cart.items.store', {  product_id:selectedOption.value , qty: quantity  }), {
-        //   fetch(route('checkout.create', {  product_id:selectedOption.value , qty: quantity  }), {
-        //         method: 'POST',
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //             'X-CSRF-TOKEN': csrfToken,
-        //             // You can include other headers here if needed
-        //         },
-        //          })
-        //         .then(response => {
-        //             if (!response.ok) {
-        //                 throw new Error('Network response was not ok');
-        //             }
-        //             return response.json();
-        //         })
-        //  console.log('tr',tr);
-    }
+
     // Function to calculate line total based on quantity and unit price
     function calculateLineTotal(row) {
         const quantity = row.querySelector('.quantity').value;
@@ -915,17 +1036,6 @@
 
     }
 
-    // Function to add a new row
-    //     function addRow()
-    //      {
-    //     const tableBody = document.getElementById('productTableBody');
-    //     const rowToClone = tableBody.querySelector('tr:first-child');
-    //     const newRow = rowToClone.cloneNode(true);
-    //     tableBody.appendChild(newRow);
-    //     newRow.querySelector('.quantity').value = '';
-    //     calculateLineTotal(newRow);
-    //     updateTotal(); // Recalculate and update the total after adding a new row
-    // }
 
     // Function to add a new row
     function addRow(addto) {
@@ -937,7 +1047,9 @@
         const uniqueId = 'qty_error_' + Date.now();
         const productUniqueId = 'order_products_error_' + Date.now();
         errorSpanQty.id = uniqueId;
+        errorSpanQty.textContent = '';
         productSpanQty.id = productUniqueId;
+        productSpanQty.textContent = '';
         tableBody.appendChild(newRow);
         // Reset the Quantity input and Line Total
         const quantityInput = newRow.querySelector('.quantity');
@@ -971,31 +1083,6 @@
     }
 
 
-    // Function to add a new row
-    // function addRow() {
-    //   const tableBody = document.getElementById('productTableBody');
-    //   const rowToClone = tableBody.querySelector('tr:first-child');
-    //   const newRow = rowToClone.cloneNode(true);
-    //   tableBody.appendChild(newRow);
-
-    //   // Generate a unique ID and name for the select element in the new row
-    //   const selectElement = newRow.querySelector('.order-product');
-    //   const uniqueId = `order_products_${tableBody.children.length}`;
-    //   selectElement.id = uniqueId;
-    //   selectElement.name = `order_products_${tableBody.children.length}`;
-
-    //   // Reset the Quantity input and Line Total
-    //   const quantityInput = newRow.querySelector('.quantity');
-    //   quantityInput.value = '';
-    //   const lineTotalCell = newRow.querySelector('td:nth-child(4)');
-    //   lineTotalCell.textContent = 'MYR 0.00';
-
-    //   // Update the Unit Price based on the selected option
-    //   const selectedOption = newRow.querySelector('.order-product option:checked');
-    //   displayPrice(selectedOption, quantityInput);
-
-    //   updateTotal(); // Recalculate and update the total after adding a new row
-    // }
 
 
 
@@ -1009,20 +1096,202 @@
     }
 
     // Add button click event
-    document.getElementById('productTableBody').addEventListener('click', function(event) {
+
+    // document.getElementById('productTableBody').addEventListener('click', function(event) {
+    //     event.preventDefault();
+    //     console.log(event.target.classList);
+    //     if (event.target.classList.contains('add-row')) {
+    //         addRow(this, event.target);
+    //         add_couponData();
+    //     } else if (event.target.classList.contains('delete-row')) {
+    //         deleteRow(event.target);
+    //         updateTotal();
+    //         add_couponData();
+    //         // if(shippmentValue.value !== ''){
+    //         //     updateTotal(shippmentValue.value);
+    //         // }
+    //         // Recalculate and update the total after deleting a row
+    //     }
+    // });
+
+    document.getElementById('add_product').addEventListener('click', function(event) {
         event.preventDefault();
-        if (event.target.classList.contains('add-row')) {
-            addRow(this, event.target);
-        } else if (event.target.classList.contains('delete-row')) {
+        addRow(document.getElementById('productTableBody'), this);
+        add_couponData();
+        // console.log(productData);
+    });
+
+    document.getElementById('productTableBody').addEventListener('click', function(event) {
+        if (event.target.classList.contains('delete-row')) {
             deleteRow(event.target);
             updateTotal();
-            add_couponData()
-            // Recalculate and update the total after deleting a row
+            add_couponData();
+            addProductData(event.target.parentElement.parentElement, type = 'delete');
         }
     });
 
+
+    document.getElementById('productTableBody').addEventListener('change', function(event) {
+        if (event.target.classList.contains('order-product')) {
+            const row = event.target.parentElement.parentElement;
+            row.querySelector('td:nth-child(3) input').value = '';
+            row.querySelector('td:nth-child(4)').innerText = 'MYR 0.00';
+            updateTotal();
+        }
+    });
+
+
+// const form = document.getElementById('order_create_form');
+// form.addEventListener('input', function(event) {
+//     const target = event.target;
+//     if((target.tagName === 'INPUT') || (target.tagName === 'SELECT') && target.id){
+//         const fieldId = target.id;
+//         const errorSpan = document.getElementById(fieldId + '_error');
+//         if (errorSpan) {
+//             if (
+//                 (target.tagName === 'INPUT' && target.value.trim() !== '') ||
+//                 (target.tagName === 'SELECT' && target.value !== '0')
+//             ) {
+//                 errorSpan.style.display = 'none';
+//             } else {
+//                 errorSpan.style.display = 'block'; // Show the error span if the field is empty or the 
+//             }
+//         }
+//     }
+// });
+
+
+
+    
+
+
+
+    // Function to calculate the future date based on prepare_days and a specific time threshold
+    function calculateFutureDate(prepareDays, thresholdHour, thresholdMinute) {
+        const currentDate = new Date();
+        const currentTime = currentDate.getHours() * 60 + currentDate.getMinutes();
+        const thresholdTime = thresholdHour * 60 + thresholdMinute;
+
+        // If the current time is before the threshold, add prepareDays, else add prepareDays + 1
+        const daysToAdd = currentTime < thresholdTime ? prepareDays : prepareDays + 1;
+
+        const futureDate = new Date();
+        futureDate.setDate(currentDate.getDate() + daysToAdd);
+
+        return futureDate;
+    }
+
+
+    function addProductData(row, type = '') {
+
+
+        if (type === 'delete') {
+            const product_id = row.querySelector('.order-product').value;
+            const indexToRemove = productDataArray.findIndex(item => item.product_id === product_id);
+
+
+            if (indexToRemove !== -1) {
+                const hasPreorder = productDataArray[indexToRemove].is_preorder_status === "1";
+                console.log('hasPreorder', hasPreorder);
+                if (hasPreorder) {
+                    pre_order_calender.min = currentDateString;
+                    pre_order_calender.value = '';
+                }
+
+                productDataArray.splice(indexToRemove, 1); // Remove the object at the specified index
+
+
+
+            }
+
+        } else {
+            const product_id = row.querySelector('.order-product').value;
+            const unit_price = row.querySelector('td:nth-child(2)').textContent
+                .split(' ')[1];
+            const line_total = row.querySelector('td:nth-child(4)').textContent
+                .split(' ')[1];
+            const prepare_days = row.querySelector('.order-product option:checked').getAttribute('data-prepare_days');
+            const is_preorder_status = row.querySelector('.order-product option:checked').getAttribute(
+                'data-is_preorder_status');
+            const indexToUpdate = productDataArray.findIndex(item => item.product_id === product_id);
+            if (indexToUpdate !== -1) {
+
+                //  // If an object with the same product_id exists, replace it
+                productDataArray[indexToUpdate] = {
+                    product_id: product_id,
+                    unit_price: unit_price,
+                    qty: row.querySelector('.quantity').value,
+                    line_total: line_total,
+                    prepare_days: prepare_days,
+                    is_preorder_status: is_preorder_status
+                };
+                console.log('indexToUpdate', productDataArray[indexToUpdate]);
+                return false;
+            }
+
+            const product = {
+                product_id: row.querySelector('.order-product').value,
+                unit_price: unit_price,
+                qty: row.querySelector('.quantity').value,
+                line_total: line_total,
+                prepare_days: prepare_days,
+                is_preorder_status: is_preorder_status
+
+            };
+            productDataArray.push(product);
+
+            console.log(productDataArray);
+
+
+
+
+        }
+
+        const preorderDiv = document.querySelector('.pre_order');
+        const preorderCheckbox = document.getElementById('preorderCheckbox');
+
+
+        const hasPreorder = productDataArray.some(item => item.is_preorder_status === "1");
+
+        if (hasPreorder) {
+            const maxPrepareDays = Math.max(...productDataArray.map(item => parseInt(item.prepare_days)));
+            const thresholdHour = 13;
+            const thresholdMinute = 0;
+            const futureDate = calculateFutureDate(maxPrepareDays, thresholdHour, thresholdMinute);
+            const futureDateString = futureDate.toISOString().split('T')[0];
+            //  pre_order_calender.value = '';
+            pre_order_calender.min = futureDateString;
+            console.log('preorderCalender', pre_order_calender);
+
+        }
+
+
+
+
+
+    }
+
+    const preorderCheckbox = document.getElementById('preorderCheckbox');
+    const preorderCalender = document.querySelector('.pre_order_calender');
+    const pre_order_calender = document.getElementById('pre_order_calender');
+
+    const currentDate = new Date();
+    const currentDateString = currentDate.toISOString().split('T')[0];
+    pre_order_calender.min = currentDateString;
+    preorderCheckbox.addEventListener('change', function(event) {
+        if (event.target.checked) {
+            preorderCalender.style.display = 'inline';
+        } else {
+            preorderCalender.style.display = 'none';
+            pre_order_calender.value = "";
+        }
+    });
+
+
+
+
     function add_couponData() {
-       
+        // console.log('discountAmt',discountAmt.value); 
         const is_present = sub.is_percent;
         const orderAmount = updateTotal();
         const type = 'percent';
@@ -1030,22 +1299,24 @@
         if (is_present && updateTotal() > 0) {
             const valid = handleCouponValidation(sub, orderAmount);
             const discountRow = document.querySelector('.discount-row');
-           const validstrng = valid == 'Coupon is valid' ? true :false;
-            if (valid !== 'Coupon is valid') {
+            const validstrng = valid == 'Coupon is Applied' ? true : false;
+            if (valid !== 'Coupon is Applied') {
                 discountRow.style.display = "none";
                 discountRow.querySelector('td:nth-child(3)').textContent = '';
                 discountRow.querySelector('td:nth-child(4)').textContent = '';
             }
 
-            if (valid == 'Coupon is valid') {
+            if (valid == 'Coupon is Applied') {
                 const discount = sub.value;
                 const discountAmount = discounted(discount, orderAmount, type);
-                discountRow.style.display = 'table-row';
-                console.log('sub',sub);
+                discountRow.style.display = '';
+                // console.log('sub', sub);
                 const thirdtd = discountRow.querySelector('td:nth-child(3)');
                 const forthtd = discountRow.querySelector('td:nth-child(4)');
                 forthtd.textContent = '-MYR ' + discountAmount;
-                thirdtd.textContent = 'coupon [' + sub.code + ']:';
+                // thirdtd.textContent = 'coupon [' + sub.code + ']:';
+                thirdtd.innerHTML =`Coupon[${sub.code}]  <i class="fa-solid fa-xmark"></i>`;
+
                 const errorElement = document.getElementById('coupon_error');
                 errorElement.textContent = valid;
                 const couponElement = document.getElementById('coupon');
@@ -1062,48 +1333,115 @@
         }
     }
 
+
+    const tfoot  = document.querySelector('tfoot');
+
+    tfoot.addEventListener('click', function(){
+        const target = event.target;
+        if(event.target.classList.contains('fa-xmark')){
+             // Check if the clicked element is the third <td> in the "discount-row"
+    if (target.closest('.discount-row td:nth-child(3)')) {
+        const innerText = target.textContent.trim();
+        const row = target.parentElement.parentElement;
+        row.style.display = "none";
+        row.querySelector('td:nth-child(3)').textContent = '';
+        row.querySelector('td:nth-child(4)').textContent = '';
+        updateTotal();
+        // if (innerText !== '') {
+        //     // The third <td> element has a value
+        //     console.log('The third <td> element in the "discount-row" has a value:', innerText);
+        // } else {
+        //     // The third <td> element is empty
+        //     console.log('The third <td> element in the "discount-row" is empty.');
+        // }
+    }
+       
+
+        }
+       
+       
+    
+   
+    });
+    
+   // Calculate line total when quantity changes
+//    document.getElementById('productTableBody').addEventListener('click', function(event) {
+//         event.preventDefault();
+//         const qty = document.querySelector('.quantity');
+//         if(event.target.classList.contains('fa-angle-left')){
+//             console.log('event.target',event.target);
+//             qty.value = parseInt(qty.value) - 1;
+            
+            
+
+//         }else if(event.target.classList.contains('fa-angle-right')){
+//             qty.value = parseInt(qty.value) + 1;
+           
+//         }
+//         qty.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+//     });
+
+    
+
     // Calculate line total when quantity changes
     document.getElementById('productTableBody').addEventListener('input', function(event) {
         if (event.target.classList.contains('quantity')) {
-            test(event.target.parentElement.parentElement);
+            const row = event.target.parentElement.parentElement;
+            const select = row.querySelector('.order-product');
+            const selectedOption = select.options[select.selectedIndex];
+            const manageStock = selectedOption.getAttribute('data-manage_stock');
+            const dataQty = parseInt(selectedOption.getAttribute('data-qty'));
+            const isStock = parseInt(selectedOption.getAttribute('data-in_stock'));
+            const spanDiv =select.nextElementSibling;
+            const span = spanDiv.querySelector('span');
+            span.textContent = '';
+           if(manageStock && event.target.value !== ''){
+            if(!isStock){
+                console.log('out of stock');
+                
+                span.textContent = 'out of stock';
+                console.log('span',span);
+                event.target.value = 0;
+                return false;
+            }
+            span.textContent = '';
+            const qtyValue = parseInt(event.target.value);
+            const stockCheck = qtyValue > dataQty ? true : false;
+            if(stockCheck){
+                event.target.value = dataQty;
+                span.textContent = 'Sorry, we only have '+dataQty+'  in stock.';
+                return false;
+            }
+           }else if( !manageStock && event.target.value !== ''){
+            if(!isStock){
+                console.log('out of stock');
+                
+                span.textContent = 'out of stock';
+                event.target.value = 0;
+                return false;
+            }
+           }
             calculateLineTotal(event.target.parentElement.parentElement);
             add_couponData();
-
+            if (event.target.value.trim() !== "") {
+                addProductData(event.target.parentElement.parentElement);
+            }
 
         }
     });
     const productArray = [];
-    // function CollectProductData(button) {
-    //         event.preventDefault();
 
-    //         const row = button.parentElement.parentElement;
-    //         const p_id = row.querySelector('.order-product').value;
-    //         const unit_price = row.querySelector('td:nth-child(2)').textContent.split(' ')[1];
-    //         const line_total = row.querySelector('td:nth-child(4)').textContent.split(' ')[1];
-    //         const qty = row.querySelector('.quantity').value;
-    //         const product = {
-    //             product_id:p_id,
-    //             unit_price:unit_price, 
-    //             qty:qty,
-    //             line_total:line_total,
-
-    //         }
-    //         productArray.push(product);
-    //         console.log('productArray',productArray);
-
-
-    // }
-    function displayErrorMessage(fieldId, message,spanId) {
+    function displayErrorMessage(fieldId, message, spanId) {
         let spanError = '';
-        if(spanId){
-             spanError = '_'+spanId;
-           
-        }
-        else{
+        if (spanId) {
+            spanError = '_' + spanId;
+
+        } else {
             spanError = '';
         }
-        
-        const errorElement = document.getElementById(fieldId + '_error'+spanError);
+
+        const errorElement = document.getElementById(fieldId + '_error' + spanError);
+        // console.log('errorElement', fieldId, message, spanId);
         errorElement.textContent = message;
         errorElement.style.color = 'red';
 
@@ -1127,8 +1465,8 @@
         const paymentSelect = document.getElementById('payment_method');
         const nameSelect = document.getElementById('user');
         const statusSelect = document.getElementById('status');
-        const productSelect = document.getElementById('order_products');
-        const productQty =  row.querySelector('.quantity');
+        const productSelect = row.querySelector('.order-product');
+        const productQty = row.querySelector('.quantity');
         const emailValue = emailInput.value.trim();
         const phoneValue = phoneInput.value.trim();
         const paymentValue = paymentSelect.value;
@@ -1138,9 +1476,16 @@
         const qtyValue = productQty.value;
         let isValid = true;
         const spanId = row.querySelector('td:nth-child(3) div span');
-        const  productSpan = row.querySelector('td:nth-child(1) div span');
-        console.log('productSpan',productSpan);
-        const  qtyError = spanId.id.split('_');
+        const productSpan = row.querySelector('td:nth-child(1) div span');
+        const productError = productSpan.id.split('_');
+        const qtyError = spanId.id.split('_');
+
+        // Helper function to hide the error span
+        // function hideErrorField(fieldId) {
+        //     const errorElement = document.getElementById(fieldId);
+        //     console.log('errorElement',errorElement);
+        //     errorElement.textContent = '';
+        // }
 
         if (emailValue === '') {
             displayErrorMessage('email', 'The email field is required.');
@@ -1151,7 +1496,7 @@
             isValid = false;
 
 
-        }
+        } 
 
         if (phoneValue === '') {
             displayErrorMessage('phone', 'The phone number field is required.');
@@ -1183,162 +1528,82 @@
         }
         if (productValue == 0) {
 
-            displayErrorMessage('order_products', 'The Product  field is required.');
+            displayErrorMessage('order_products', 'The Product  field is required.', productError[3]);
             isValid = false;
 
         }
         if (qtyValue === '') {
-            displayErrorMessage('qty', 'The Quantity  field is required.',qtyError[2]);
+            displayErrorMessage('qty', 'The Quantity  field is required.', qtyError[2]);
             isValid = false;
 
         }
         return isValid;
     }
 
-    // function handleCouponValidation(coupon, orderAmount) {
-    //     // if(coupon.maximum_spend){
-    //     //     return 'coupon maximum_spend exists.';
-    //     // }else{
-    //     //     return 'coupon maximum_spend doest exists.';
-    //     // }
-
-    //     try {
-    //         // Check if the coupon code is missing or empty
-    //         if (!coupon || !coupon.code) {
-    //             throw new Error('The coupon does not exist.');
-    //         }
-
-    //         // Check if the coupon has expired
-    //         const currentDate = new Date();
-    //         const endDate = new Date(coupon.end_date);
-
-    //         if (currentDate > endDate) {
-    //             throw new Error('Coupon has expired');
-    //         }
-
-    //         // Check if the coupon is used up
-    //         if (coupon.usage_limit_per_coupon) {
-    //             throw new Error('Coupon has been fully used');
-    //         }
-
-    //         // Check if the order amount is below the minimum spend
-    //         // const orderAmount =  orderAmount /* Get the order amount from your application */;
-    //         if (coupon.didNotSpendTheRequiredAmount) {
-    //             const minimumSpend = parseFloat(coupon.minimum_spend.amount);
-
-    //             if (orderAmount < minimumSpend) {
-    //                 throw new Error(`Order amount must be at least ${coupon.minimum_spend.formatted}`);
-    //             }
-
-    //         }
-
-    //         if (coupon.maximum_spend) {
-    //             // Check if the order amount exceeds the maximum spend
-    //             const maximumSpend = parseFloat(coupon.maximum_spend.amount);
-
-    //             if (orderAmount > maximumSpend) {
-    //                 throw new Error(`Order amount cannot exceed ${coupon.maximum_spend.formatted}`);
-    //             }
-    //         }
-
-
-    //         // Check if the customer has exceeded the usage limit
-    //         const usageLimitPerCustomer = coupon.usage_limit_per_customer;
-
-    //         if (coupon.usageLimitpercoupon !== false && coupon.used >= usage_limit_per_coupon) {
-    //             throw new Error(`Customer has exceeded the usage limit for this coupon`);
-    //         }
-
-    //         // Add more custom checks here based on your requirements
-
-    //         // Check if the coupon has already applied
-    //         const alreadyApplied = coupon.alreadyapplied;
-
-    //         if (alreadyApplied) {
-    //             throw new error('The coupon has been already applied.');
-    //         }
-
-    //         const invalid = coupon.invalid;
-
-    //         if (invalid) {
-    //             throw new error('The coupon is not valid.');
-    //         }
-
-
-
-    //         // If all checks pass, you can return a success message
-    //         return 'coupon is valid';
-
-    //     } catch (error) {
-    //         // Handle and log the error or return an error message
-    //         return `Error: ${error.message}`;
-    //     }
-
-    // }
 
     function handleCouponValidation(coupon, orderAmount) {
-    try {
-        // Check if the coupon code is missing or empty
-        if (!coupon || !coupon.code) {
-            throw new Error('The coupon does not exist.');
-        }
-
-        // Check if the coupon has expired
-        const currentDate = new Date();
-        const endDate = new Date(coupon.end_date);
-
-        if (currentDate > endDate) {
-            throw new Error('Coupon has expired');
-        }
-
-        // Check if the coupon is used up
-        if (coupon.usage_limit_per_coupon && coupon.used >= coupon.usage_limit_per_coupon) {
-            throw new Error('Coupon has been fully used');
-        }
-
-        // Check if the order amount is below the minimum spend
-        if (coupon.minimum_spend) {
-            const minimumSpend = parseFloat(coupon.minimum_spend.amount);
-
-            if (orderAmount < minimumSpend) {
-                throw new Error(`Order amount must be at least ${coupon.minimum_spend.formatted}`);
+        try {
+            // Check if the coupon code is missing or empty
+            if (!coupon || !coupon.code) {
+                throw new Error('The coupon does not exist.');
             }
-        }
 
-        // Check if the order amount exceeds the maximum spend (if maximum_spend is not null)
-        if (coupon.maximum_spend) {
-            const maximumSpend = parseFloat(coupon.maximum_spend.amount);
+            // Check if the coupon has expired
+            const currentDate = new Date();
+            const endDate = new Date(coupon.end_date);
 
-            if (orderAmount > maximumSpend) {
-                throw new Error(`Order amount cannot exceed ${coupon.maximum_spend.formatted}`);
+            if (currentDate > endDate) {
+                throw new Error('Coupon has expired');
             }
+
+            // Check if the coupon is used up
+            if (coupon.usage_limit_per_coupon && coupon.used >= coupon.usage_limit_per_coupon) {
+                throw new Error('Coupon has been fully used');
+            }
+
+            // Check if the order amount is below the minimum spend
+            if (coupon.minimum_spend) {
+                const minimumSpend = parseFloat(coupon.minimum_spend.amount);
+
+                if (orderAmount < minimumSpend) {
+                    throw new Error(`Order amount must be at least ${coupon.minimum_spend.formatted}`);
+                }
+            }
+
+            // Check if the order amount exceeds the maximum spend (if maximum_spend is not null)
+            if (coupon.maximum_spend) {
+                const maximumSpend = parseFloat(coupon.maximum_spend.amount);
+
+                if (orderAmount > maximumSpend) {
+                    throw new Error(`Order amount cannot exceed ${coupon.maximum_spend.formatted}`);
+                }
+            }
+
+            // Check if the customer has exceeded the usage limit
+            if (coupon.perCustomerUsageLimitReached) {
+                throw new Error(`Customer has exceeded the usage limit for this coupon`);
+            }
+
+            // Add more custom checks here based on your requirements
+
+            // Check if the coupon has already applied
+            if (coupon.alreadyapplied) {
+                throw new Error('The coupon has already been applied.');
+            }
+
+            // Check if the coupon is marked as invalid
+            if (coupon.invalid) {
+                throw new Error('The coupon is not valid.');
+            }
+
+            // If all checks pass, you can return a success message
+             return 'Coupon is Applied';
+
+        } catch (error) {
+            // Handle and log the error or return an error message
+            return `Error: ${error.message}`;
         }
-
-        // Check if the customer has exceeded the usage limit
-        if (coupon.perCustomerUsageLimitReached) {
-            throw new Error(`Customer has exceeded the usage limit for this coupon`);
-        }
-
-        // Add more custom checks here based on your requirements
-
-        // Check if the coupon has already applied
-        if (coupon.alreadyapplied) {
-            throw new Error('The coupon has already been applied.');
-        }
-
-        // Check if the coupon is marked as invalid
-        if (coupon.invalid) {
-            throw new Error('The coupon is not valid.');
-        }
-
-        // If all checks pass, you can return a success message
-        return 'Coupon is valid';
-
-    } catch (error) {
-        // Handle and log the error or return an error message
-        return `Error: ${error.message}`;
     }
-}
 
 
 
@@ -1354,7 +1619,7 @@
                 // Calculate the discounted amount
                 const discountAmount = (discountPercentage / 100) * amount;
                 const discountedAmount = amount - discountAmount;
-               
+
                 // Return the discounted amount as a string with 2 decimal places
                 updateTotal(discountAmount.toFixed(2));
                 return discountAmount.toFixed(2);
@@ -1374,6 +1639,8 @@
 
 
     }
+
+
 
     //submit coupon click event
     document.getElementById('coupon_btn').addEventListener('click', function() {
@@ -1417,11 +1684,11 @@
                 const errorElement = document.getElementById('coupon_error');
                 const discountRow = document.querySelector('.discount-row');
                 const validationMessage = handleCouponValidation(couponObject, orderAmount);
-                const valdate = validationMessage == 'Coupon is valid' ? true : false;
+                const valdate = validationMessage == 'Coupon is Applied' ? true : false;
                 const discount_amt = document.getElementById('discount_amt');
                 const is_percent = document.getElementById('discount_type');
                 const coupon_id = document.getElementById('coupon_id');
-                if (validationMessage !== 'Coupon is valid') {
+                if (validationMessage !== 'Coupon is Applied') {
 
                     discountRow.style.display = "none";
                     discountRow.querySelector('td:nth-child(3)').textContent = '';
@@ -1431,8 +1698,8 @@
                 const forthtd = discountRow.querySelector('td:nth-child(4)');
                 errorElement.textContent = validationMessage;
                 errorElement.style.color = 'red';
-                if (validationMessage == 'Coupon is valid') {
-                    
+                if (validationMessage == 'Coupon is Applied') {
+
                     const discount = couponObject.value;
                     const discount_type = couponObject.is_percent;
                     coupon_id.value = couponObject.id;
@@ -1446,7 +1713,9 @@
                         const discountAmount = discounted(discount, orderAmount, type);
                         discountRow.style.display = 'table-row';
                         forthtd.textContent = '-MYR ' + discountAmount;
-                        thirdtd.textContent = 'coupon [' + coupon + ']:';
+                        // thirdtd.textContent = 'coupon [' + coupon + ']:';
+                thirdtd.innerHTML =`Coupon[${sub.code}]  <i class="fa-solid fa-xmark"></i>`;
+
 
 
                     } else {
@@ -1456,7 +1725,9 @@
                         const discountAmount = discounted(dis, orderAmount, type);
                         discountRow.style.display = 'table-row';
                         forthtd.textContent = '-MYR ' + discountAmount;
-                        thirdtd.textContent = 'coupon [' + coupon + ']:';
+                        // thirdtd.textContent = 'coupon [' + coupon + ']:';
+                        thirdtd.innerHTML =`Coupon[${sub.code}]  <i class="fa-solid fa-xmark"></i>`;
+
                     };
                 }
 
@@ -1482,10 +1753,253 @@
 
 
     });
+    //shipping methods
+    function zipdata() {
+        return new Promise((resolve, reject) => {
+            const csrfToken = "{{ csrf_token() }}";
+            fetch(route('admin.fixedrates.getpincode'), {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Resolve the Promise with the received data
+                    resolve(data);
+                })
+                .catch(error => {
+                    // Reject the Promise with an error if something went wrong
+                    reject(error);
+                });
+        });
+    }
+
+    function zipExists(zipcode = null) {
+
+        zipdata()
+            .then(data => {
+                // Handle the data here
+                let priceData = '';
+                if (data.hasOwnProperty(zipcode)) {
+                    const price = data[zipcode];
+                    // console.log(`Price for zip code ${zipcode}: ${price}`);
+                    priceData = `MYR ${price}.00`;
+                } else {
+                    priceData = 'MYR 0.00';
+                }
+                // console.log('priceData',priceData);
+                // return;
+                const shipping_method = document.getElementsByName('shipping_method');
+                shipping_method.forEach(function(element) {
+                    // element.addEventListener('change', function(){
+                    const labelFor = element.getAttribute('id');
+                    const span = document.querySelector('#price_' + labelFor);
+                    
+
+                    if (labelFor == 'flat_rate') {
+                        span.innerHTML = priceData;
+                        const spanValue = span.textContent.split('MYR')[1];
+                        // shippmentValue.value = spanValue;
+                        console.log('shippmentValuet', shippmentValue.value);
+                        if (element.checked) {
+                            shippmentValue.value = spanValue;
+                            updateTotal();
+                            add_couponData();
+                        }
+
+                    }
+                    // });
+                });
+
+
+            })
+            .catch(error => {
+                // Handle errors here
+                console.error(error);
+            });
+
+        // for(const key in zipData){
+        //     console.log('zip',key);
+        // }
+
+
+
+
+    }
+
+    const shipping_method = document.getElementsByName('shipping_method');
+    shipping_method.forEach(function(element) {
+        if (element.value === 'flat_rate' && element.checked === true) {
+            other_address.style.display = '';
+            const other_address_input = document.getElementById('other_address');
+            other_address_input.addEventListener('change', function() {
+                const shippingAddress = document.getElementById('shipping-address');
+                if (this.checked) {
+                    console.log('original_shipping_address',original_shipping_address); 
+                    shippingAddress.style.display = 'inline-flex';
+                     zipExists(parseInt(original_shipping_address.shipping_zip));
+                } else {
+                    shippingAddress.style.display = 'none';
+                    const sippingAddress = document.getElementById('shipping-address');
+                    console.log('shippingAddress',shippingAddress);
+                     zipExists(parseInt(original_billing_address.billing_zip));
+
+                }
+            });
+}
+
+        element.addEventListener('change', function() {
+            other_address.style.display = '';
+            console.log('other_address',other_address);
+           
+            other_address_input.addEventListener('change', function() {
+                const shippingAddress = document.getElementById('shipping-address');
+                if (this.checked) {
+
+                    shippingAddress.style.display = 'inline-flex';
+                } else {
+                    shippingAddress.style.display = 'none';
+                    const sippingAddress = document.getElementById('shipping-address');
+                    // sippingAddress.checked = false;
+
+                }
+            });
+            const labelFor = this.getAttribute('id');
+            const span = document.querySelector('#price_' + labelFor);
+            const spanValue = span.textContent.split('MYR')[1];
+            shippmentValue.value = spanValue;
+            let targetElement = document.getElementById('pickup-store');
+            if (labelFor == 'local_pickup' && element.checked) {
+                const csrfToken = "{{ csrf_token() }}";
+                const shippingAddress = document.getElementById('shipping-address');
+                fetch(route('admin.pickupstores.getLocalPickupAddress'), {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken, // You should define 'csrfToken' or remove if not needed
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+
+                            let template = `<h4 class="pull-left">Pickup Store Address</h4>`;
+                            data.forEach(function(pickupStore) {
+
+                                template += `<div class="form-radio">
+                                            <label for="shipping-address-${pickupStore.id}">
+                                                <input type="radio" name="shipping-address" id="shipping-address-${pickupStore.id}" value="${pickupStore.id}">
+                                                <span>${pickupStore.name}</span>
+                                                <span>${pickupStore.address_1}</span>
+                                                <span>${pickupStore.address_2}</span>
+                                                <span>${pickupStore.city}</span>
+                                                <span>${pickupStore.zip}</span>
+                                                
+                                                <span>${pickupStore.state_name}</span>
+                                                
+                                                <span>${pickupStore.country_name}</span>
+                                                
+                                            </label>
+                                        </div>`;
+
+
+
+                            });
+                            
+                            // Get the target element by its ID
+                            targetElement.innerHTML = template;
+                            // targetElement = document.getElementById('pickup-store');
+                            targetElement.style.display = 'inline-flex';
+                            // Set the innerHTML of the target element to the dynamicHTML
+                            const inputRadio = targetElement.querySelector('.form-radio input[type="radio"]');
+                            inputRadio.checked = true;
+                            const checkedId = inputRadio.id;
+                            original_shipping_address = {};
+                            pickupStoreLines = [];
+                            const labels = document.querySelector(`label[for="${checkedId}"]`);
+                            const spanTags = labels.querySelectorAll('span');
+                            spanTags.forEach((spanTag) => {
+                                const data = spanTag.textContent;
+                                pickupStoreLines.push(data);
+                                original_shipping_address = {
+                                    'shipping_address_1': pickupStoreLines[0],
+                                    'shipping_address_2': pickupStoreLines[1],
+                                    'shipping_city': pickupStoreLines[2],
+                                    'shipping_zip': pickupStoreLines[3],
+                                    'shipping_state': pickupStoreLines[4],
+                                    'shipping_country': pickupStoreLines[5],
+
+                                }
+                            });
+                            console.log('original_shipping_address',original_shipping_address);
+
+                        }
+
+                    )
+                    .catch(error => {
+                        // Handle errors here
+                        console.error(error);
+                    });
+                other_address.style.display = 'none';
+                shippingAddress.style.display = 'none';
+                other_address_input.checked = false;
+                // console.log('other_address_input',other_address_input);
+
+
+            } else {
+                targetElement.style.display = 'none';
+
+            }
+
+            updateTotal();
+            add_couponData();
+
+
+        });
+    });
+    const shippingPickupStore = document.querySelector('#pickup-store');
+    shippingPickupStore.addEventListener('change', function(event) {
+        const inputTag = event.target;
+        // console.log('inputTag',inputTag);
+        if (inputTag.checked) {
+            const checkedId = inputTag.id;
+            original_shipping_address = {};
+            pickupStoreLines = [];
+            const labels = document.querySelector(`label[for="${checkedId}"]`);
+            const spanTags = labels.querySelectorAll('span');
+            spanTags.forEach((spanTag) => {
+                const data = spanTag.textContent;
+                pickupStoreLines.push(data);
+                original_shipping_address = {
+                    'shipping_address_1': pickupStoreLines[0],
+                    'shipping_address_2': pickupStoreLines[1],
+                    'shipping_city': pickupStoreLines[2],
+                    'shipping_zip': pickupStoreLines[3],
+                    'shipping_state': pickupStoreLines[4],
+                    'shipping_country': pickupStoreLines[5],
+
+                }
+            });
+            console.log('shippingPickupStore', original_shipping_address);
+
+        }
+
+    });
+
+
+
+    // ----------------------------------------------------------------
+
+
     // Submit button click event
 
     document.addEventListener('DOMContentLoaded', function() {
-        updateTotal();
         const editFormButton = document.getElementById('editForm');
         const submitFormButton = document.getElementById('submitForm');
         if (editFormButton) {
@@ -1676,7 +2190,7 @@
                             if (data.data === 'success') {
                                 // Redirect to the list page
                                 window.location.href = route(
-                                "admin.orders.index"); // Replace with the actual URL
+                                    "admin.orders.index"); // Replace with the actual URL
 
                                 //  console.log('data',data.data); 
                             }
@@ -1691,22 +2205,22 @@
             });
 
         }
-        function validateAllRows()
-        {
+
+        function validateAllRows() {
             let isValid = true;
             const rows = document.querySelectorAll('#productTableBody tr');
-            rows.forEach(function(row){
-                if(!validateForm(row)){
+            rows.forEach(function(row) {
+                if (!validateForm(row)) {
                     isValid = false;
                 }
-                
+
             });
             return isValid;
-           
+
         }
-       
+
         if (submitFormButton) {
-            
+
             document.getElementById('submitForm').addEventListener('click', function(event) {
                 event.preventDefault();
                 // validateAllRows();
@@ -1714,6 +2228,13 @@
                     event.preventDefault();
                 } else {
                     const selectedProducts = [];
+                    const CalenderDate = document.getElementById('pre_order_calender');
+                    let CalenderValue = '';
+                    if (CalenderDate.value !== '') {
+                        CalenderValue = CalenderDate.value.toString();
+                    } else {
+                        CalenderValue = null;
+                    }
                     const rows = document.querySelectorAll('#productTableBody tr');
                     rows.forEach(function(row) {
                         const unit_price = row.querySelector('td:nth-child(2)').textContent
@@ -1725,6 +2246,7 @@
                             unit_price: unit_price,
                             qty: row.querySelector('.quantity').value,
                             line_total: line_total,
+                            delivery_date: CalenderValue
 
                         };
                         selectedProducts.push(product);
@@ -1783,6 +2305,8 @@
 
                         }
 
+
+
                     });
 
                     function isEmpty(obj) {
@@ -1798,7 +2322,7 @@
                         }
                     });
 
-                    console.log('submitbutton', original_billing_address, original_shipping_address);
+
                     if (isEmpty(original_shipping_address) && !isEmpty(original_billing_address)) {
                         original_shipping_address['shipping_address_1'] = original_billing_address
                             .billing_address_1;
@@ -1811,12 +2335,12 @@
                         original_shipping_address['shipping_state'] = original_billing_address
                             .billing_state;
                         original_shipping_address['shipping_zip'] = original_billing_address
-                        .billing_zip;
+                            .billing_zip;
 
 
                     }
-                    console.log('original_billing_address', original_billing_address);
-                    console.log('original_shipping_address', original_shipping_address);
+                    // console.log('original_billing_address', original_billing_address);
+                    // console.log('original_shipping_address', original_shipping_address);
 
                     const discountTag = document.querySelector('tfoot .discount-row td:nth-child(4)');
                     const sliceText = discountTag.textContent.split(' ');
@@ -1881,6 +2405,25 @@
                     const couponTag = document.getElementById('coupon_id');
                     //    console.log('coupon_id',coupon_id.value);
                     const coupon_id = couponTag.value;
+                    let shipping_method = '';
+                    let shipping_cost = 0.00;
+
+                    const shipping_methods = document.getElementsByName('shipping_method');
+                    shipping_methods.forEach(function(element) {
+                        // element.addEventListener('change', function(){
+
+                        if (element.checked) {
+                            const labelFor = element.getAttribute('id');
+                            const span = document.querySelector('#price_' + labelFor);
+                            const spanValue = span.textContent.split('MYR')[1];
+                            shipping_cost = parseFloat(spanValue).toFixed(2);
+                            shipping_method = labelFor;
+                        }
+
+                        // });
+                    });
+                    // console.log('labelFor',labelFor,spanValue);
+                    // return
                     const csrfToken = "{{ csrf_token() }}";
 
                     const data = {
@@ -1894,7 +2437,8 @@
                         currency_rate: 1000,
                         locale: 'en',
                         user_type: user_typeInput.value,
-                        shipping_cost: 0.0000,
+                        shipping_method: shipping_method,
+                        shipping_cost: shipping_cost,
                         coupon_id: coupon_id
                     };
                     delete data.user;
@@ -1908,8 +2452,13 @@
                     delete data['billing-address'];
                     delete data['other_address'];
                     delete data['shipping-address'];
+                    delete data.shippment_value;
+                    delete data.preorderCheckbox;
+                    delete data.pre_order_calender;
+                    delete data.billing_full_name;
+                    delete data.shipping_full_name;
                     console.log('data', data);
-                //  return;
+                        //  return;
 
                     fetch(route("admin.orders.store"), {
                             method: 'POST',
@@ -1928,7 +2477,7 @@
                                 if (data.data === 'success') {
                                     // Redirect to the list page
                                     window.location.href = route(
-                                    "admin.orders.index"); // Replace with the actual URL
+                                        "admin.orders.index"); // Replace with the actual URL
                                     // console.log('products',data.products);
                                 }
 
@@ -1947,3 +2496,33 @@
         }
     });
 </script>
+
+<style>
+     .form-radio span {
+        /* line-height: 26px; */
+    display: block;
+    clear: both;
+    
+            
+    }
+    label {
+        font-weight: lighter;
+    }
+
+    .price-amount {
+        margin-left: 71%; /* Add spacing to the right of the element */
+        margin-block-start: -3%;
+}
+
+
+    /* Define a class to set the background icon and padding for the <td> */
+
+
+
+    
+
+    
+    
+
+    
+</style>

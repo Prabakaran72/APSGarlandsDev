@@ -83,7 +83,8 @@
 
         <div class="col-md-6">
             <div class="shipping-address">
-                <h4 class="pull-left">{{ trans('order::orders.shipping_address') }}</h4>
+                <h4 class="pull-left">{{  $order->shipping_method === 'Local Pickup' ? 'Pickup Store Address' : trans('order::orders.shipping_address') }}</h4>
+                {{-- <h4>{{ $order->shipping_method }}</h4> --}}
                 
 {{-- @php print_r($order); @endphp --}}
                 <span>
@@ -101,15 +102,6 @@
                     <br>
                     {{ $order->shipping_country_name }}
                 </span>
-            </div>
-            <div class="col-md-2">
-                <div class="shipping-address">
-                    {{-- <h4 class="pull-left mb-4">{{ trans('order::orders.shipping_address') }}</h4> --}}
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editShippingModal">
-                        Edit 
-                    </button>
-                    
-                </div>
             </div>
         </div> 
         
