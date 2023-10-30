@@ -6,6 +6,8 @@ use Modules\Order\Entities\Order;
 use Modules\User\Admin\UserTable;
 use Modules\Review\Entities\Review;
 use Modules\Testimonial\Entities\Testimonial;
+use Modules\Blogpost\Entities\Blogpost;
+
 use Illuminate\Auth\Authenticatable;
 use Modules\Address\Entities\Address;
 use Modules\Product\Entities\Product;
@@ -188,6 +190,10 @@ class User extends EloquentUser implements AuthenticatableContract
     public function testimonials()
     {
         return $this->hasMany(Testimonial::class, 'user_id');
+    }
+    public function blogposts()
+    {
+        return $this->hasMany(Blogpost::class, 'author_id');
     }
 
     /**
