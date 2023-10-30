@@ -35,9 +35,10 @@ export default {
                 newShippingAddress: false,
                 ship_to_a_different_address: false,
                 terms_and_conditions: false,
+                isCheckedRecurringOrder: false,
             },
-            pickupstore: [], // Initialize an empty array to store the response data
-            selectedLocalpickupAddressId: null, // Initialize a variable to store the selected local pickup address
+            pickupstore: [], // Initialize pickupstore as an empty array
+            selectedLocalpickupAddressId: null,
             fixedrate: {
                 price: 0,
                 total:0,
@@ -59,21 +60,21 @@ export default {
             stripeError: null,
             authorizeNetToken: null,
             termsModalContent: "",   //For Terms and Conditions Modal popup
+            preparingDays: null,
+			selectedDeliveryDate: null,
+			minDate: null,
         };
     },
     mounted() {
-        // if (this.pickupstore.length > 0) {
-        //     this.selectedLocalpickupAddressId = this.pickupstore[0].id;
-        //   }
-        // Call the function when the component is mounted
-       // console.log("test123",this.countries);
+       
         this.getLocalpickupAddress();
-        if (this.form.shipping_method !== 'flat_rate' && this.pickupstore.length > 0) {
+        if (this.form.shipping_method === 'local_pickup' && this.pickupstore.length > 0) {
             // Check if pickupstore is not empty and shipping method is not 'flat_rate'
             this.selectedLocalpickupAddressId = this.pickupstore[0].id;
             
             // Find and store the details of the selected address
             this.selectedAddressDetails = this.pickupstore[0];
+          
           }
       },
     computed: {
@@ -143,33 +144,28 @@ export default {
     },
 
     watch: {
-        // selectedLocalpickupAddressId(newVal) {
-        //     console.log('Selected address ID:', newVal);
-        //   },
         pickupstore: {
             handler(newVal) {
               if (newVal.length > 0 && this.selectedLocalpickupAddressId === null) {
-                // Set the default ID and address details
                 this.selectedLocalpickupAddressId = newVal[0].id;
               }
             },
-            deep: true, // Watch for nested changes within pickupstore
+            deep: true, 
           },
           selectedLocalpickupAddressId(newVal) {
-            // console.log("test456", this.form.billing.state)
-            // console.log('Selected address ID:', newVal);
             // Find the selected address in the pickupstore array
             const selectedAddress = this.pickupstore.find(address => address.id === newVal);
-            //console.log("selectedAddress",selectedAddress);
             if (selectedAddress) {
-               // this.stateName(this.selectedAddressDetails.state);
-               
-              // Store the selected address details
               this.selectedAddressDetails = selectedAddress;
-            // console.log("this.selectedAddressDetails",this.selectedAddressDetails);  
-            // console.log("this.selectedAddressDetails.state",this.selectedAddressDetails.country);
-            
-           // this.stateName(this.selectedAddressDetails.country);
+            }
+          },
+          selectedLocalpickupAddressId(newVal) {
+            // Check if pickupstore is an array before using the find method
+            if (Array.isArray(this.pickupstore)) {
+              const selectedAddress = this.pickupstore.find(address => address.id === newVal);
+              if (selectedAddress) {
+                this.selectedAddressDetails = selectedAddress;
+              }
             }
           },
         shouldDisableCheckbox(newVal) {
@@ -267,10 +263,6 @@ export default {
     },
 
     created() {
-        // if (this.pickupstore.length > 0) {
-        //     this.selectedLocalpickupAddressId = this.pickupstore[0].id;
-        //   }
-        
           
         this.getLocalpickupAddress();
 
@@ -332,7 +324,8 @@ export default {
         getFixedRate(price) {
             $.ajax({
                 method: "GET",
-                url: route("admin.fixedrates.getfixedrates", { price: price }),
+               // url: route("admin.fixedrates.getfixedrates", { price: price }), Fixedrate.getpincode
+               url: route("Fixedrate.getfixedrates", { price: price }),
                 success: (data) => {
                     this.$nextTick(() => {
                     if (price === 0) {
@@ -407,11 +400,10 @@ export default {
             this.$nextTick(() => {
             $.ajax({
                 method: "GET",
-                url: route("admin.fixedrates.getpincode"),
+                url: route("Fixedrate.getpincode"),
                 data: '',
             })
             .then(response => {
-           
           if (response && typeof response === 'object') {
             let zipFound = false;
             // Iterate through the keys of the response object
@@ -502,18 +494,20 @@ export default {
     });
     },
     getLocalpickupAddress() {
+       // console.log("this.form.shipping_method",this.form.shipping_method);
        // console.log('entered');
         // Make an AJAX request to retrieve address details
         $.ajax({
           method: "GET",
-          url: route("admin.pickupstores.getLocalPickupAddress"),
+         // url: route("admin.pickupstores.getLocalPickupAddress"),Pickupstore.getLocalPickupAddress
+          url: route("Pickupstore.getLocalPickupAddress"),
           data: {},
         })
         .then(response => {
-         // console.log('response', response);
-          this.pickupstore = response; // Set the 'pickupstore' data with the response
-          //console.log('this.pickupstore', this.pickupstore);
-        })
+           // console.log('Received response:', response);
+            this.pickupstore = response; // Set the 'pickupstore' data with the response
+            //console.log('this.pickupstore', this.pickupstore);
+          })
         .catch(error => {
           console.error(error);
         });
@@ -677,6 +671,7 @@ export default {
                     this.selectedAddressDetails,
                     ship_to_a_different_address:
                         +this.form.ship_to_a_different_address,
+                        delivery_date:this.selectedDeliveryDate,
                 },
             })
                 .then((response) => {

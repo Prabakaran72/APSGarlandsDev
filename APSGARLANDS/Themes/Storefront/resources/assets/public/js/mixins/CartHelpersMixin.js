@@ -86,7 +86,7 @@ export default {
             }
 
             this.loadingOrderSummary = true;
-            this.getLocalpickupAddress();
+           this.getLocalpickupAddress();
             this.changeShippingMethod(shippingMethodName);
             //console.log('getLocalpickupAddress');
             $.ajax({
