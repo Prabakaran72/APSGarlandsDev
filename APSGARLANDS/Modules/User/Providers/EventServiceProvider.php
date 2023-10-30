@@ -15,6 +15,8 @@ class EventServiceProvider extends ServiceProvider
         \Modules\User\Events\CustomerRegistered::class => [
             \Modules\User\Listeners\SendWelcomeEmail::class,
             \Modules\User\Listeners\SendWelcomeSms::class,
+            \Modules\User\Listeners\EarnRewardOnSignup::class,
         ],
+
     ];
 }

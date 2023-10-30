@@ -44,12 +44,15 @@ class CustomerRewardpointController extends Controller
             $customerRewardPoints->created_at = Carbon::now();
             $customerRewardPoints->save();
         }
+        else{
+
+        }
     }
 
 
     public function store(){
         //  Cart::instance();
-        Cart::redeemRewardPoints(request()->redeemedAmount, request()->redeemedPoint);
+        Cart::redeemRewardPoints(request()->redeemedAmount, request()->redeemedPoint, request()->resetSession);
         return Cart::instance();
     }
 

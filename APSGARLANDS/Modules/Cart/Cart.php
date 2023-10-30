@@ -16,8 +16,8 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 class Cart extends DarryldecodeCart implements JsonSerializable
 {
-    protected $redemptionRewardAmount = 0;
-    protected $redeemedpoints = 0;
+    protected $redemptionRewardAmount;
+    protected $redeemedpoints;
     /**
      * Get the current instance.
      *
@@ -440,6 +440,7 @@ class Cart extends DarryldecodeCart implements JsonSerializable
         return json_encode($this->jsonSerialize());
     }
 
+
     public function rewardpoints()
     {
     $currency = 0;    
@@ -448,11 +449,11 @@ class Cart extends DarryldecodeCart implements JsonSerializable
         // dd('$this->redemptionRewardAmount > 0 - true');
         $currency = new Money($this->redemptionRewardAmount, "MYR");
     }
-    else if($this->session->exists('redemptionRewardAmount')){
-        // dd($this->session->get('redemptionRewardAmount'));
-        // $currency =   new Money($this->session->get('redemptionRewardAmount'),'MYR');
-        $currency  = $this->session->get('redemptionRewardAmount');
-    }
+    // else if($resetSession && $this->session->exists('redemptionRewardAmount') ){
+    //     // dd($this->session->get('redemptionRewardAmount'));
+    //     // $currency =   new Money($this->session->get('redemptionRewardAmount'),'MYR');
+    //     $currency  = $this->session->get('redemptionRewardAmount');
+    // }
     else{
         // dd('else');
         // $currency = new Money($this->redemptionRewardAmount, "MYR");
@@ -461,13 +462,29 @@ class Cart extends DarryldecodeCart implements JsonSerializable
     }
         $this->session->put('redemptionRewardAmount', $currency);
         $this->session->put('redeemedpoints', $this->redeemedpoints);
+
+        // dd($this->session->get('redemptionRewardAmount'));
         return $currency;
     }
-    public function redeemRewardPoints($redeemedAmount = 0, $redeemedpoints = 0)
+    public function redeemRewardPoints($redeemedAmount = 0, $redeemedpoints = 0, $resetSession=false)
     {
-        // dd('redeemRewardPoints()');
-        $this->redemptionRewardAmount = $redeemedAmount;
-        $this->redeemedpoints = $redeemedpoints;
+        if($resetSession){
+            if($this->session->exists('redemptionRewardAmount')){
+                $currency = $this->session->get('redemptionRewardAmount');
+                $this->redemptionRewardAmount = $currency->amount();
+                $this->redeemedpoints = $this->session->get('redeemedpoints');
+                return $currency;
+            }
+            else{
+                $this->redemptionRewardAmount = 0 ;
+                $this->redeemedpoints = 0;
+            }
+        }
+        else{
+            
+            $this->redemptionRewardAmount = $redeemedAmount;
+            $this->redeemedpoints = $redeemedpoints;            
+        }
         $this->rewardpoints();
     }
     public function clearRedemption(){

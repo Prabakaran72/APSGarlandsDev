@@ -30,4 +30,6 @@ return [
     'apply_Reward'=>'Apply Reward Points',
     'reward_points'=> 'Reward Points',
     'redeemed_amount' =>'Reward Amount',
+    'redeem_reward' => 'CLAIM REWARD',
+    'enter_reward_point' => 'Enter Reward Points',
 ];
