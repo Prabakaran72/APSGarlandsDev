@@ -10,6 +10,7 @@ use Modules\Product\Entities\Product;
 use Modules\Shipping\Facades\ShippingMethod;
 use Darryldecode\Cart\Cart as DarryldecodeCart;
 use Modules\Product\Services\ChosenProductOptions;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 class Cart extends DarryldecodeCart implements JsonSerializable
@@ -186,18 +187,27 @@ class Cart extends DarryldecodeCart implements JsonSerializable
         if (!$this->hasShippingMethod()) {
             return new NullCartShippingMethod();
         }
-
+        //dd( new NullCartShippingMethod());
         return new CartShippingMethod($this, $this->getConditionsByType('shipping_method')->first());
     }
 
     public function shippingCost()
-    {   //dd($this->shippingMethod()->cost());
-        return $this->shippingMethod()->cost();
-
-    }
-
-    public function addShippingMethod($shippingMethod)
     {
+        // Check if the shipping method is a flat rate option
+        if ($this->shippingMethod()->name() === 'flat_rate') {
+            // Retrieve the dynamic_flat_rate_cost from the session
+            $dynamicFlatRateCost = Session::get('dynamic_flat_rate_cost', 0);
+   //dd(Money::inDefaultCurrency($dynamicFlatRateCost));
+            // Use the dynamic flat rate cost
+            return Money::inDefaultCurrency($dynamicFlatRateCost);
+        }
+    
+        // If it's not a flat rate option, return the default shipping cost
+        return $this->shippingMethod()->cost();
+    }
+    public function addShippingMethod($shippingMethod)
+    { 
+        //dd($shippingMethod);
         $this->removeShippingMethod();
 
         $this->condition(
