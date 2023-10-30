@@ -65,7 +65,19 @@
                             </a>
                         </li>
 
-                       
+                        <li class="{{ request()->routeIs('account.profile.edit') ? 'active' : '' }}">
+                            <a href="{{ route('account.profile.edit') }}">
+                                <i class="las la-user-circle"></i>
+                                {{ trans('storefront::account.pages.my_profile') }}
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="{{ route('logout') }}">
+                                <i class="las la-sign-out-alt"></i>
+                                {{ trans('storefront::account.pages.logout') }}
+                            </a>
+                        </li>
                     </ul>
                 </div>
 

@@ -198,12 +198,12 @@
                             </tr>
                         @endif
 
-                        @foreach ($order->taxes as $tax)
+                        {{-- @foreach ($order->taxes as $tax)
                             <tr>
                                 <td>{{ $tax->name }}</td>
                                 <td class="text-right">{{ $tax->order_tax->amount->convert($order->currency, $order->currency_rate)->format($order->currency) }}</td>
                             </tr>
-                        @endforeach
+                        @endforeach --}}
 
                         <tr>
                             <td>{{ trans('order::print.total') }}</td>

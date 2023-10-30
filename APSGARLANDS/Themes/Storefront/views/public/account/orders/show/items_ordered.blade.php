@@ -4,7 +4,6 @@
             <thead>
                 <tr>
                     <th>{{ trans('storefront::account.product_name') }}</th>
-                    <th>{{ trans('storefront::account.view_order.delivery_date') }}</th>
                     <th>{{ trans('storefront::account.view_order.unit_price') }}</th>
                    <th>{{ trans('storefront::account.view_order.quantity') }}</th>
                     <th>{{ trans('storefront::account.view_order.line_total') }}</th>
@@ -33,9 +32,9 @@
                                 </ul>
                             @endif
                         </td>
-                        <td>
+                        <!--<td>
                             @php
-                                if($product->delivery_date!=null||$product->delivery_date!=''){
+                                if($product->delivery_date!=null && $product->delivery_date!=''){
                             @endphp
                             {{ $product->delivery_date->format('Y-m-d') }}
                             @php
@@ -43,7 +42,7 @@
                                     echo '-';
                                 }
                             @endphp
-                        </td>
+                        </td>-->
 
                         <td>
                             <label>{{ trans('storefront::account.view_order.unit_price') }}</label>

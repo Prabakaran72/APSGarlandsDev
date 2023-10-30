@@ -5,7 +5,7 @@ return [
     'pickupstore' => 'Pickup store',
     'pickupstores' => 'Pickup stores',
     'table' => [
-        'name' => 'Store Name',
+        'first_name' => 'Store Name',
         'city' =>'City'
     ],
     'tabs' => [

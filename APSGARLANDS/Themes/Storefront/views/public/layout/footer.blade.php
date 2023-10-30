@@ -153,7 +153,7 @@
                 </div>
 
                 <div>
-                    <p>Powered by <a href="https://www.santhila.co/" target="_blank">Santhila DataBot</a></p>
+                    <div class="footer-text">Powered by <a href="https://www.santhila.co/" target="_blank">Santhila DataBot</a></div>
                 </div>
             </div>
 

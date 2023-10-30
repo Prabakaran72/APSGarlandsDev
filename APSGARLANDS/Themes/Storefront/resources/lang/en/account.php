@@ -30,6 +30,7 @@ return [
         'view' => 'View',
         'view_order' => 'View Order',
         'no_orders' => 'You haven\'t placed any order yet.',
+        'delivery_date' => 'Delivery Date'
     ],
     'view_order' => [
         'view_order' => 'View Order',

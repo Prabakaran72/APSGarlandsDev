@@ -23,6 +23,11 @@
             </li>
 
             <li>
+                <label>{{ trans('storefront::account.view_order.delivery_date') }}</label>
+                <span>{{ $order->delivery_date ? date('M j, Y', strtotime($order->delivery_date))  : "-"}}</span>
+            </li>
+
+            <li>
                 <label>{{ trans('storefront::account.view_order.shipping_method') }}</label>
                 <span>{{ $order->shipping_method }}</span>
             </li>

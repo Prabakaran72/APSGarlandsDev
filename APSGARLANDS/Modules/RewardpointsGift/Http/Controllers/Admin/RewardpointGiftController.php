@@ -77,7 +77,7 @@ class RewardpointGiftController extends Controller
     {
         $entity = RewardpointsGift::with('user')->find($id);
 
-        
+
         if (request()->wantsJson()) {
             return $entity;
         }
@@ -89,25 +89,26 @@ class RewardpointGiftController extends Controller
 
     public function update($id)
     {
-        $entity = RewardpointsGift::find($id);
-        $entity->update(
-            $this->getRequest('update')->except(['_token', '_method'])
-        );
-        $entity = CustomerRewardpointController::find($entity->customer_reward_id);
-        $entity->update(
-            $this->getRequest('update')->except(['_token', '_method'])
-        );
+        DB::beginTransaction();
+        try {
+            $entity = RewardpointsGift::find($id);
+            $entity->update(
+                $this->getRequest('update')->except(['_token', '_method'])
+            );
 
-        $CustmerRewardPointsController = new CustomerRewardpointController();
-        $CustmerRewardPointsController->create($entity, 'manualoffer');
-
-        if (method_exists($this, 'redirectTo')) {
-            return $this->redirectTo($entity)
+            $customerEntity = CustomerRewardpoint::find($entity->customer_reward_id);
+            $customerEntity->update(['reward_points_earned' => $entity->reward_point_value]);
+            DB::commit();
+            return redirect()->route("admin.rewardpointsgift.edit", $entity->user_id)
                 ->withSuccess(trans('admin::messages.resource_saved', ['resource' => $this->getLabel()]));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            // throw $e; // Re-throw the exception to propagate it
+            return redirect()->route("admin.rewardpointsgift.edit",$entity->user_id)->with('error', trans(
+                'admin::messages.resource_save_failed',
+                ['resource' => $this->getLabel()]
+            ));
         }
-
-        return redirect()->route("admin.rewardpointsgift.index")
-            ->withSuccess(trans('admin::messages.resource_saved', ['resource' => $this->getLabel()]));
     }
 
     public function create($id)
@@ -147,8 +148,10 @@ class RewardpointGiftController extends Controller
             // Handle the exception (e.g., log it) and rollback the transaction
             DB::rollBack();
             // throw $e; // Re-throw the exception to propagate it
-                return redirect()->route("admin.rewardpointsgift.edit", ['id' => $customer_id])->with('error', trans('admin::messages.resource_save_failed', 
-                    ['resource' => $this->getLabel()]));
+            return redirect()->route("admin.rewardpointsgift.edit", ['id' => $customer_id])->with('error', trans(
+                'admin::messages.resource_save_failed',
+                ['resource' => $this->getLabel()]
+            ));
         }
     }
 }

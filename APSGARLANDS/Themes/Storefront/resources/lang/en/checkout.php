@@ -6,10 +6,12 @@ return [
     'add_new_address' => '+ ADD NEW ADDRESS',
     'billing_details' => 'Billing Details',
     'delivery_details' => 'Delivery Details',
+    'delivery_date' => 'Delivery Date',
     'you_must_select_an_address' => 'You must select an address.',
     'please_select' => 'Please Select',
     'create_an_account_by_entering_the_information_below' => 'Create an account by entering the information below. If you are a returning customer please login from the top of the page.',
     'shipping_details' => 'Shipping Details',
+    'pickup_store_details' =>'Pickup Store Details',
     'special_note_for_delivery' => 'Special note for delivery',
     'payment_method' => 'Payment Method',
     'no_payment_method' => 'No payment method is found.',
@@ -17,4 +19,5 @@ return [
     'i_agree_to_the' => 'I agree to the',
     'terms_&_conditions' => 'Terms & Conditions',
     'place_order' => 'PLACE ORDER',
+    'recurring_order' => 'Recurring Order',
 ];

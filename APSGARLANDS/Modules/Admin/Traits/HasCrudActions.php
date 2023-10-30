@@ -6,10 +6,11 @@ use Illuminate\Http\Request;
 use Modules\Support\Search\Searchable;
 use Modules\Admin\Ui\Facades\TabManager;
 use Modules\Fixedrate\Entities\Fixedrate;
+use Modules\Pickupstore\Entities\Pickupstore;
 use Modules\Shipping\Providers\ShippingServiceProvider;
 use Illuminate\Support\Facades\Config; 
 use Illuminate\Support\Facades\Session;
-use Modules\Pickupstore\Entities\Pickupstore;
+
 
 trait HasCrudActions
 {
@@ -52,21 +53,13 @@ trait HasCrudActions
         }
         
         return response()->json([]); // Return an empty array if there is no data
-        
-        //($pincodeData);
+      
     }
-//     public function getfixedrates(Request $request)
-// {
-//     $newPrice = $request->input('price');
-    
-//     // You can store or use the price as needed
-    
-//     return response()->json(['price' => $newPrice]);
-// }
- // Adjust the namespace as needed
+  public function  getLocalPickupAddress(){
+    $pickupstoreDetails = Pickupstore::all();
 
- // Import the Config facade
- 
+    return response()->json($pickupstoreDetails);
+  }
 
  public function getfixedrates(Request $request)
  {
@@ -344,14 +337,14 @@ trait HasCrudActions
             $entity->searchable();
         }
     }
-    public function  getLocalPickupAddress(){
-        $pickupstoreDetails = Pickupstore::all();
-        foreach ($pickupstoreDetails as $pickupstore) {
-            $pickupstore['country_name'] = $pickupstore->getPickupStoreCountryNameAttribute();
-            $pickupstore['state_name'] = $pickupstore->getPickupStoreStateNameAttribute();
-        }
+    // public function  getLocalPickupAddress(){
+    //     $pickupstoreDetails = Pickupstore::all();
+    //     foreach ($pickupstoreDetails as $pickupstore) {
+    //         $pickupstore['country_name'] = $pickupstore->getPickupStoreCountryNameAttribute();
+    //         $pickupstore['state_name'] = $pickupstore->getPickupStoreStateNameAttribute();
+    //     }
         
     
-        return response()->json($pickupstoreDetails);
-      }
+    //     return response()->json($pickupstoreDetails);
+    //   }
 }

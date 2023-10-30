@@ -4,6 +4,7 @@
             <tr>
                 <th>{{ trans('storefront::account.orders.order_id') }}</th>
                 <th>{{ trans('storefront::account.date') }}</th>
+                <th>{{ trans('storefront::account.orders.delivery_date') }}</th>
                 <th>{{ trans('storefront::account.status') }}</th>
                 <th>{{ trans('storefront::account.orders.total') }}</th>
                 <th>{{ trans('storefront::account.action') }}</th>
@@ -19,6 +20,9 @@
 
                     <td>
                         {{ $order->created_at->toFormattedDateString() }}
+                    </td>
+                    <td class="text-center">
+                        {{ $order->delivery_date ? $order->delivery_date : '-'}}
                     </td>
 
                     <td>

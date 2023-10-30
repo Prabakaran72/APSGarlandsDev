@@ -1,7 +1,7 @@
 @push('shortcuts')
     <dl class="dl-horizontal">
         <dt><code>b</code></dt>
-        <dd>{{ trans('admin::admin.shortcuts.back_to_index', ['name' => trans('pickupstore::pickupstore.pickupstore')]) }}</dd>
+        <dd>{{ trans('admin::admin.shortcuts.back_to_index', ['first_name' => trans('pickupstore::pickupstore.pickupstore')]) }}</dd>
     </dl>
 @endpush
 

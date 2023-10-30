@@ -103,7 +103,7 @@
         @include('public.layout.sidebar_menu')
         @include('public.layout.sidebar_cart')
         @include('public.layout.alert')
-        @include('public.layout.newsletter_popup')
+        {{-- @include('public.layout.newsletter_popup') --}}
         @include('public.layout.cookie_bar')
     </div>
 

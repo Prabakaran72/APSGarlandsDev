@@ -56,6 +56,10 @@
                         <div class="product-details-info">
                             <div class="details-info-top">
                                 <h1 class="product-name">{{ $product->name }}</h1>
+                                <input type="hidden" value="{{ $product->prepare_days }}" name="pre_order_days" id="pre_order_days"/>
+								@if ($product->prepare_days!=0 )
+								<div class="product-price" style="font-size: 16px;font-weight: 500;line-height: 16px;display: flex;color: var(--color-primary);">Preparing Days {{ $product->prepare_days }}</div>
+							    @endif
 
                                 @if (setting('reviews_enabled'))
                                     <product-rating :rating-percent="ratingPercent" :review-count="totalReviews"></product-rating>

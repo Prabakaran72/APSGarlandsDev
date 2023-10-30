@@ -1,7 +1,7 @@
 <div class="category-nav {{ request()->routeIs('home') ? 'show' : '' }}">
-    <div class="category-nav-inner">
+    <div class="category-nav-inner  justify-content-center">
         {{ trans('storefront::layout.all_categories_header') }}
-        <i class="las la-bars"></i>
+        <!-- <i class="las la-bars"></i> -->
     </div>
 
     @if ($categoryMenu->menus()->isNotEmpty())

@@ -79,13 +79,13 @@ class CheckoutController extends Controller
         if (auth()->guest() && $request->create_an_account) {
             $customerService->register($request)->login();
         }
-
         $order = $orderService->create($request);
 
         $gateway = Gateway::get($request->payment_method);
 
         try {
             $response = $gateway->purchase($order, $request);
+            
         } catch (Exception $e) {
             $orderService->delete($order);
 
@@ -95,23 +95,4 @@ class CheckoutController extends Controller
         }
         return response()->json($response);
     }
-//     public function setDeliveryDate(Request $request)
-//     {
-//         $productDeliveryDate = $request->input('productDeliveryDate');
-
-//     // Now, $productDeliveryDate is an array that you can iterate through
-//     foreach ($productDeliveryDate as $item) {
-//         $productId = $item['product_id'];
-//         $deliveryDate = $item['delivery_date'];
-//         $orderId = $item['orderid'];
-// echo $orderId;
-// DB::table('order_products')
-// ->where('order_id', $orderId)
-// ->where('product_id', $productId)
-// ->update(['delivery_date' => $deliveryDate]);
-//         // Perform your processing here
-//         // Example: YourModel::create(['product_id' => $productId, 'delivery_date' => $deliveryDate]);
-//     }
-
-//     }
 }

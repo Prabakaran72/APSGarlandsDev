@@ -18,7 +18,7 @@
                     />
 
                     <div class="header-search-right" @focusin="hideSuggestions">
-                        <select
+                        <!-- <select
                             name="category"
                             class="header-search-select custom-select-option arrow-black"
                             @nice-select-updated="
@@ -42,7 +42,7 @@
                             >
                                 {{ category.name }}
                             </option>
-                        </select>
+                        </select> -->
 
                         <button
                             type="submit"
@@ -58,7 +58,7 @@
                 </div>
             </form>
 
-            <div
+            <!-- <div
                 v-if="
                     Boolean(isMostSearchedKeywordsEnabled) &&
                     mostSearchedKeywords.length !== 0
@@ -87,7 +87,7 @@
                         </a>
                     </li>
                 </ul>
-            </div>
+            </div> -->
         </div>
 
         <div class="header-search-sm-form">

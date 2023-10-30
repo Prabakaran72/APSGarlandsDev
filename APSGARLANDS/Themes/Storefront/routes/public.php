@@ -8,7 +8,10 @@ Route::get('storefront/product-grid/tabs/{tabNumber}', 'ProductGridController@in
 Route::get('storefront/flash-sale-products', 'FlashSaleProductController@index')->name('storefront.flash_sale_products.index');
 Route::get('storefront/vertical-products/{columnNumber}', 'VerticalProductController@index')->name('storefront.vertical_products.index');
 
-Route::post('storefront/newsletter-popup', 'NewsletterPopup@store')->name('storefront.newsletter_popup.store');
-Route::delete('storefront/newsletter-popup', 'NewsletterPopup@destroy')->name('storefront.newsletter_popup.destroy');
+// Route::post('storefront/newsletter-popup', 'NewsletterPopup@store')->name('storefront.newsletter_popup.store');
+// Route::delete('storefront/newsletter-popup', 'NewsletterPopup@destroy')->name('storefront.newsletter_popup.destroy');
 
 Route::delete('storefront/cookie-bar', 'CookieBarController@destroy')->name('storefront.cookie_bar.destroy');
+
+Route::get('/CustomizeProduct', 'CustomizeProductController@viewCustomProduct')->name('storefront.CustomizeProduct.index');
+ 

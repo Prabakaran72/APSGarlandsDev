@@ -14,6 +14,7 @@ Themes/Storefront/assets/public/js/app.js
 storage/logs/
 
 #avoid tracking node modules in all directories and subdirectories in this project
+# **/node_modules/
 
 
 /.meta
@@ -23,6 +24,7 @@ yarn-error.log
 *.map
 
 #to avoid npm mix js and css files
+APSGARLANDS/Modules/Admin/Assets/js/admin.js
 APSGARLANDS/Modules/Admin/Assets/js/admin.js
 APSGARLANDS/Modules/Brand/Assets/admin/js/brand.js      
 APSGARLANDS/Modules/Category/Assets/admin/js/jstree.js  
@@ -67,6 +69,7 @@ APSGARLANDS/Modules/Translation/node_modules/
 APSGARLANDS/Themes/Storefront/node_modules/
 APSGARLANDS/mix-manifest.json
 APSGARLANDS/storage/logs/
-APSGARLANDS/vendor/
-APSGARLANDS/node_modules/
+# APSGARLANDS/vendor/
+# APSGARLANDS/node_modules/
 
+node_modules/.cache/

@@ -33,7 +33,10 @@
                                 <td>{{ trans('order::orders.order_date') }}</td>
                                 <td>{{ $order->created_at->toFormattedDateString() }}</td>
                             </tr>
-
+                            <tr>
+                                <td>{{ trans('order::orders.delivery_date') }}</td>
+                                <td>{{ date('M j, Y', strtotime($order->delivery_date)) }}</td>
+                            </tr>
                             <tr>
                                 <td>{{ trans('order::orders.order_status') }}</td>
                                 <td>

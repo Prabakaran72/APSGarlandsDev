@@ -1,5 +1,6 @@
 <template>
     <div class="sidebar-cart-item">
+        <input type="hidden" id="header-prepare-days" v-model="cartItem.product.prepare_days" />
         <a :href="productUrl(cartItem.product)" class="product-image">
             <img
                 :src="baseImage(cartItem.product)"
@@ -55,11 +56,13 @@
             },
 
             remove() {
+             
                 store.removeCartItem(this.cartItem);
 
                 $.ajax({
-                    method: 'DELETE',
+                    method: 'POST',
                     url: route('cart.items.destroy', { cartItemId: this.cartItem.id }),
+                    data:{cartItem :  this.cartItem, deleteReason: ''},
                 }).then((cart) => {
                     store.updateCart(cart);
                 });

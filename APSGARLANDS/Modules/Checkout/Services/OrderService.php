@@ -99,7 +99,7 @@ class OrderService
     }
 
     private function store($request)
-    {
+    { //dd($request);
         $shippingMethod = Cart::shippingMethod()->name();
         $shippingCost = 0;
 
@@ -113,6 +113,20 @@ class OrderService
         } else {
             $otherShippingCost = Cart::shippingCost()->amount();
             $shippingCost = $otherShippingCost;
+        }
+        $shippingMethod = $request->shipping_method;
+
+        // Check if the selected shipping method is 'local pickup'
+        if ($shippingMethod === 'local_pickup') {
+            
+            // Use the selected pickup store details as the shipping address
+            $shippingAddress = $request->selectedPickupstoreDetails;
+            //dd($shippingAddress);
+            
+        } else {
+            // Use the regular shipping address details
+            $shippingAddress = $request->shipping;
+           //  dd($shippingAddress);
         }
 
         // Calculate the total by adding the subTotal, discount, and shippingCost
@@ -132,14 +146,18 @@ class OrderService
         'billing_state' => $request->billing['state'],
         'billing_zip' => $request->billing['zip'],
         'billing_country' => $request->billing['country'],
-        'shipping_first_name' => $request->shipping['first_name'],
-        'shipping_last_name' => $request->shipping['last_name'],
-        'shipping_address_1' => $request->shipping['address_1'],
-        'shipping_address_2' => $request->shipping['address_2'] ?? null,
-        'shipping_city' => $request->shipping['city'],
-        'shipping_state' => $request->shipping['state'],
-        'shipping_zip' => $request->shipping['zip'],
-        'shipping_country' => $request->shipping['country'],
+        // Here, store the pickup store details when the shipping method is 'local pickup.'
+        // If the shipping method is 'flat rate,' use details from the address table and store them in the same shipping field names.
+        'shipping_first_name' => $shippingAddress['first_name'],
+        'shipping_last_name' => $shippingAddress['last_name'] ?? null,
+        'shipping_address_1' => $shippingAddress['address_1'],
+        'shipping_address_2' => $shippingAddress['address_2'] ?? null,
+        'shipping_city' => $shippingAddress['city'],
+        'shipping_state' => $shippingAddress['state'],
+        'shipping_zip' => $shippingAddress['zip'],
+        'shipping_country' => $shippingAddress['country'],
+        'pickupstore_address_id' => $shippingAddress['id'] ?? null,
+        
         'sub_total' => Cart::subTotal()->amount(),
         'shipping_method' => Cart::shippingMethod()->name(),
         'shipping_cost' => $shippingCost,
@@ -152,6 +170,7 @@ class OrderService
         'locale' => locale(),
         'status' => Order::PENDING_PAYMENT,
         'note' => $request->order_note,
+        'delivery_date'=>$request->delivery_date,
     ]);
 }
 

@@ -78,7 +78,7 @@
                                 <div class="count" v-text="wishlistCount"></div>
                             </div>
 
-                            <span>{{ trans('storefront::layout.favorites') }}</span>
+                            <span style="display:none">{{ trans('storefront::layout.favorites') }}</span>
                         </a>
                     </div>
 
@@ -136,10 +136,6 @@
 
 
 
-
-
-
-
                     <!-- <div class='quick-menu' style='display:flex'>
                         <i class='las la-phone' onclick='toggleView()'></i>
 
@@ -163,8 +159,8 @@
                                                                 <span>{{ trans('storefront::layout.account') }}</span>
                                                             </a>
                                                         </div>
-@else
-    <div class="header-contact header">
+                            @else
+                                <div class="header-contact header">
                                                             <a href="{{ route('login') }}" class="menu-link">
                                                                 <div class="icon-wrap">
                                                                     <i class="las la-sign-in-alt"></i>
@@ -220,33 +216,39 @@
                         @endauth
                     </div> --}}
                     {{-- <div class='' style='display:flex'> --}}
-                        <div class="header-contact header">
-                        @auth
-                                <div class="dropdown">
-                                    <a href="#" class="menu-link" id="profile-dropdown" data-toggle="dropdown"
-                                        aria-haspopup="true" aria-expanded="false">
-                                        <!-- Your image here -->
-                                        <img src="{{ auth()->user()->sso_avatar ?? auth()->user()->image_url ?? 'storage/profile/default.jpg' }}"
-                                            alt="User Profile Image" class="profile-image" width="50px" height="50px">
-                                        {{-- {{ trans('storefront::layout.account') }} --}}
-                                        {{ auth()->user()->full_name }}
-                                    </a>
-                                    <div class="dropdown-menu" aria-labelledby="profile-dropdown">
+                            <div class="header-contact header">
+                                @auth
+                                    <div class="dropdown d-flex">
+                                        <a href="#" class="menu-link header-wishlist" id="profile-dropdown" data-toggle="dropdown"
+                                            aria-haspopup="true" aria-expanded="false">
+                                            <!-- Your image here -->
+                                            <img src="{{ (auth()->user()->sso_avatar) ? (auth()->user()->sso_avatar) : ((auth()->user()->image_url) ? (auth()->user()->image_url) : (asset('storage/profile/default.jpg'))) }}"
+                                                alt="User Profile Image" class="profile-image" width="50px" height="50px">
+                                                <span>
+                                                    {{-- {{ trans('storefront::layout.account') }} --}}
+                                                    {{ auth()->user()->full_name }}
+                                                </span>
+                                        </a>
+                                        <div class="dropdown-menu" aria-labelledby="profile-dropdown">
 
-                                        <a class="dropdown-item"
-                                            href="{{ route('account.profile.update') }}">{{ trans('storefront::layout.my_Profile') }}</a>
-                                        <a class="dropdown-item"
-                                            href="{{ route('logout') }}">{{ trans('storefront::layout.logout') }}</a>
+                                            <a class="dropdown-item"
+                                                href="{{ route('account.profile.update') }}">{{ trans('storefront::layout.my_Profile') }}</a>
+                                            <a class="dropdown-item"
+                                                href="{{ route('logout') }}">{{ trans('storefront::layout.logout') }}</a>
+                                        </div>
                                     </div>
-                                </div>
-                        @else
-                        <div class="count">
-                            <a href="{{ route('login') }}">{{ trans('storefront::layout.login') }}</a>
-                        </div>
-                        @endauth
-                    </div>
-
-                {{-- </div> --}}
+                                @else
+                                    <!-- <div class="count"> -->
+                                        <a class='header-wishlist menu-link' href="{{ route('login') }}">
+                                        <div class="icon-wrap">
+                                            <i class="las la-user"></i>
+                                        </div>
+                                            <!-- <span>{{ trans('storefront::layout.login') }}</span> -->
+                                        </a>
+                                    <!-- </div> -->
+                                @endauth
+                            </div>
+                    {{-- </div> --}}
             </div>
         </div>
     </div>

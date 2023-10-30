@@ -44,7 +44,7 @@
                             {{ $abandoned->rate }}
                         </td>
                         <td>
-                            {{ $abandoned->created_at->format('d-m-Y') }}
+                            {{ date_format($abandoned->created_at,"d-m-Y")}}
                         </td>
                         <td>
                             {{ $abandoned->first_name }}{{ $abandoned->last_name }}

@@ -42,7 +42,7 @@ class CartItemController extends Controller
 
         return Cart::instance();
     }
-
+    
     /**
      * Update the specified resource in storage.
      *
@@ -63,46 +63,39 @@ class CartItemController extends Controller
         }
 
         return Cart::instance();
-    }
+    }    
+    public function clearCartItem($cartItemId)
+        {
+        if(auth()->check() && auth()->user()->id){
+            $customer_id=auth()->user()->id;
+            $first_name=auth()->user()->first_name;
+            $last_name=auth()->user()->last_name;
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param string $cartItemId
-     * @return \Illuminhtate\Http\Response
-     */
-    public function destroy($cartItemId)
-    {
-        if (!empty((auth()->user()))) {
-            $customer_id = auth()->user()->id;
-            $first_name = auth()->user()->first_name;
-            $last_name = auth()->user()->last_name;
-        } else {
-            $customer_id = '0';
-            $first_name = '';
-            $last_name = '';
-        }
-        $cartItemRef    =   explode('$$##$$', $cartItemId);
-        $cart_item_id_val = $cartItemRef[0];
-        $slug_val = $cartItemRef[1];
-        $product_id_val = $cartItemRef[2];
-        $qty = $cartItemRef[3];
-        $unitprice = $cartItemRef[4];
-        $reason_destroy = $cartItemRef[5];
-
-        $CartsAbandoned = AbandonedListModel::insert([
-            'slug' => $slug_val,
-            'quantity' => $qty,
-            'rate' => $unitprice,
-            'customer_id' => $customer_id,
-            'product_id' => $product_id_val,
-            'reason' => $reason_destroy,
-            'first_name' => $first_name,
-            'last_name' => $last_name,
+            $reason_destroy=request()->deleteReason;
+            $cartItemallvalue=request()->cartItem;
+            $slug_val=$cartItemallvalue['product']['slug'];
+            $qty=$cartItemallvalue['qty'];
+            $unitprice=$cartItemallvalue['unitPrice']['amount'];
+            $product_id_val=$cartItemallvalue['product']['id'];
+            $CartsAbandoned=AbandonedListModel::insert([
+                'slug'=>$slug_val,
+                'quantity'=>$qty,
+                'rate'=>$unitprice,
+                'customer_id'=>$customer_id,
+                'product_id'=>$product_id_val,
+                'reason'=>$reason_destroy,
+                'first_name'=>$first_name,
+                'last_name'=>$last_name,
         ]);
-
-        Cart::remove($cart_item_id_val);
-
-        return Cart::instance();
+        }
+        
+     Cart::remove($cartItemId);
+     return Cart::instance();
     }
+     /*Get and Check */
+     public function checkemty()
+     {
+         return Cart::instance();
+         
+     }
 }

@@ -9,18 +9,7 @@
 
         <li class="dropdown top-nav-menu pull-right">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-            @switch(true)
-                  @case($currentUser->sso_google == '1' || $currentUser->sso_fb == '1')
-                          <img src="{{ auth()->user()->sso_avatar }}" alt="User Profile Image" class="profile-image">
-                  @break
-
-                  @case($currentUser->sso_fb == '' && $currentUser->sso_google == '' && (!empty($currentUser->image_url)))
-                          <img src="{{ auth()->user()->image_url }}" alt="User Profile Image" class="profile-image">
-                  @break
-
-                  @default
-                          <i class="las la-user"></i>
-                  @endswitch<span>{{ $currentUser->first_name }}</span>
+                <i class="fa fa-user-circle-o"></i><span>{{ $currentUser->first_name }}</span>
             </a>
 
             <ul class="dropdown-menu">
@@ -46,13 +35,3 @@
         @endif
     </ul>
 </nav>
-<style>
-.profile-image {
-    width: 30px; /* Adjust the width and height as needed */
-    height: 30px;
-    border-radius: 50%; /* Creates a circular shape */
-    border: 2px solid #fff; /* Optional border style */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Optional shadow effect */
-    object-fit: cover; /* Ensures the image covers the container */
-}
-</style>

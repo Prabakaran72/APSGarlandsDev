@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('customer_reward_points', function (Blueprint $table) {
             $table->id();
             $table->integer('customer_id')->index();
-            $table->enum('reward_type',['birthday, firstsignup, firstorder, firstpayment, firstreview, manualoffer']);
+            $table->enum('reward_type',['birthday', 'firstsignup', 'firstorder', 'firstpayment', 'firstreview', 'manualoffer']);
             $table->integer('reward_points_earned')->nullable();
             $table->integer('reward_points_claimed')->nullable();
             $table->dateTime('expiry_date');
