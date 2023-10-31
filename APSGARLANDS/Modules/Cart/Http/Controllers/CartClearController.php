@@ -34,7 +34,7 @@ class CartClearController
             'product_id'=>$cartItemRef[0],
             'reason'=>request('reason_destroy'),
             'first_name'=>$first_name,
-'last_name'=>$last_name,
+            'last_name'=>$last_name,
                   ]);
         }
        Cart::clear();

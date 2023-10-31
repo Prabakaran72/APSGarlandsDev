@@ -23431,6 +23431,14 @@ textarea.form-control {
   padding-top: 70px;
 }
 
+.blog-color {
+  color: black;
+}
+
+.blog-card {
+  background-color: white;
+}
+
 .home-slider {
   border-radius: 2px;
   overflow: hidden;

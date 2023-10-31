@@ -13,22 +13,36 @@
 <div class="container">
 
     <div class="row justify-content-center align-items-center min-vh-80">
-        <div class="row">
+        <div class="row blog-color">
             @foreach($Blogpost as $blogpost)
             <div class="col-md-12">
                 <div class="card" style="width:100%">
                     @switch(true)
                     @case($blogpost->users->sso_google == '1' || $blogpost->users->sso_fb == '1')
-                    <img src="{{ $blogpost->users->sso_avatar }}" alt="User Profile Image"  class="profile-image" /><b>{{ $blogpost->users->first_name }}</b>
+					<div class="row">
+					  <div class="col-md-3">
+						<center><img src="{{ $blogpost->users->sso_avatar }}" alt="User Profile Image"  class="profile-image" width="100%" /></center>
+					  </div>
+					  <div class="col-md-9">
+						<b>{{ $blogpost->users->first_name }}</b>
+					  </div>
+					</div>
                     @break
                     @case($blogpost->users->sso_fb == '' && $blogpost->users->sso_google == '' && (!empty($blogpost->users->image_url)))
-                    <img src="{{ $blogpost->users->image_url }}" alt="User Profile Image" class="profile-image" /><b>{{ $blogpost->users->first_name }}</b>
+					<div class="row">
+					  <div class="col-md-3">
+						<center><img src="{{ $blogpost->users->image_url }}" alt="User Profile Image" class="profile-image" width="100%" /></center>
+					  </div>
+					  <div class="col-md-9">
+						<b>{{ $blogpost->users->first_name }}</b>
+					  </div>
+					</div>
                     @break
                     @default
                     <i class="las la-user-circle"></i>
                    <b>{{ $blogpost->users->first_name }}</b>
                     @endswitch
-                    <div class="card-body" >
+                    <div class="card-body blog-card" >
                         <p class="card-text"><b>{{ $blogpost->post_title }}</b></p>
                         <p class="card-text" >
                          {{ str_limit(strip_tags($blogpost->post_body), 100) }}
@@ -36,12 +50,43 @@
               ... <a href="{{ route('account.blogs.blogSingle',$blogpost->id) }}" class="more">Read More</a>
             @endif 
             </div> 
-           
-            <like-component :blog="{{ $blogpost->id }}"  :alldislikes="{{ $blogpost->dislikes() }}"  :alllikes="{{ $blogpost->likes() }}"></like-component>
          
-         <button class="show-comments-btn" data-post-id="{{ $blogpost->id }}" onclick="toggleComments(this)">Show Comments</button>
-                    <div class="comments-section" id="comments-section-{{ $blogpost->id }}" style="display: none;">
-                <h4>Display Comments</h4>
+		 <div class="row">
+		    <div class="col-md-6">
+				<like-component :blog="{{ $blogpost->id }}"  :alldislikes="{{ $blogpost->dislikes() }}"  :alllikes="{{ $blogpost->likes() }}"></like-component>
+			</div>
+			<div class="col-md-6">	 
+				<i class="las la-comment"></i> <div class="show-comments-btn" data-post-id="{{ $blogpost->id }}" onclick="toggleComments(this)">Show Comments</div>
+		    </div>
+		</div>
+		 
+        <div class="comments-section" id="comments-section-{{ $blogpost->id }}" style="display: none;">
+            <h4>Display Comments</h4>
+			
+	   
+        <button class="addshow-comments-btn" data-post-id="{{ $blogpost->id }}" onclick="addtoggleComments(this)">Add Comments</button>
+            <div class="addcomments-section" id="addcomments-section-{{ $blogpost->id }}" style="display: none;">
+                <form method="POST" action="{{ route('account.blogs.commentsstore') }}">
+
+                        @csrf
+
+                        <div class="form-group">
+
+                            <textarea class="form-control" name="comments" id="comments"></textarea>
+
+                            <input type="hidden" name="post_id" value="{{ $blogpost->id }}" />
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <input type="submit" class="btn btn-success" value="Add Comment" />
+
+                        </div>
+
+                </form>
+			</div>
+					
        <ul>
         @foreach ($blogpost->blogcomments as $comment)
              @switch(true)
@@ -60,27 +105,6 @@
     </ul>
     </div>
 
- <button class="addshow-comments-btn" data-post-id="{{ $blogpost->id }}" onclick="addtoggleComments(this)">Add Comments</button>
-                    <div class="addcomments-section" id="addcomments-section-{{ $blogpost->id }}" style="display: none;">
-                    <form method="POST" action="{{ route('account.blogs.commentsstore') }}">
-
-                        @csrf
-
-                        <div class="form-group">
-
-                            <textarea class="form-control" name="comments" id="comments"></textarea>
-
-                            <input type="hidden" name="post_id" value="{{ $blogpost->id }}" />
-
-                        </div>
-
-                        <div class="form-group">
-
-                            <input type="submit" class="btn btn-success" value="Add Comment" />
-
-                        </div>
-
-                    </form></div>
             </div></div>
             @endforeach
         </div>

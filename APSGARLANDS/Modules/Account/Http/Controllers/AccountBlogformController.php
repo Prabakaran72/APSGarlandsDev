@@ -30,8 +30,6 @@ class AccountBlogformController
               $Blogtag=Blogtag::all();
 
         return view('public.account.blogform.create',compact('Blogcategory','Blogtag'));
-
-
     }
     public function edit($id)
     {
