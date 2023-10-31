@@ -40,30 +40,34 @@
 
 
     <div style="display: flex; flex-direction: row; background-color: white; color: black; width: 50%; margin: 0 auto;">
-        <div style="flex: 0.4; text-align: left; padding-right: 3px;">
-            <p style="margin: 5;">Recurring Main Id</p>
-            <p style="margin: 5;">Customer Name</p>
+        <div style="flex: 0.6; text-align: left; padding-right: 3px;">
+            {{-- <p style="margin: 5;">Recurring Main Id</p> --}}
+            <p style="margin: 5;">Order Id</p>
+            <p style="margin: 5;">Recurring Order Count</p>
             <p style="margin: 5;">Maximum Preparing Days</p>
-            <p style="margin: 5;">Customer Email</p>
-            <p style="margin: 5;">Created Date</p>
             <p style="margin: 5;">Expected Delivery Time</p>
+            <p style="margin: 5;">Created Date</p>
 
         </div>
         <div style="flex: 1; text-align: left; padding-left: 10px;">
-            <p style="margin: 5;">{{ $recurringMainOrders->id }}</p>
-            <p style="margin: 5;">{{ $user_first_name . '   ' . $user_last_name }}</p>
+            {{-- <p style="margin: 5;">{{ $recurringMainOrders->id }}</p> --}}
+            <p style="margin: 5;">{{ $recurringMainOrders->order_id }}
+                <a href="{{ route('admin.orders.show', ['id' => $recurringMainOrders->order_id]) }}" target="_blank">View
+                    Order Details</a>
+            </p>
+            <p style="margin: 5;">{{ $recurringMainOrders->recurring_date_count }}</p>
             <p style="margin: 5;">{{ $recurringMainOrders->max_preparing_days }}</p>
-            <p style="margin: 5;">{{ $user_email }}</p>
-            @php
-                $datetimeString = $recurringMainOrders->created_at;
-                $createdDate = date('Y-m-d', strtotime($datetimeString));
-            @endphp
-            <p style="margin: 5;">{{ $createdDate }}</p>
             @php
                 $time = $recurringMainOrders->delivery_time; // '09:30:02'
                 $hoursAndMinutes = substr($time, 0, 5); // Extract '09:30'
             @endphp
             <p style="margin: 5;"> {{ $hoursAndMinutes }}</p>
+            @php
+                $datetimeString = $recurringMainOrders->created_at;
+                $createdDate = date('Y-m-d', strtotime($datetimeString));
+            @endphp
+            <p style="margin: 5;">{{ $createdDate }}</p>
+
         </div>
     </div>
 
@@ -80,12 +84,12 @@
         <thead>
             <tr>
                 <th><input type="checkbox" id="selectAllCheckbox" class="select-all-checkbox"></th>
-                <th>S.NO</th>
-                <th>Order Id</th>
-                <th>Order Date</th>
-                <th>Delivery Date</th>
-                <th>Order Details</th>
-                <th>Status</th>
+                <th>Id</th>
+                {{-- <th>Recurring Id</th> --}}
+                <th>Selected Date</th>
+                {{-- <th>Updated User Id</th> --}}
+                <th>Subscribe Status</th>
+                <th>Order Status</th>
             </tr>
         </thead>
         <tbody>
@@ -93,36 +97,41 @@
                 $sno = 1; // Initialize the serial number counter
             @endphp
             @foreach ($recurringSubOrders as $sub_data)
+                @php
+                    // dd($sub_data);
+                @endphp
                 <tr>
+
                     <td>
-                        <input type="checkbox" class="rowCheckbox" value="{{ $sub_data->order_id }}"
-                            {{ strtotime($sub_data->delivery_date) <= strtotime(date('Y-m-d')) || $sub_data->is_active == 0 ? 'disabled' : '' }}
+                        <input type="checkbox" class="rowCheckbox" value="{{ $sub_data->id }}"
+                            {{ strtotime($sub_data->selected_date) <= strtotime(date('Y-m-d')) || $sub_data->subscribe_status == 0 ? 'disabled' : '' }}
                             title="<?php
-                            if (strtotime($sub_data->delivery_date) <= strtotime(date('Y-m-d'))) {
+                            if (strtotime($sub_data->selected_date) <= strtotime(date('Y-m-d'))) {
                                 echo 'Delivery date has passed';
-                            } elseif ($sub_data->is_active == 0) {
+                            } elseif ($sub_data->subscribe_status == 0) {
                                 echo 'You Already update Unsubscribed';
                             } else {
                                 echo 'Click to select';
                             }
                             ?>">
                     </td>
-                    <td>{{ $sno }}</td>
-                    <td>{{ $sub_data->order_id }}</td>
-                    <td>{{ $sub_data->selected_date }}</td>
-                    <td>{{ $sub_data->delivery_date }}</td>
-                    <td>
-                        <a href="{{ route('admin.users.edit', ['id' => $recurringMainOrders->created_user_id]) }}"
-                            target="_blank">Edit User</a>
+                    <td>{{ $sub_data->id }}</td>
 
-                        {{-- <a href="{{ route('admin.orders.show', ['id' => $recurringMainOrders->order_id]) }}" target="_blank">View Order Details</a> --}}
-                    </td>
+                    <td>{{ $sub_data->selected_date }}</td>
+
                     <td>
-                        @if ($sub_data->is_active == 1)
+                        @if ($sub_data->subscribe_status == 1)
                             <span class="dot green"></span>
                         @else
                             <span class="dot red"></span>
                         @endif
+                    </td>
+                    <td>
+                        <select name="" id="">
+                            @foreach (trans('order::statuses') as $name => $label)
+                                <option value="{{ $name }}" {{ $sub_data->order_status === $name ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
                     </td>
                 </tr>
                 @php
@@ -163,8 +172,16 @@
     });
 
     function unsubscribeMultipleOrders() {
+
+        // Get a reference to the "Unsubscribe" button
+        const overallUnsubscribeButton = document.getElementById('overallUnsubscribeButton');
+
+        // Disable the button to prevent further clicks
+        overallUnsubscribeButton.disabled = true;
+
         // Get all selected checkboxes
         const selectedCheckboxes = document.querySelectorAll('.rowCheckbox:checked');
+        overallUnsubscribeButton
 
         // Create an array to store the values of selected checkboxes
         const selectedOrderIds = [];
@@ -179,102 +196,29 @@
                 url: '{{ route('admin.recurrings.unsubscribeMultipleOrder') }}',
                 type: 'POST',
                 data: {
-                    order_ids: selectedOrderIds
+                    selectedIds: selectedOrderIds
                 },
                 success: function(response) {
-                    // Handle the response from the controller here
-                    console.log("sangeetha 1 ", response);
 
+                    overallUnsubscribeButton.disabled = false;
+
+                    // Handle the response from the controller here
+                    console.log(response);
 
                     window.location.reload();
 
                 },
                 error: function(error) {
+
+                    overallUnsubscribeButton.disabled = false;
+
                     // Handle any errors here
-                    console.error("sangeetha 0 ", error);
+                    console.error(error);
                 }
             });
         } else {
             console.log("please Select");
+            overallUnsubscribeButton.disabled = false;
         }
     }
 </script>
-
-{{-- // overallUnsubscribeButton.addEventListener('click', function() {
-    //     const selectedIds = [];
-
-    //     // Collect the selected checkbox values
-    //     rowCheckboxes.forEach(function(checkbox) {
-    //         if (checkbox.checked) {
-    //             selectedIds.push(checkbox.value);
-    //         }
-    //     });
-
-    //     // Get the route URL and CSRF token from the button's data attributes
-    //     const routeUrl = overallUnsubscribeButton.getAttribute('data-route');
-    //     const csrfToken = '{{ csrf_token() }}';
-
-    //     // Send an AJAX request to the server
-    //     if (selectedIds.length > 0) {
-    //         fetch(routeUrl, {
-    //                 method: 'POST',
-    //                 headers: {
-    //                     'Content-Type': 'application/json',
-    //                     'X-CSRF-TOKEN': csrfToken,
-    //                 },
-    //                 body: JSON.stringify({
-    //                     selectedIds: selectedIds
-    //                 }),
-    //             })
-    //             .then(response => response.json())
-    //             .then(data => {
-    //                 if (data.success) {
-    //                     // Handle success, e.g., reload the page or update UI
-    //                     location.reload(); // For simplicity, you can reload the page
-    //                 } else {
-    //                     // Handle failure
-    //                     console.error('Failed to unsubscribe selected items.');
-    //                 }
-    //             })
-    //             .catch(error => {
-    //                 console.error('Error:', error);
-    //             });
-    //     } else {
-    //         alert('Please select at least one item to unsubscribe.');
-    //     }
-    // }); --}}
-
-{{-- // Add a click event listener to the "Overall Unsubscribe" button
-        // overallUnsubscribeButton.addEventListener('click', function() {
-        //     const selectedRowIds = [];
-
-        //     // Iterate through row checkboxes to find the selected ones and collect their IDs
-        //     rowCheckboxes.forEach(function(checkbox) {
-        //         if (checkbox.checked) {
-        //             // Extract the row ID from the checkbox value (assuming you set it as the value)
-        //             selectedRowIds.push(checkbox.value);
-        //         }
-        //     });
-
-        //     // Make an AJAX request to update the status for the selected rows
-        //     fetch('{{ route('admin.recurringSubOrder.unsubscribe') }}', {
-        //             method: 'POST',
-        //             headers: {
-        //                 'Content-Type': 'application/json',
-        //                 'X-CSRF-TOKEN': '{{ csrf_token() }}', // Include the CSRF token
-        //             },
-        //             body: JSON.stringify({
-        //                 selectedRowIds: selectedRowIds, // Send the selected row IDs as JSON data
-        //             }),
-        //         })
-        //         .then(response => response.json())
-        //         .then(data => {
-        //             // Handle the response data, if needed
-        //             console.log('Update Status Response:', data);
-        //             return
-        //             // Optionally, you can redirect to another page or update the UI based on the response
-        //         })
-        //         .catch(error => {
-        //             console.error('Error updating status:', error);
-        //         });
-        // }); --}}

@@ -19,6 +19,7 @@ return [
     'apply_coupon' => 'APPLY COUPON',
     'order_summary' => 'Order Summary',
     'subtotal' => 'Subtotal',
+    'recurringSubtotal' => 'Recurring Subtotal',
     'coupon' => 'Coupon',
     'shipping_method' => 'Shipping Method',
     'total' => 'Total',

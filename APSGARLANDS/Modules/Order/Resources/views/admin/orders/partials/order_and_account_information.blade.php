@@ -17,6 +17,7 @@
 
     <h3 class="section-title">{{ trans('order::orders.order_and_account_information') }}</h3>
 
+
     <div class="row">
         <div class="col-md-6">
             <div class="order clearfix">
@@ -27,7 +28,13 @@
                         <tbody>
                             <tr>
                                 <td>{{ trans('order::orders.order_id') }}</td>
-                                <td>{{ $order->id }}</td>
+                                <td>{{ $order->id }}
+                                    @php
+                                    if ($order->isRecurring) {
+                                   echo '<a href="' . route('admin.recurring.mainorder.edit', ['id' => $order->id]) . '" target="_blank">View Recurring Order Details</a>';
+                               }
+                               @endphp
+                               </td>
                             </tr>
                             <tr>
                                 <td>{{ trans('order::orders.order_date') }}</td>
@@ -39,8 +46,8 @@
                                 <td>
                                     <div class="row">
                                         <div class="col-lg-9 col-md-10 col-sm-10">
-                                            <select id="order-status" class="form-control custom-select-black"
-                                                data-id="{{ $order->id }}">
+                                            <select  id="order-status" class="form-control custom-select-black"
+                                                data-id="{{ $order->id }}" @if($order->isRecurring == 1) disabled @endif>
                                                 @foreach (trans('order::statuses') as $name => $label)
                                                     <option value="{{ $name }}"
                                                         {{ $order->status === $name ? 'selected' : '' }}>

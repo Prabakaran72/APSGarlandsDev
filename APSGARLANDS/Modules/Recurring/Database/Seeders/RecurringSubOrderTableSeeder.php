@@ -21,18 +21,36 @@ class RecurringSubOrderTableSeeder extends Seeder
      */
     public function run()
     {
-        // Sample data for the recurring_sub_orders table
-        DB::table('recurring_sub_orders')->insert([
-            'recurring_id' => Recurring::all()->random()->id,
-            'order_id' => Order::all()->random()->id,
-            'selected_date' => Carbon::now()->toDateString(),
-            'delivery_date' => Carbon::tomorrow()->toDateString(),
-            'is_active' => '1',
-            'updated_user_id' => User::all()->random()->id,
-            // 'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // Create an array of 5 dates
+        $orderDates = [];
 
-        // Add more data as needed
+        // Get the current date
+        $currentDate = Carbon::now();
+
+        // Add the past 2 days
+        for ($i = 2; $i > 0; $i--) {
+            $orderDates[] = $currentDate->subDays($i)->toDateString();
+        }
+
+        // Add the current date
+        $orderDates[] = $currentDate->toDateString();
+
+        // Reset the date to the current date
+        $currentDate = Carbon::now();
+
+        // Add the future 2 days
+        for ($i = 1; $i <= 2; $i++) {
+            $orderDates[] = $currentDate->addDays($i)->toDateString();
+        }
+
+        // Insert records into the 'recurring_sub_orders' table
+        foreach ($orderDates as $date) {
+            DB::table('recurring_sub_orders')->insert([
+                'recurring_id' => Recurring::all()->random()->id,
+                'selected_date' => $date,
+                'status' => '1',
+                'updated_user_id' => User::all()->random()->id,
+            ]);
+        }
     }
 }

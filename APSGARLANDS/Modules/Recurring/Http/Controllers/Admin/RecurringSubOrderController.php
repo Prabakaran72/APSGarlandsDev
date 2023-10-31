@@ -22,32 +22,6 @@ class RecurringSubOrderController extends Controller
     use HasCrudActions;
     protected $model = recurringSubOrder::class;
     protected $label = 'recurring::recurrings.recurringsuborder';
-    // protected $validation = SaveRecurringRequest::class;
-
-
-    // public function index(Request $request)
-    // {
-    //     $recur_id = $request->route('id');
-    //     $val = '77';
-
-    //     $dataType = gettype($recur_id);
-    //     $dataType1 = gettype($val);
-
-    //     if ($request->has('query')) {
-    //         return $this->getModel()
-    //             ->search($request->get('query'))
-    //             ->query()
-    //             ->limit($request->get('limit', 10))
-    //             ->get();
-    //     }
-
-    //     if ($request->has('table')) {
-    //         // dd($val);
-    //         return $this->getModel()->table($val);
-    //     };
-
-    //     return view('recurring::admin.recurrings.sub_list');
-    // }
 
     public function edit($id)
     {
@@ -60,40 +34,19 @@ class RecurringSubOrderController extends Controller
         }
 
         // Retrieve all associated RecurringSubOrder records
-        $recurringSubOrders = $recurringMainOrders->recurringSubOrders()->paginate('5');
-
-        $user = User::find($created_id);
-        $user_first_name = $user->first_name;
-        $user_last_name = $user->last_name;
-        $user_email = $user->email;
+        $recurringSubOrders = $recurringMainOrders->recurringSubOrders()->paginate('20');
 
         // Pass the data to a view
-        return view('recurring::admin.recurrings.RecurringSubOrder', compact('recurringMainOrders', 'recurringSubOrders', 'user_first_name', 'user_last_name', 'user_email'));
+        return view('recurring::admin.recurrings.RecurringSubOrder', compact('recurringMainOrders', 'recurringSubOrders'));
     }
 
+    public function orderToRecurringRedirection($id){
 
-    // public function unsubscribeMultipleOrder(Request $request)
-    // {
-    //     $selectedOrderIds = $request->input('order_ids', []);
-
-    //     $indianTimezone = 'Asia/Kolkata';
-
-    //     $currentDateTime = Carbon::now($indianTimezone);
-
-    //     $formattedDateTime = $currentDateTime->format('Y-m-d H:i:s');
-
-    //     RecurringSubOrder::whereIn('order_id', $selectedOrderIds)->update(['is_active' => 0, 'updated_user_id' => auth()->id(), 'updated_at' => $formattedDateTime]);
-
-    //     $subOrder = RecurringSubOrder::whereIn('order_id', $selectedOrderIds)->get();
-
-    //     if ($subOrder->count() > 0) {
-
-    //         return response()->json(['message' => 'Status updated successfully']);
-    //     } else {
-
-    //         return response()->json(['message' => 'Record not found'], 404);
-    //     }
-    // }
+        $RecurringData =  Recurring::where('order_id', $id)->first();
+        $recurringMainOrders = Recurring::find($RecurringData->id);
+        $recurringSubOrders = $recurringMainOrders->recurringSubOrders()->paginate('20');
+        return view('recurring::admin.recurrings.RecurringSubOrder', compact('recurringMainOrders', 'recurringSubOrders'));
+    }
 
     public function unsubscribeMultipleOrder(Request $request)
     {
@@ -105,11 +58,10 @@ class RecurringSubOrderController extends Controller
         $formattedDateTime = $currentDateTime->format('Y-m-d H:i:s');
 
         // Get the selected order_ids from the AJAX request
-        $selectedOrderIds = $request->input('order_ids');
+        $selectedOrderIds = $request->input('selectedIds');
 
-        //  $affectedRows = RecurringSubOrder::whereIn('order_id', $selectedOrderIds)->update(['is_active' => '0']);
-        $affectedRows = RecurringSubOrder::whereIn('order_id', $selectedOrderIds)->update(['is_active' => '0', 'updated_user_id' => auth()->id(), 'updated_at' => $formattedDateTime]);
-        // dd($formattedDateTime,$affectedRows);
+        $affectedRows = RecurringSubOrder::whereIn('id', $selectedOrderIds)->update(['subscribe_status' => '0', 'updated_user_id' => auth()->id(), 'updated_at' => $formattedDateTime]);
+
         if ($affectedRows > 0) {
             return response()->json(['message' => 'update']);
         } else {

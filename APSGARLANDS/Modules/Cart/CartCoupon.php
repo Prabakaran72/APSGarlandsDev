@@ -82,8 +82,13 @@ class CartCoupon implements JsonSerializable
     private function productsTotalPrice()
     {
         return $this->couponApplicableProducts()->sum(function ($cartItem) {
-            // return $cartItem->total()->amount();// Existing with source code to calculate total after applied Coupon
-            return (($cartItem->total()->amount()) * $this->cart->recurringOrderCount); //Modified for Recurring Order to update Total eventhough applied a coupen
+            // dd(($this->cart->recurringOrderCount));
+            $recurringOrderCount = session('recurringOrderCount', 1); // 1 is the default value if not set in session
+            if( ($recurringOrderCount) > 0){
+                return (($cartItem->total()->amount()) * $recurringOrderCount); //Modified for Recurring Order to update Total eventhough applied a coupen
+            }
+            return $cartItem->total()->amount(); // Existing with source code to calculate total after applied Coupon
+
         });
     }
 

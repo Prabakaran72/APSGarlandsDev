@@ -37,6 +37,7 @@ return [
     'quantity' => 'Quantity',
     'line_total' => 'Amount',
     'subtotal' => 'Subtotal',
+    'recurringSubtotal' => 'Recurring Subtotal',
     'shipping_method' => 'Shipping Method',
     'coupon' => 'Coupon',
     'tax' => 'Tax',

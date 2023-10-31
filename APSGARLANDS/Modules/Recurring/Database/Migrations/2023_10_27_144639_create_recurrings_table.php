@@ -15,18 +15,25 @@ return new class extends Migration
     {
         Schema::create('recurrings', function (Blueprint $table) {
             $table->increments('id');
-            $table->unsignedInteger('created_user_id');
+            $table->unsignedInteger('order_id');
+            $table->integer('recurring_date_count')->nullable();
             $table->integer('max_preparing_days')->nullable();
             $table->time('delivery_time');
-            $table->timestamp('created_at')->nullable();
+            // $table->unsignedInteger('created_user_id');
+            // $table->timestamp('created_at')->nullable();
             // Add foreign key constraint
-            $table->foreign('created_user_id')
-                ->references('id')->on('users')
+            // $table->foreign('created_user_id','created_user_id')
+            //     ->references('id')->on('users')
+            //     ->onDelete('cascade')
+            //     ->onUpdate('cascade');
+            $table->foreign('order_id','order_id')
+                ->references('id')->on('orders')
                 ->onDelete('cascade')
                 ->onUpdate('cascade');
+            $table->timestamps();
         });
     }
-    
+
     /**
      * Reverse the migrations.
      *

@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Modules\Order\Entities\Order;
 use Modules\User\Entities\User;
 
 class RecurringTableSeeder extends Seeder
@@ -21,13 +22,12 @@ class RecurringTableSeeder extends Seeder
     {
         // Sample data for the recurrings table
         DB::table('recurrings')->insert([
-            'id'=> 1,
-            'created_user_id' => User::all()->random()->id,
+            'order_id' => Order::all()->random()->id,
+            'recurring_date_count' => '5',
             'max_preparing_days' => 1,
             'delivery_time' => '12:05:00',
             'created_at' => Carbon::yesterday(),
         ]);
-
 
         // Add more data as needed
     }

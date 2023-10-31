@@ -11,9 +11,9 @@ use Modules\Admin\Ui\AdminTable;
 class recurringSubOrder extends Model
 {
     // use HasFactory;
-    protected $primaryKey = 'recurring_id';
+    // protected $primaryKey = 'recurring_id';
     protected $table = 'recurring_sub_orders';
-    protected $fillable = ['recurring_id', 'order_id', 'selected_date', 'delivery_date', 'is_active', 'updated_user_id'];
+    protected $fillable = ['recurring_id', 'selected_date', 'subscribe_status','order_status','updated_user_id'];
     public $recurring_id = 0;
 
     public function table($id)

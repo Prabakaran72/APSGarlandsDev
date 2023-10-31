@@ -1,9 +1,16 @@
 <div class="order-details-bottom">
     <ul class="list-inline order-summary-list">
         <li>
-            <label>{{ trans('storefront::account.view_order.subtotal') }}</label>
+            @php
+                if ( ($order->isRecurring) == 1) {
+                    echo '<label>' . trans('storefront::account.view_order.recurringSubtotal') . '</label>';
+                } else {
+                    echo '<label>' . trans('storefront::account.view_order.subtotal') . '</label>';
+                }
+            @endphp
 
             <span class="price-amount">
+
                 {{ $order->sub_total->convert($order->currency, $order->currency_rate)->format($order->currency) }}
             </span>
         </li>

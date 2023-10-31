@@ -16,5 +16,6 @@ return [
     'quantity' => 'Quantity',
     'line_total' => 'Amount',
     'subtotal' => 'Subtotal',
+    'recurringSubtotal' => 'Recurring Subtotal',
     'total' => 'Total',
 ];

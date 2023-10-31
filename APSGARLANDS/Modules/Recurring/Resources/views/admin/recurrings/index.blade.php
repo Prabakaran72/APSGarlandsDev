@@ -14,8 +14,11 @@
         <tr>
             @include('admin::partials.table.select_all')
             <th>{{ trans('recurring::recurrings.table.recurring_order_main_id') }}</th>
-            <th>{{ trans('recurring::recurrings.table.customer_name') }}</th>
-            <th>{{ trans('recurring::recurrings.table.customer_email') }}</th>
+            {{-- <th>{{ trans('recurring::recurrings.table.order_id') }}</th> --}}
+            {{-- <th>{{ trans('recurring::recurrings.table.customer_name') }}</th> --}}
+            {{-- <th>{{ trans('recurring::recurrings.table.customer_email') }}</th> --}}
+            <th>{{ trans('recurring::recurrings.table.recurring_order_count') }}</th>
+            <th>{{ trans('recurring::recurrings.table.preparing_days') }}</th>
             <th>{{ trans('recurring::recurrings.table.delivery_time') }}</th>
             <th data-sort>{{ trans('admin::admin.table.created') }}</th>
         </tr>
@@ -25,10 +28,10 @@
 
 @push('scripts')
     <script>
-        // DataTable.setRoutes('#recurrings-table .table', {
-        //     index: '{{ 'admin.recurrings.index' }}',
-        //     edit: '{{ 'admin.recurrings.index' }}',
-        // });
+        DataTable.setRoutes('#recurrings-table .table', {
+            index: '{{ 'admin.recurrings.index' }}',
+            edit: '{{ 'admin.recurrings.edit' }}',
+        });
 
         new DataTable('#recurrings-table .table', {
             columns: [{
@@ -40,34 +43,16 @@
                 {
                     data: 'id'
                 },
-
+                // {
+                //     data: 'order_id'
+                // },
                 {
-                    data: null, // Use null as the data source since we're not directly binding to a single attribute
-                    render: function(data, type, row) {
-                        // return row;
-
-                        const capitalizedFirstName = row.user.first_name.charAt(0).toUpperCase() + row.user
-                            .first_name.slice(1);
-                        const capitalizedLastName = row.user.last_name.charAt(0).toUpperCase() + row.user
-                            .last_name.slice(1);
-                        if (type === 'display') {
-                            // Concatenate first_name and last_name attributes
-                            return capitalizedFirstName + ' ' + capitalizedLastName;
-                        } else {
-                            // For sorting and filtering, return the concatenated data
-                            return capitalizedFirstName + ' ' + capitalizedLastName;
-                        }
-                    },
-                    name: 'customer_name',
-                    orderable: true,
-                    searchable: false,
-                    width: '25%'
+                    data: 'recurring_date_count'
+                },
+                {
+                    data: 'max_preparing_days'
                 },
 
-
-                {
-                    data: 'user.email'
-                },
                 {
                     data: 'delivery_time',
                     render: function(data) {
@@ -85,3 +70,31 @@
         });
     </script>
 @endpush
+
+{{-- {
+    data: null, // Use null as the data source since we're not directly binding to a single attribute
+    render: function(data, type, row) {
+        // return row;
+
+        const capitalizedFirstName = row.user.first_name.charAt(0).toUpperCase() + row.user
+            .first_name.slice(1);
+        const capitalizedLastName = row.user.last_name.charAt(0).toUpperCase() + row.user
+            .last_name.slice(1);
+        if (type === 'display') {
+            // Concatenate first_name and last_name attributes
+            return capitalizedFirstName + ' ' + capitalizedLastName;
+        } else {
+            // For sorting and filtering, return the concatenated data
+            return capitalizedFirstName + ' ' + capitalizedLastName;
+        }
+    },
+    name: 'customer_name',
+    orderable: true,
+    searchable: false,
+    width: '25%'
+},
+
+
+{
+    data: 'user.email'
+}, --}}

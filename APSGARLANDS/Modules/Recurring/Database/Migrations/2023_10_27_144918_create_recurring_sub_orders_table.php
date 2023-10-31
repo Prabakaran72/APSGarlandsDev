@@ -16,24 +16,23 @@ return new class extends Migration
         Schema::create('recurring_sub_orders', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('recurring_id');
-            $table->unsignedInteger('order_id');
             $table->date('selected_date')->nullable();
-            $table->date('delivery_date')->nullable();
-            $table->enum('is_active', ['0', '1'])->default('1');
-            $table->unsignedInteger('updated_user_id')->nullable();
-            // $table->timestamps();
-            $table->timestamp('updated_at')->nullable();
+            $table->enum('subscribe_status', ['0', '1'])->default('1');
+            // $table->unsignedInteger('updated_user_id')->nullable();
+            $table->unsignedInteger('updated_user_id')->nullable()->default(NULL);
+            // $table->timestamp('updated_at')->nullable();
 
             // Add foreign key constraints
-            $table->foreign('recurring_id')
+            $table->foreign('recurring_id', 'recurring_id')
                 ->references('id')->on('recurrings')
                 ->onDelete('cascade')
                 ->onUpdate('cascade');
 
-            $table->foreign('order_id')
-                ->references('id')->on('orders')
+            $table->foreign('updated_user_id', 'updated_user_id')
+                ->references('id')->on('users')
                 ->onDelete('cascade')
                 ->onUpdate('cascade');
+            $table->timestamps();
         });
     }
 

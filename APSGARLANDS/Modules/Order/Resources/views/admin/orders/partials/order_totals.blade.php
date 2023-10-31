@@ -5,7 +5,14 @@
                 <table class="table">
                     <tbody>
                         <tr>
-                            <td>{{ trans('order::orders.subtotal') }}</td>
+                            <td>
+                                @if($order->isRecurring)
+                                    {{ trans('order::orders.recurringSubtotal') }}
+                                @else
+                                    {{ trans('order::orders.subtotal') }}
+                                @endif
+                            </td>
+
                             <td class="text-right">{{ $order->sub_total->format() }}</td>
                         </tr>
 

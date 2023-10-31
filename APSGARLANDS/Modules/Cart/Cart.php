@@ -19,7 +19,7 @@ class Cart extends DarryldecodeCart implements JsonSerializable
      *
      * @return $this
      */
-    public $recurringOrderCount=1;
+
 
     public function instance()
     {
@@ -278,7 +278,7 @@ class Cart extends DarryldecodeCart implements JsonSerializable
                 'value' => $this->getCouponValue($coupon),
                 'order' => 2,
                 'attributes' => [
-                'coupon_id' => $coupon->id,
+                    'coupon_id' => $coupon->id,
                 ],
             ]),
         );
@@ -380,8 +380,10 @@ class Cart extends DarryldecodeCart implements JsonSerializable
 
     public function subTotal()
     {
-        return Money::inDefaultCurrency($this->getSubTotal(true, $this->recurringOrderCount))->add($this->optionsPrice());
+        $recurringOrderCount = session('recurringOrderCount', 1); // 1 is the default value if not set in session
+        return Money::inDefaultCurrency($this->getSubTotal(true, $recurringOrderCount))->add($this->optionsPrice());
     }
+
 
     private function optionsPrice()
     {
@@ -403,7 +405,7 @@ class Cart extends DarryldecodeCart implements JsonSerializable
         return $this->subTotal()
             ->add($this->shippingMethod()->cost())
             ->subtract($this->coupon()->value());
-            // ->add($this->tax());
+        // ->add($this->tax());
     }
 
     public function toArray()
@@ -430,10 +432,15 @@ class Cart extends DarryldecodeCart implements JsonSerializable
     {
         return json_encode($this->jsonSerialize());
     }
-    public function recurringsubTotal($count){
-        $this->recurringOrderCount=$count;
+    public function recurringsubTotal($count)
+    {
+        if($count > 0){
+            session(['recurringOrderCount' => $count]);
+            // $this->recurringOrderCount = $count;
+        }else{
+            session()->forget('recurringOrderCount');
+        }
+
     }
-    public function getRecurringOrderCount(){
-        return $this->recurringOrderCount;
-    }
+
 }

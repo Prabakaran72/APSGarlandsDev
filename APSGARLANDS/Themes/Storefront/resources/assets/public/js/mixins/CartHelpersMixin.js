@@ -55,7 +55,7 @@ export default {
                 this.couponCode = null;
                 store.updateCart(cart);
                 // console.log('form.shipping.zip',this.form.shipping.zip);
-                //this.zipExists(newZip); 
+                //this.zipExists(newZip);
             }).catch((xhr) => {
                 this.couponError = xhr.responseJSON.message;
             }).always(() => {

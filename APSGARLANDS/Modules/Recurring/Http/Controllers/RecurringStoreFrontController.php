@@ -7,19 +7,16 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 // use \Darryldecode\Cart\Cart;
 use Modules\Cart\Facades\Cart;
+use Modules\Recurring\Entities\Recurring;
+use Modules\Recurring\Entities\recurringSubOrder;
 
 class RecurringStoreFrontController extends Controller
 {
 
-    public function updateRecurringSubTotal($recurringSubTotAmt)
+    public function updateRecurringSubTotal(Request $request)
     {
-        //  dd("recurringSubTotAmt",$recurringSubTotAmt);
-        $recurringDateCount = 12;
-        // $cart = Cart::instance();
-        // $cart->total($recurringSubTotAmt);
-        Cart::recurringsubTotal($recurringSubTotAmt);
-        // dd( $cart->getSubTotal(false, $recurringSubTotAmt));
-        // dd(Cart::instance());
+        // dd($request->recurringDateCount);
+        Cart::recurringsubTotal($request->recurringDateCount);
         return Cart::instance();
     }
 }

@@ -10,13 +10,13 @@
                     v-model="form.payment_method"
                     :value="name"
                     :id="name"
+                    v-if="!form.isCheckedRecurringOrder || name === 'razerpay'"
                 >
-
-                <label :for="name" v-text="gateway.label"></label>
-                <span class="helper-text" v-text="gateway.description"></span>
+                <label :for="name" v-text="gateway.label" v-if="!form.isCheckedRecurringOrder || name === 'razerpay'"></label>
+                <span class="helper-text" v-text="gateway.description"  v-if="!form.isCheckedRecurringOrder || name === 'razerpay'"></span>
             </div>
 
-            <span class="error-message" v-if="hasNoPaymentMethod">
+            <span class="error-message" v-if="hasNoPaymentMethod " >
                 {{ trans('storefront::checkout.no_payment_method') }}
             </span>
         </div>

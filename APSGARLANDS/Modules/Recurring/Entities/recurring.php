@@ -16,7 +16,7 @@ class Recurring extends Model
 
     //protected $table = 'recurring_main_orders';
 
-    protected $fillable = ['id', 'order_id', 'created_user_id', 'delivery_time'];
+    protected $fillable = ['order_id','recurring_date_count','max_preparing_days','delivery_time'];
 
     public function table()
     {
@@ -38,6 +38,7 @@ class Recurring extends Model
 
     public function recurringSubOrders()
     {
-        return $this->hasMany(RecurringSubOrder::class, 'recurring_id');
+        // dd($this->hasMany(RecurringSubOrder::class,'recurring_id')->toSql());
+        return $this->hasMany(RecurringSubOrder::class,'recurring_id','id');
     }
 }

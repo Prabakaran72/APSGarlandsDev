@@ -2,4 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::post('public/recurrings/updateRecurringSubTotal', 'RecurringStoreFrontController@updateRecurringSubTotal')->name('recurring.subtotal.update');
+Route::post('updateRecurringSubTotal', 'RecurringStoreFrontController@updateRecurringSubTotal')->name('recurring.subtotal.update');
+
+Route::post('storeRecurringDetails', 'RecurringStoreFrontController@storeRecurringDetails')->name('store.recurring.order');
