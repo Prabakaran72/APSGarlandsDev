@@ -193,8 +193,9 @@ class Cart extends DarryldecodeCart implements JsonSerializable
     }
 
     public function shippingCost()
-    {
+    {   //dd($this->shippingMethod()->cost());
         return $this->shippingMethod()->cost();
+
     }
 
     public function addShippingMethod($shippingMethod)

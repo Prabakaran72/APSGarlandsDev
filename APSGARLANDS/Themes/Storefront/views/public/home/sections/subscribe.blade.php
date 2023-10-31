@@ -1,4 +1,5 @@
 @if (setting('newsletter_enabled'))
+<div id="subscriber-list">
     <newsletter-subscription inline-template>
         <section class="subscribe-wrap d-flex justify-content-center">
             <div class="container">
@@ -59,5 +60,6 @@
             </div>
         </section>
     </newsletter-subscription>
+</div>
 @endif
 

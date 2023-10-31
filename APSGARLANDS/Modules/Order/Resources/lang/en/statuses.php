@@ -8,4 +8,6 @@ return [
     'pending_payment' => 'Pending Payment',
     'processing' => 'Processing',
     'refunded' => 'Refunded',
+    'payment_failed' => 'Payment Failed',
+    
 ];

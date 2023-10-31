@@ -4,9 +4,11 @@ namespace Modules\Pickupstore\Entities;
 
 use Modules\Admin\Ui\AdminTable;
 use Modules\Support\Eloquent\Model;
-use Modules\Meta\Eloquent\HasMetaData;
-use Modules\Support\Eloquent\Sluggable;
-use Modules\Support\Eloquent\Translatable;
+use Modules\Support\State;
+use Modules\Support\Country;
+
+
+
 
 class Pickupstore extends Model
 {
@@ -24,12 +26,22 @@ class Pickupstore extends Model
      *
      * @var array
      */
-    protected $fillable = ['name','tagline','email', 'phone', 'address_1', 'address_2', 'city', 'store_state','store_country', 'zip', 'is_active'];
+    protected $fillable = ['first_name','tagline','email', 'phone', 'address_1', 'address_2', 'city', 'state','country', 'zip', 'is_active'];
     /** 
      * The attributes that should be cast to native types.
      *
      * @var array
      */
+    public function getStateNameAttribute()
+    { 
+       // dd(State::name($this->country, $this->state));
+        return State::name($this->country, $this->state);
+    }
+    public function getCountryNameAttribute()
+    {
+        return Country::name($this->country);
+    }
+
     protected $casts = [
         'is_active' => 'boolean',
     ];

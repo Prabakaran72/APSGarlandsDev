@@ -37,3 +37,9 @@ Route::delete('pickupstores/{ids?}', [
     'uses' => 'PickupstoreController@destroy',
     'middleware' => 'can:admin.pickupstores.destroy',
 ]);
+
+Route::get('getLocalPickupAddress',[
+    'as' => 'admin.pickupstores.getLocalPickupAddress',
+    'uses'=>'PickupstoreController@getLocalPickupAddress',
+    'middleware' => 'can:admin.pickupstores.index',
+]);

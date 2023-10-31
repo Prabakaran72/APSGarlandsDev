@@ -11,5 +11,5 @@ class PickupstoreTranslation extends TranslationModel
      *
      * @var array
      */
-    protected $fillable = ['name', 'body'];
+    protected $fillable = ['first_name', 'body'];
 }

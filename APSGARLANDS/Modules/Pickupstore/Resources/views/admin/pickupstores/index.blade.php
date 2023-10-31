@@ -17,7 +17,7 @@
             @include('admin::partials.table.select_all')
 
             <th>{{ trans('admin::admin.table.id') }}</th>
-            <th>{{ trans('pickupstore::pickupstore.table.name') }}</th>
+            <th>{{ trans('pickupstore::pickupstore.table.first_name') }}</th>
             <th>{{ trans('pickupstore::pickupstore.table.city') }}</th>
             <th>{{ trans('admin::admin.table.status') }}</th>
             <th data-sort>{{ trans('admin::admin.table.created') }}</th>
@@ -31,7 +31,7 @@
             columns: [
                 { data: 'checkbox', orderable: false, searchable: false, width: '3%' },
                 { data: 'id', width: '5%' },
-                { data: 'name', name: 'translations.name', orderable: false, defaultContent: '' },
+                { data: 'first_name', name: 'translations.first_name', orderable: false, defaultContent: '' },
                 { data: 'city', name: 'city', searchable: false },
                 { data: 'status', name: 'is_active', searchable: false },
                 { data: 'created', name: 'created_at' },

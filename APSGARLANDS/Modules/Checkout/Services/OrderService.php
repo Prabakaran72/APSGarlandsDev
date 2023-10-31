@@ -125,6 +125,20 @@ class OrderService
             $otherShippingCost = Cart::shippingCost()->amount();
             $shippingCost = $otherShippingCost;
         }
+        $shippingMethod = $request->shipping_method;
+
+        // Check if the selected shipping method is 'local pickup'
+        if ($shippingMethod === 'local_pickup') {
+
+            // Use the selected pickup store details as the shipping address
+            $shippingAddress = $request->selectedPickupstoreDetails;
+            //dd($shippingAddress);
+
+        } else {
+            // Use the regular shipping address details
+            $shippingAddress = $request->shipping;
+           //  dd($shippingAddress);
+        }
 
         // Calculate the total by adding the subTotal, discount, and shippingCost
         $total = Cart::subTotal()->amount() - Cart::discount()->amount() + $shippingCost;

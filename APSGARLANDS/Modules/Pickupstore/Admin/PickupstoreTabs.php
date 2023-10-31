@@ -23,7 +23,7 @@ class PickupstoreTabs extends Tabs
         return tap(new Tab('general', trans('pickupstore::pickupstore.tabs.general')), function (Tab $tab) {
             $tab->active();
             $tab->weight(10);
-            $tab->fields(['translatable.store_name', 'translatable.store_tagline', 'store_phone', 'store_email', 'store_address_1', 'store_address_2', 'store_city', 'store_country', 'store_state', 'store_zip']);
+            $tab->fields(['translatable.store_name', 'translatable.store_tagline', 'store_phone', 'store_email', 'store_address_1', 'store_address_2', 'store_city', 'store_country', 'state', 'store_zip']);
             $tab->view('pickupstore::admin.pickupstores.tabs.general', [
                 'countries' => Country::all(),
             ]);

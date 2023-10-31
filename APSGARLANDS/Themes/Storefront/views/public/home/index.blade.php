@@ -54,4 +54,7 @@
     <div id="galleries_slide_div">
     </div>
     @endif
+    {{-- @if (setting('newsletter_enabled'))
+    @include('public.home.sections.subscribe')
+    @endif --}}
 @endsection

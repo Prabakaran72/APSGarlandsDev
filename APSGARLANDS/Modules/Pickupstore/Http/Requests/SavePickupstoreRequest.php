@@ -26,15 +26,15 @@ class SavePickupstoreRequest extends Request
     {
         return [
             'slug' => '',
-            'name' => 'required',
+            'first_name' => 'required',
             'tagline'=>'',
             'email' => 'email',
             'phone' => 'required|numeric',
             'address_1' => '',
             'address_2' => '',
             'city' => 'required',
-            'store_state' => 'required',
-            'store_country' => ['required', Rule::in(Country::codes())],
+            'state' => 'required',
+            'country' => ['required', Rule::in(Country::codes())],
             'zip' => 'required|numeric',
             'is_active' => 'required|boolean',
         ];

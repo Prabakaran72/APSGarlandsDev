@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Modules\Support\Search\Searchable;
 use Modules\Admin\Ui\Facades\TabManager;
 use Modules\Fixedrate\Entities\Fixedrate;
+use Modules\Pickupstore\Entities\Pickupstore;
 use Modules\Shipping\Providers\ShippingServiceProvider;
 use Illuminate\Support\Facades\Config; 
 use Illuminate\Support\Facades\Session;
@@ -51,21 +52,14 @@ trait HasCrudActions
         }
         
         return response()->json([]); // Return an empty array if there is no data
-        
-        //($pincodeData);
+      
     }
-//     public function getfixedrates(Request $request)
-// {
-//     $newPrice = $request->input('price');
+  public function  getLocalPickupAddress(){
+    $pickupstoreDetails = Pickupstore::all();
+    dd(response()->json($pickupstoreDetails));
+    return response()->json($pickupstoreDetails);
     
-//     // You can store or use the price as needed
-    
-//     return response()->json(['price' => $newPrice]);
-// }
- // Adjust the namespace as needed
-
- // Import the Config facade
- 
+  }
 
  public function getfixedrates(Request $request)
  {

@@ -1,16 +1,16 @@
 
 
-$("#store_country").on("change", (e) => {
-    let oldState = $("#store_state").val();
+$("#country").on("change", (e) => {
+    let oldState = $("#state").val();
 
     $.ajax({
         type: "GET",
         url: route("countries.states.index", e.currentTarget.value),
         success(states) {
-            $(".store-state").addClass("hide");
+            $(".state").addClass("hide");
 
             if (_.isEmpty(states)) {
-                return $(".store-state.input")
+                return $(".state.input")
                     .removeClass("hide")
                     .find("input")
                     .val(oldState);
@@ -22,7 +22,7 @@ $("#store_country").on("change", (e) => {
                 options += `<option value="${code}">${states[code]}</option>`;
             }
 
-            $(".store-state.select")
+            $(".state.select")
                 .removeClass("hide")
                 .find("select")
                 .html(options)
@@ -32,5 +32,5 @@ $("#store_country").on("change", (e) => {
 });
 
 $(function () {
-    $("#store_country").trigger("change");
+    $("#country").trigger("change");
 });

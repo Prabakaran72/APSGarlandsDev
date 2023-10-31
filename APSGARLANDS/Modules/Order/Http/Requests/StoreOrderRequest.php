@@ -27,7 +27,7 @@ class StoreOrderRequest extends Request
             'customer_email' => ['required', 'email', $this->emailUniqueRule()],
             'customer_phone' => ['required'],
             'billing.first_name' => 'required',
-            'billing.last_name' => 'required',
+            'billing.last_name' => '',
             'billing.address_1' => 'required',
             'billing.city' => 'required',
             'billing.zip' => 'required',
@@ -45,6 +45,8 @@ class StoreOrderRequest extends Request
             'shipping.state' => 'required_if:ship_to_a_different_address,1',
             'payment_method' => ['required', Rule::in(Gateway::names())],
             'terms_and_conditions' => 'accepted',
+            'pickupstore_address_id' => '',
+            
         ];
     }
 
