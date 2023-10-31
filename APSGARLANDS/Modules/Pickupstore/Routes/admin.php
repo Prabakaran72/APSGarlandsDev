@@ -43,3 +43,9 @@ Route::get('getLocalPickupAddress',[
     'uses'=>'PickupstoreController@getLocalPickupAddress',
     'middleware' => 'can:admin.pickupstores.index',
 ]);
+
+Route::get('getLocalPickupAddressManual',[
+    'as' => 'admin.pickupstores.getLocalPickupAddressManual',
+    'uses'=>'PickupstoreController@getLocalPickupAddressManual',
+    'middleware' => 'can:admin.pickupstores.index',
+]);

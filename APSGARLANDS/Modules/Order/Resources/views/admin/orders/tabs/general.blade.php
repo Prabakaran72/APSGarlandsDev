@@ -312,6 +312,9 @@
                                                                 class="price-amount" style="
                                                                 font-weight: 500;
                                                             ">{{ $array['cost']['inCurrentCurrency']['formatted'] }}</span>
+                                                            <div>
+                                                                <span id="{{ $array['name'] }}_error" class="text-red">
+                                                            </div>
                                                         </div>
                                                     @endforeach
 
@@ -565,7 +568,7 @@
 
 
 
-                    console.log('other_address', other_address);
+                    // console.log('other_address', other_address);
                     addAddress(addressObj, fromUser);
                     //  console.log('addressline_user',addressline_user);
                     // const desiredOrder = [0, 1, 2, 3, 5, 4];
@@ -733,11 +736,11 @@
 
                             //   shippingAddressDisplay.appendChild(shippingformRadio);
                             if(this.checked && other_address_input.checked == false){
-                                console.log('original_billing_address.billing_zip', original_billing_address.billing_zip);
+                                // console.log('original_billing_address.billing_zip', original_billing_address.billing_zip);
                                 zipExists(parseInt(original_billing_address.billing_zip));
                             }
                               
-                            console.log('original_billing_address->shipping', original_shipping_address);
+                            // console.log('original_billing_address->shipping', original_shipping_address);
 
 
                         }
@@ -806,9 +809,9 @@
                                 // }
                             });
                             // console.log('shippingData before update:', shippingData);
-                            console.log('shippingAddress', original_shipping_address);
+                            // console.log('shippingAddress', original_shipping_address);
                             if(this.checked && other_address_input.checked == true){
-                                console.log('original_shipping_address.shipping_zip',original_shipping_address.shipping_zip);
+                                // console.log('original_shipping_address.shipping_zip',original_shipping_address.shipping_zip);
                                 zipExists(parseInt(original_shipping_address.shipping_zip));
                             }
                             //  zipExists(parseInt(original_shipping_address.shipping_country));
@@ -886,7 +889,7 @@
 
                     });
                     //   shippingAddressDisplay.appendChild(shippingformRadio);
-                    console.log('original_billing_address', original_billing_address);
+                    // console.log('original_billing_address', original_billing_address);
                 }
 
 
@@ -925,7 +928,7 @@
             // Get the selected option
 
             const selectedOption = this.options[this.selectedIndex];
-            console.log('selectedOption',selectedOption);
+            // console.log('selectedOption',selectedOption);
             // Find the closest parent row element
             const row = this.closest('tr');
 
@@ -935,7 +938,6 @@
 
             // Call displayPrice to update the price
             displayPrice(selectedOption, quantityInput);
-
         });
     });
 
@@ -1067,7 +1069,7 @@
         const selectElement = newRow.querySelector('.order-product');
         selectElement.selectedIndex = 0;
         selectElement.dispatchEvent(new Event('change'));
-
+        // productTableBody = selectElement;
 
         selectElement.addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
@@ -1192,7 +1194,7 @@
 
             if (indexToRemove !== -1) {
                 const hasPreorder = productDataArray[indexToRemove].is_preorder_status === "1";
-                console.log('hasPreorder', hasPreorder);
+                // console.log('hasPreorder', hasPreorder);
                 if (hasPreorder) {
                     pre_order_calender.min = currentDateString;
                     pre_order_calender.value = '';
@@ -1225,7 +1227,7 @@
                     prepare_days: prepare_days,
                     is_preorder_status: is_preorder_status
                 };
-                console.log('indexToUpdate', productDataArray[indexToUpdate]);
+                // console.log('indexToUpdate', productDataArray[indexToUpdate]);
                 return false;
             }
 
@@ -1240,7 +1242,7 @@
             };
             productDataArray.push(product);
 
-            console.log(productDataArray);
+            // console.log(productDataArray);
 
 
 
@@ -1261,7 +1263,7 @@
             const futureDateString = futureDate.toISOString().split('T')[0];
             //  pre_order_calender.value = '';
             pre_order_calender.min = futureDateString;
-            console.log('preorderCalender', pre_order_calender);
+            // console.log('preorderCalender', pre_order_calender);
 
         }
 
@@ -1397,10 +1399,10 @@
             span.textContent = '';
            if(manageStock && event.target.value !== ''){
             if(!isStock){
-                console.log('out of stock');
+                // console.log('out of stock');
                 
                 span.textContent = 'out of stock';
-                console.log('span',span);
+                // console.log('span',span);
                 event.target.value = 0;
                 return false;
             }
@@ -1414,7 +1416,7 @@
             }
            }else if( !manageStock && event.target.value !== ''){
             if(!isStock){
-                console.log('out of stock');
+                // console.log('out of stock');
                 
                 span.textContent = 'out of stock';
                 event.target.value = 0;
@@ -1632,7 +1634,7 @@
             const discountAmount = amount - discount;
             // updateTotal(discountAmount.toFixed(2));
             updateTotal(discount.toFixed(2));
-            console.log('discountAmount', discountAmount);
+            // console.log('discountAmount', discountAmount);
             return discount.toFixed(2);
 
         }
@@ -1679,7 +1681,7 @@
                     orderAmount = row.querySelector('td:nth-child(4)').textContent.split('MYR')[1]
                         .trim();
                 });
-                console.log('couponObject', couponObject);
+                // console.log('couponObject', couponObject);
 
                 const errorElement = document.getElementById('coupon_error');
                 const discountRow = document.querySelector('.discount-row');
@@ -1807,7 +1809,7 @@
                         span.innerHTML = priceData;
                         const spanValue = span.textContent.split('MYR')[1];
                         // shippmentValue.value = spanValue;
-                        console.log('shippmentValuet', shippmentValue.value);
+                        // console.log('shippmentValuet', shippmentValue.value);
                         if (element.checked) {
                             shippmentValue.value = spanValue;
                             updateTotal();
@@ -1842,13 +1844,13 @@
             other_address_input.addEventListener('change', function() {
                 const shippingAddress = document.getElementById('shipping-address');
                 if (this.checked) {
-                    console.log('original_shipping_address',original_shipping_address); 
+                    // console.log('original_shipping_address',original_shipping_address); 
                     shippingAddress.style.display = 'inline-flex';
                      zipExists(parseInt(original_shipping_address.shipping_zip));
                 } else {
                     shippingAddress.style.display = 'none';
                     const sippingAddress = document.getElementById('shipping-address');
-                    console.log('shippingAddress',shippingAddress);
+                    // console.log('shippingAddress',shippingAddress);
                      zipExists(parseInt(original_billing_address.billing_zip));
 
                 }
@@ -1857,7 +1859,7 @@
 
         element.addEventListener('change', function() {
             other_address.style.display = '';
-            console.log('other_address',other_address);
+            // console.log('other_address',other_address);
            
             other_address_input.addEventListener('change', function() {
                 const shippingAddress = document.getElementById('shipping-address');
@@ -1879,7 +1881,7 @@
             if (labelFor == 'local_pickup' && element.checked) {
                 const csrfToken = "{{ csrf_token() }}";
                 const shippingAddress = document.getElementById('shipping-address');
-                fetch(route('admin.pickupstores.getLocalPickupAddress'), {
+                fetch(route('admin.pickupstores.getLocalPickupAddressManual'), {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1895,7 +1897,7 @@
                                 template += `<div class="form-radio">
                                             <label for="shipping-address-${pickupStore.id}">
                                                 <input type="radio" name="shipping-address" id="shipping-address-${pickupStore.id}" value="${pickupStore.id}">
-                                                <span>${pickupStore.name}</span>
+                                                <span>${pickupStore.first_name}</span>
                                                 <span>${pickupStore.address_1}</span>
                                                 <span>${pickupStore.address_2}</span>
                                                 <span>${pickupStore.city}</span>
@@ -1937,7 +1939,7 @@
 
                                 }
                             });
-                            console.log('original_shipping_address',original_shipping_address);
+                            // console.log('original_shipping_address',original_shipping_address);
 
                         }
 
@@ -1986,7 +1988,7 @@
 
                 }
             });
-            console.log('shippingPickupStore', original_shipping_address);
+            // console.log('shippingPickupStore', original_shipping_address);
 
         }
 
@@ -1995,6 +1997,78 @@
 
 
     // ----------------------------------------------------------------
+    const flatRateInput = document.querySelector('#flat_rate');
+    const flatRateError = document.querySelector('#flat_rate_error');
+    const submitForm = document.querySelector('#submitForm');
+    let observer = null;
+    function checkInitialState() {
+    if (flatRateInput.checked) {
+        observer = new MutationObserver(handleFlatRateChange);
+        observer.observe(document.querySelector('#price_flat_rate'), {
+                childList: true,
+                characterData: true,
+                subtree: true
+            });
+        // console.log('The "flat_rate" radio button is checked initially.');
+    } 
+}
+checkInitialState();
+
+function handleFlatRateChange(mutationsList) {
+    for (const mutation of mutationsList) {
+        if (mutation.type === 'childList' && mutation.target.id === 'price_flat_rate') {
+            const textContent = mutation.target.textContent.trim();
+            const numericValue = parseFloat(textContent.split('MYR')[1].trim());
+            
+
+            if(numericValue == 0){
+              
+               flatRateError.innerText = 'This Pincode not serviceable for flat rate shippment Option';
+               submitForm.setAttribute('disabled','disabled');
+            }else if(numericValue > 0){
+                flatRateError.innerText = '';
+                submitForm.removeAttribute('disabled','disabled');
+            }
+            // console.log('numericValue',numericValue);
+           
+        }
+    }
+}
+    const shippingRow = document.querySelector('.shipping-row');
+   
+    shippingRow.addEventListener('change', function(event){
+        if(event.target.getAttribute('name').includes('shipping_method')){
+            if (event.target.id === 'flat_rate' && event.target.checked) {
+                // const firstSibling = event.target.nextElementSibling;
+                // const secondSibling = firstSibling.nextElementSibling;
+                // const spanValue = parseInt(secondSibling.textContent.split(/\s+/)[1]);
+                // if(spanValue === 0 && spanValue !== previousSpanValue){
+                //     console.log('spanValue',spanValue);
+                // }
+                if (observer) {
+                observer.disconnect();
+            }
+                observer.observe(document.querySelector('#price_flat_rate'), {
+                childList: true,
+                characterData: true,
+                subtree: true
+            });
+                
+        }else {
+            flatRateError.innerText = '';
+            submitForm.removeAttribute('disabled','disabled');
+            observer.disconnect();
+
+        }
+        }
+       
+
+    });
+    //----------------------------------------------------------------
+    // tfootElements.forEach(function(tfootElement){
+    //     console.log(tfootElement);
+    // });
+
 
 
     // Submit button click event
@@ -2317,7 +2391,7 @@
                     other.addEventListener('change', function() {
                         if (this.checked) {
 
-                            console.log('shipping_address');
+                            // console.log('shipping_address');
 
                         }
                     });
@@ -2422,7 +2496,7 @@
 
                         // });
                     });
-                    // console.log('labelFor',labelFor,spanValue);
+                    //  console.log('shipping_method',shipping_method,shipping_cost);
                     // return
                     const csrfToken = "{{ csrf_token() }}";
 
@@ -2457,7 +2531,7 @@
                     delete data.pre_order_calender;
                     delete data.billing_full_name;
                     delete data.shipping_full_name;
-                    console.log('data', data);
+                    // console.log('data', data);
                         //  return;
 
                     fetch(route("admin.orders.store"), {
@@ -2518,6 +2592,10 @@
     /* Define a class to set the background icon and padding for the <td> */
 
 
+/* Add a class to hide the selected option */
+.hidden-option {
+    display: none;
+}
 
     
 

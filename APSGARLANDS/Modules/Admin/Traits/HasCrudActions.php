@@ -337,14 +337,14 @@ trait HasCrudActions
             $entity->searchable();
         }
     }
-    // public function  getLocalPickupAddress(){
-    //     $pickupstoreDetails = Pickupstore::all();
-    //     foreach ($pickupstoreDetails as $pickupstore) {
-    //         $pickupstore['country_name'] = $pickupstore->getPickupStoreCountryNameAttribute();
-    //         $pickupstore['state_name'] = $pickupstore->getPickupStoreStateNameAttribute();
-    //     }
+    public function  getLocalPickupAddressManual(){
+        $pickupstoreDetails = Pickupstore::all();
+        foreach ($pickupstoreDetails as $pickupstore) {
+            $pickupstore['country_name'] = $pickupstore->getPickupStoreCountryNameAttribute();
+            $pickupstore['state_name'] = $pickupstore->getPickupStoreStateNameAttribute();
+        }
         
     
-    //     return response()->json($pickupstoreDetails);
-    //   }
+        return response()->json($pickupstoreDetails);
+      }
 }

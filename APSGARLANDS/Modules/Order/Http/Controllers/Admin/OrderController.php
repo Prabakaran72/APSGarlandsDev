@@ -6,7 +6,7 @@ use Modules\Order\Entities\Order;
 use Modules\Order\Entities\OrderProduct;
 use Modules\Admin\Traits\HasCrudActions;
 use Modules\User\Entities\User;
-use Modules\Customer\Entities\Customer;
+// use Modules\Customer\Entities\Customer;
 use Illuminate\Support\Carbon;
 use Modules\Support\Country;
 use Modules\Support\State;
@@ -61,13 +61,13 @@ class OrderController
             return $user;
         });
     
-        $customer = Customer::all(['id', 'first_name', 'last_name'])->map(function ($customer) {
-            $customer['ids'] .= 'M-'.$customer['id'];
-            $customer['fullname'] = $customer['first_name'].' '.$customer['last_name'];
-            return $customer;
-        });
+        // $customer = Customer::all(['id', 'first_name', 'last_name'])->map(function ($customer) {
+        //     $customer['ids'] .= 'M-'.$customer['id'];
+        //     $customer['fullname'] = $customer['first_name'].' '.$customer['last_name'];
+        //     return $customer;
+        // });
     
-        $users = $user->merge($customer);
+         $users = $user;
         $date = Carbon::now()->format('Y-m-d');
 
         $countries =   Country::all();
@@ -99,10 +99,10 @@ class OrderController
         }
         else{
 
-            $data = Customer::findOrFail($ids);
-            $data['type'] ='mannual';
-            $data['state_name'] =$data->getUserStateNameAttribute();
-            $data['country_name'] =$data->getUserCountryNameAttribute();
+            // $data = Customer::findOrFail($ids);
+            // $data['type'] ='mannual';
+            // $data['state_name'] =$data->getUserStateNameAttribute();
+            // $data['country_name'] =$data->getUserCountryNameAttribute();
            
            
 
