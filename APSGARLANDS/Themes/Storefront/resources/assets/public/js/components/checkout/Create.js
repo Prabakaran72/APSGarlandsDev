@@ -44,6 +44,17 @@ export default {
                 newShippingAddress: false,
                 ship_to_a_different_address: false,
                 terms_and_conditions: false,
+
+                //RECURRING ORDER
+                isCheckedRecurringOrder: false,
+                recurring_order_dates: [],
+                recurring_selected_dates: [], // To store recurring selected dates
+                recurring_format_order_dates: [], //To store recurring dates with format
+                maxPreparingDays: 5, // Your max preparing days
+                currentDate: new Date(),
+                recurring_time: "", // Initialize with the current time
+                recurring_selected_date_count: 0,
+                initalSubTotal:0,
             },
             fixedrate: {
                 price: 0,
@@ -67,33 +78,25 @@ export default {
             stripeError: null,
             authorizeNetToken: null,
             termsModalContent: "",   //For Terms and Conditions Modal popup
-
-            //RECURRING ORDER
-            isCheckedRecurringOrder: false,
-            recurring_order_dates: [],
-            recurring_selected_dates: [], // To store recurring selected dates
-            recurring_formart_order_dates: [],
-            maxPreparingDays: 5, // Your max preparing days
-            currentDate: new Date(),
-            recurring_time: "", // Initialize with the current time
-            UpdateRecurringSubTotAmt: "",
-            recurring_selected_date_count: 0,
-            inialSubTotalAmount: 0,
-            recurringTotalAmount: 0,
-            recurringTotalAmountFormatted: "",
         };
     },
 
     mounted() {
-        // Set the initial value of recurring_time to the current time
+        // Set the initial value of form.recurring_time to the current time
         this.setCurrentTime();
 
     },
 
     computed: {
 
+        selectedDates() {
+            return this.form.recurring_order_dates.map(date => {
+              return date.toDateString(); // You can format the date as needed
+            });
+          },
+
         RecurringAvailableStartDate() {
-            return addDays(this.currentDate, this.maxPreparingDays);
+            return addDays(this.form.currentDate, this.form.maxPreparingDays);
         },
 
         shouldDisableCheckbox() {
@@ -143,17 +146,16 @@ export default {
 
     watch: {
 
-        isCheckedRecurringOrder(newVal) {
+        "form.isCheckedRecurringOrder": function (newVal) {
             if (!newVal) {
                 // Uncheck the isCheckedRecurringOrder checkbox
-                this.isCheckedRecurringOrder = false;
-                this.recurring_order_dates = [];
-                this.recurring_selected_dates = [];
-                // this.recurringTotalAmountCalc();
-            }else{
-                // this.recurringTotalAmountCalc();
+                this.form.isCheckedRecurringOrder = false;
+                this.form.recurring_order_dates = [];
+                this.form.recurring_selected_dates = [];
+                this.form.recurring_format_order_dates = [];
+                this.form.recurring_selected_date_count = 0;
+                this.recurringTotalAmountCalc();
             }
-            // this.recurringTotalAmountCalc();
         },
 
         shouldDisableCheckbox(newVal) {
@@ -283,66 +285,57 @@ export default {
     },
 
     methods: {
+        handleRecurringOrderPayment() {
+            if (this.form.isCheckedRecurringOrder) {
+                this.form.payment_method = 'razerpay';
+                this.form.initalSubTotal = this.cart.subTotal.formatted;
+            }
+        },
 
         setCurrentTime() {
             const now = new Date();
             const hours = now.getHours().toString().padStart(2, '0');
             const minutes = now.getMinutes().toString().padStart(2, '0');
-            this.recurring_time = `${hours}:${minutes}`;
+            this.form.recurring_time = `${hours}:${minutes}`;
         },
 
         recurringDateCalc() {
 
-            this.recurring_order_dates = this.recurring_order_dates || [];
+            this.form.recurring_order_dates = this.form.recurring_order_dates || [];
 
-            // Check if this.recurring_order_dates is an array before using .length
-            if (Array.isArray(this.recurring_order_dates) && this.recurring_order_dates.length === 0) {
+            // Check if this.form.recurring_order_dates is an array before using .length
+            if (Array.isArray(this.form.recurring_order_dates) && this.form.recurring_order_dates.length === 0) {
                 // document.getElementById('productSubTotal').innerHTML = "MYR&nbsp;" + (this.cart.subTotal.amount).toFixed(2);
-                return; // Do nothing if recurring_order_dates is an empty array
+                return; // Do nothing if form.recurring_order_dates is an empty array
             }
 
-            this.recurring_selected_dates = this.recurring_order_dates.slice();
+            this.form.recurring_selected_dates = this.form.recurring_order_dates.slice();
 
-            const formattedDates = this.recurring_selected_dates.map(date => {
+            const formattedDates = this.form.recurring_selected_dates.map(date => {
                 const adjustedDate = addDays(date, 1); // Add one day
                 return adjustedDate.toISOString().substring(0, 10); // Format as "YYYY-MM-DD"
             });
 
-            this.recurring_formart_order_dates = formattedDates.join(", ");
-            this.recurring_selected_date_count = formattedDates.length;
+            this.form.recurring_format_order_dates = formattedDates.join(", ");
+            this.form.recurring_selected_date_count = formattedDates.length;
+            console.log("recurring_format_order_dates", this.form.recurring_format_order_dates);
+            console.log("recurring_selected_date_count", this.form.recurring_selected_date_count);
 
-
-
-            //TO DISPLAY THE SELECTED DATES
-            // document.getElementById('formattedSelectedDates').innerHTML =
-            //     (this.recurring_selected_date_count) + " - " + (this.recurring_formart_order_dates);
-            // this.recurringTotalAmountCalc();
+            this.recurringTotalAmountCalc();
         },
 
         recurringTotalAmountCalc() {
 
-            const recurringDateCount = this.recurring_selected_date_count;
-            let recurringSubTotAmt;
-            let recurringSubTotAmt1="100";
-            //TO CALCULATE THE SUB TOTAL AMOUNT
-            if (recurringDateCount == 1 || recurringDateCount == 0 || !this.isCheckedRecurringOrder) {
-                this.inialSubTotalAmount = (this.cart.subTotal.amount);
-                recurringSubTotAmt = '0';
-            } else {
-                this.UpdateRecurringSubTotAmt = (this.recurring_selected_date_count * this.inialSubTotalAmount);
-                recurringSubTotAmt = (this.UpdateRecurringSubTotAmt).toString();
-            }
-            console.log("create js - recurringTotalAmountCalc() - recurringSubTotAmt",recurringSubTotAmt);
+            const recurringDateCount = parseFloat(this.form.recurring_selected_date_count);
 
             //TO UPDATE THE SUB TOTAL AMOUNT
-
             $.ajax({
                 method: "POST",
-                url: route("recurring.subtotal.update", { recurringSubTotAmt: recurringDateCount }),
-                // data: data,
+                url: route("recurring.subtotal.update"),
+                data: { recurringDateCount: recurringDateCount },
             })
                 .then((cart) => {
-                    console.log("create js - recurringTotalAmountCalc() - cart",cart);
+                    console.log("create js - recurringTotalAmountCalc() - cart", cart);
                     store.updateCart(cart);
                 })
                 .catch((xhr) => {
@@ -517,16 +510,21 @@ export default {
             });
         },
         updateTotalFlatRate() {
+            this.recurringTotalAmountCalc();
             const totalFlatRateElement = document.getElementById('total_flat_rate');
             this.totalFlatRateValue = this.fixedrate.total;
             this.$nextTick(() => {
                 if (totalFlatRateElement) {
                     totalFlatRateElement.innerText = this.totalFlatRateValue;
                     // this.getFixedRate(price);
-                    // console.log('Updated total_flat_rate: ' + totalFlatRateElement.innerText);
+                    this.recurringTotalAmountCalc();
+                     console.log('this.totalFlatRateValue ' + this.totalFlatRateValue);
                 } else {
+                    console.log("else updateTotalFlatRate");
                     // console.error("Element with ID 'total_flat_rate' not found.");
+                    // this.recurringTotalAmountCalc();
                 }
+
             });
         },
         addNewBillingAddress() {
@@ -675,17 +673,16 @@ export default {
             }
 
             // Check if isCheckedRecurringOrder is enabled
-            if (this.isCheckedRecurringOrder) {
+            if (this.form.isCheckedRecurringOrder) {
                 // Fields are mandatory, focus on the first one
-                if (this.recurring_order_dates.length === 0 && Array.isArray(this.recurring_order_dates)) {
+                if (this.form.recurring_order_dates.length === 0 && Array.isArray(this.form.recurring_order_dates)) {
                     this.$refs.recurring_order_dates.focus();
                     return;
                 }
             }
 
-            //    console.log('it s placeorder function',this.form.payment_method)
             this.placingOrder = true;
-
+            console.log("this.form", this.form);
             $.ajax({
                 method: "POST",
                 url: route("checkout.create"),
@@ -702,6 +699,7 @@ export default {
                     if (response.redirectUrl) {
                         window.location.href = response.redirectUrl;
                     } else if (this.form.payment_method === "razerpay") {
+                        console.log("if response.orderId", response.orderId);
                         //console.log("confirmRazerpayPayment");
                         this.confirmRazerpayPayment(response);
                     } else {
@@ -721,6 +719,7 @@ export default {
                     this.placingOrder = false;
                 });
         },
+
 
         confirmOrder(orderId, paymentMethod, params = {}) {
             // console.log('it s a confirm order function');
