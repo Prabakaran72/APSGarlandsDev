@@ -1,10 +1,10 @@
-@if (setting('rewardpoints_enabled'))
-    <div class="coupon-wrap">
+@if (setting('rewardpoints_enabled') && auth()->user())
+    <div class="coupon-wrap" v-if='show'>
         <div class="form-group">
             <div class="form-input">
-                <input type="text" v-model="reward.redeemedPoint"
-                    placeholder="{{ trans('storefront::cart.enter_reward_point') }}" class="form-control">
-
+                <input type="number" v-model="reward.redeemedPoint"
+                    placeholder="{{ trans('storefront::cart.enter_reward_point') }}" class="form-control"
+                    >
             </div>
 
             <button type="button" class="btn btn-primary btn-apply-coupon" :class="{ 'btn-loading': redeemReward_btn }"

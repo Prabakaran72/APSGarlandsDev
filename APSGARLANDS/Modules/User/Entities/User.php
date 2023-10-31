@@ -305,4 +305,29 @@ class User extends EloquentUser implements AuthenticatableContract
 
         return (['rewardSetting'=>$rewardSetting, 'userRewardsLog'=>$userRewardsLog, 'usersActiveRewardpoints'=> $usersActiveRewardpoints]);
     }
+
+    public function isThisfirstOrder(){
+        try{
+            return Order::where('customer_id', auth()->user()->id)->count();   
+        }
+        catch(\Exception $ex){
+            return null;
+        }
+    }
+    public function isThisfirstRMSPayment(){
+        try{
+            return Order::where('customer_id', auth()->user()->id)->where('payment_method','razerpay')->count();   
+        }
+        catch(\Exception $ex){
+            return null;
+        }
+    }        
+    public function isThisfirstReview(){
+        try{
+            return Review::where('reviewer_id', auth()->user()->id)->where('is_approved','1')->count();   
+        }
+        catch(\Exception $ex){
+            return null;
+        }
+    }
 }

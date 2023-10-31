@@ -48,7 +48,7 @@ class CheckoutCompleteController
         }
     }
 
-    /**
+    /**s
      * Display the specified resource.
      *
      * @param int $id

@@ -124,12 +124,15 @@ class OrderService
         
         //Insert customer claimed rewardpoints in customer_reward_points table
         //Have to ensure customer has enough valid reward points        
-        $customer_rewards_id =CustomerRewardPoint::insertGetId([
-            'customer_id'=>  auth()->id(),
-            'reward_points_claimed' => $request->redemptionRewardPoints,
-            'created_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s'),
-        ]);
+        if( $request->redemptionRewardPoints > 0)
+        {
+            $customer_rewards_id=CustomerRewardPoint::insertGetId([
+                'customer_id'=>  auth()->id(),
+                'reward_points_claimed' => $request->redemptionRewardPoints,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ]);
+        }
 
     return Order::create([
         'customer_id' => auth()->id(),
@@ -165,8 +168,8 @@ class OrderService
         'locale' => locale(),
         'status' => Order::PENDING_PAYMENT,
         'note' => $request->order_note,
-        'rewardpoints_id'=> $customer_rewards_id,
-        'redemption_amount'=>$request->redemptionRewardAmount['amount'],
+        'rewardpoints_id'=> isset($customer_rewards_id) ? $customer_rewards_id: null,
+        'redemption_amount'=>isset($customer_rewards_id) ? $request->redemptionRewardAmount['amount'] : null,
     ]);
 
 }

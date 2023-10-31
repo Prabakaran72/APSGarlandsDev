@@ -3,12 +3,12 @@ export default {
     props: ["customerrewardpoints"],
     data() {
         return {
-            show: true,
+            show: false,
             reward: {
                 redemptionAmount: 0,
                 isValidRedemption: false,
                 redeemedPoint: null,
-                error: { status: false, message: "" }
+                error: { status: false, message: "" },
             },
             settings: this.customerrewardpoints,
             redeemReward_btn: false,
@@ -17,52 +17,57 @@ export default {
 
     mounted() {
         setTimeout(() => {
-            // this.reward.show = true;
             this.updateRedemptionAmountInCart(null); // to get the redemptionAmount from the sotred session data
-        },1000);
-        console.log('customerrewardpoints',this.customerrewardpoints);
+        }, 1000);
 
-    },
-
-    watch: {
-        "reward.redemptionAmount": function () {
-            this.hasEnoughOrderAmounToRedeem();
-        },
-        "reward.error.status" : function(){
-            if(!this.reward.error.status)
-            {
-                this.redeemReward_btn = false;
-            }
-            else{
-                this.updateRedemptionAmountInCart();
-            }
+        if (this.settings.activeRewardPoints > 0) {
+            this.show = true;
+        } else {
+            this.show = false;
         }
     },
 
+    watch: {
+        "reward.redemptionAmount": function (newValue, oldValue) {
+            this.integerValidation(newValue, oldValue)
+            this.hasEnoughOrderAmounToRedeem();
+        },
+    },
+
     methods: {
+        integerValidation(newValue, oldValue){
+            if (newValue !== '' && newValue % 1 !== 0) {
+                // If it's a decimal, revert to the old value (an integer)
+                this.reward.redeemedPoint = oldValue;
+                this.reward.error = {
+                    status: true,
+                    message:
+                        "Decimal Fraction values are not allowed..!",
+                };
+            }
+        },
+        
         redeemRewardPoints() {
-            this.redeemReward_btn = true;
+            this.makeTrueReedemBtn();
             this.hasRedemptionErrors();
         },
 
         hasRedemptionErrors() {
             
-            // isRedemptionNotNullNotEmpty() {
-            if (this.reward.redeemedPoint) {
+            // isRedemption Not Null Not Empty
+            if (this.reward.redeemedPoint >0 && this.reward.redeemedPoint &&  this.reward.redeemedPoint.trim(' ')) {
                 this.reward.error = { status: false, message: "" };
             } else {
                 this.reward.error = {
                     status: true,
                     message: "Redemption points are empty",
                 };
+                this.makeFalseReedemBtn();
                 return true;
             }
-            // isRedemptionNotExceedsAvailablePoints() {
-    
-            if (
-                this.reward.redeemedPoint <=
-                this.settings.activeRewardPoints
-            ) {
+            // isRedemption Not Exceeds Available Points
+
+            if (this.reward.redeemedPoint <= this.settings.activeRewardPoints) {
                 this.reward.error = { status: false, message: "" };
             } else {
                 this.reward.error = {
@@ -70,9 +75,10 @@ export default {
                     message:
                         "Your redemption points exceed the actual points you have.",
                 };
+                this.makeFalseReedemBtn();
                 return true;
             }
-            // isRedeedmedPointsWithInMaxLimit() {
+            // isRedeedmedPoints With In Max Limit
 
             if (
                 this.reward.error.status != true &&
@@ -85,73 +91,86 @@ export default {
                     message:
                         "The redemption points exceed the allowed maximum limit.",
                 };
+                this.makeFalseReedemBtn();
                 return true;
             }
-            // },
-            // },
-            // isRedeedmedPointsAboveMinOrderLimit() {
+            
+            // isRedeedmedPointsAbove Min Order Limit
             if (
                 this.reward.error.status != true &&
                 store.state.cart.subTotal.amount >=
-                this.settings.min_order_cart_value_redemption
+                    this.settings.min_order_cart_value_redemption
             ) {
                 this.reward.error = { status: false, message: "" };
             } else {
                 this.reward.error = {
                     status: true,
                     message:
-                        "Minimun order amount is "+ this.settings.min_order_cart_value_redemption+" to redeem your reward",
+                        "Minimun order amount is " +
+                        this.settings.min_order_cart_value_redemption +
+                        " to redeem your reward",
                 };
+                this.makeFalseReedemBtn();
                 return true;
             }
-            // },
-            console.log("isRedeedmedPointsAboveMinOrderLimit")
-            this.calculateRedemptionAmount();
 
-            // },
+            this.calculateRedemptionAmount();
         },
 
         calculateRedemptionAmount() {
-        console.log('calculateRedemptionAmount');
             this.reward.redemptionAmount =
-                this.settings.pointsEquolantCash *
-                this.reward.redeemedPoint;
+                this.settings.pointsEquolantCash * this.reward.redeemedPoint;
         },
 
         hasEnoughOrderAmounToRedeem() {
-            console.log('hasEnoughOrderAmounToRedeem');
-            if (this.reward.redemptionAmount > 0 &&
+            if (
+                this.reward.redemptionAmount > 0 &&
                 this.reward.redemptionAmount <= store.state.cart.total.amount
             ) {
                 this.reward.error = { status: false, message: "" };
                 this.reward.isValidRedemption = true; //when this value is true then
                 this.updateRedemptionAmountInCart(true); //Here ends all the validation
-            }             
-            else if(this.reward.redemptionAmount = 0) {
+            } else if ((this.reward.redemptionAmount = 0)) {
                 this.reward.error = {
                     status: true,
                     message:
                         "The order amount is not sufficient to redeem your reward.",
                 };
+                this.makeFalseReedemBtn();
                 this.updateRedemptionAmountInCart();
             }
         },
         updateRedemptionAmountInCart(type = false) {
+            // to skip empty api request, if the user not has rewardpoints
+            if (this.settings.activeRewardPoints == 0) {
+                this.show = false;
+            }
+
             //## type = true when all validation are successfully validated
             //## type = false, for any validation fails
-            //## type = null initial render, to find redemption applied in current session 
-            console.log("type", type);
-            var sendDataTosend=null;
-            if (type ===true) {
-                sendDataTosend = { redeemedAmount: this.reward.redemptionAmount, redeemedPoint:this.reward.redeemedPoint, resetSession:false};
-                
-            } else if(type ===false) {
+            //## type = null initial render, to find redemption applied in current session
+
+            var sendDataTosend = null;
+            if (type === true) {
+                sendDataTosend = {
+                    redeemedAmount: this.reward.redemptionAmount,
+                    redeemedPoint: this.reward.redeemedPoint,
+                    resetSession: false,
+                };
+            } else if (type === false) {
                 this.reward.redeemedAmount = 0;
                 this.reward.redeemedPoint = 0;
-                sendDataTosend = { redeemedAmount: 0, redeemedPoint: 0, resetSession:false};
-            }
-            else{
-                sendDataTosend = { redeemedAmount: this.reward.redemptionAmount, redeemedPoint:this.reward.redeemedPoint, resetSession:true};
+                sendDataTosend = {
+                    redeemedAmount: 0,
+                    redeemedPoint: 0,
+                    resetSession: false,
+                };
+            } else {
+                sendDataTosend = {
+                    redeemedAmount: this.reward.redemptionAmount,
+                    redeemedPoint: this.reward.redeemedPoint,
+                    resetSession: true,
+                };
             }
             $.ajax({
                 method: "POST",
@@ -161,17 +180,17 @@ export default {
                     store.updateCart(cart);
                     this.reward.redemptionAmount = 0;
                     this.reward.redeemedPoint = null;
-                    this.redeemReward_btn = false;
+                    this.makeFalseReedemBtn();
                 },
                 error: function (error) {
                     console.error(error);
-                    this.redeemReward_btn = false;
+                    this.makeFalseReedemBtn();
                 },
             });
             return false;
         },
 
-        removeReward(){
+        removeReward() {
             $.ajax({
                 method: "delete",
                 url: route("customerrewardspoints.delete"),
@@ -186,5 +205,11 @@ export default {
                 },
             });
         },
+        makeFalseReedemBtn(){
+            this.redeemReward_btn = false;
+        },
+        makeTrueReedemBtn(){
+            this.redeemReward_btn = true;
+        }
     },
 };

@@ -11,6 +11,7 @@ use Modules\Setting\Entities\Setting;
 use Illuminate\Support\Facades\Log;
 use Modules\User\Emails\RewardPointsEarnedMail;
 use Illuminate\Support\Facades\Mail;
+use Modules\User\Entities\User;
 
 class EarnFirstOrderReward
 {
@@ -19,9 +20,14 @@ class EarnFirstOrderReward
      *
      * @return void
      */
-    public function __construct()
+    protected $custRewPts;
+    protected $rewardSettings;
+    protected $settings;
+    public function __construct(Rewardpoints $rewardSettings, CustomerRewardPoint $custRewPts, Setting $setting)
     {
-        //
+        $this->rewardSettings = $rewardSettings;
+        $this->custRewPts = $custRewPts;
+        // $this->settings = $settings;
     }
 
     /**
@@ -32,32 +38,22 @@ class EarnFirstOrderReward
      */
     public function handle(OrderPlaced $event)
     {
-        Log::info($event->order);
-
+        
         if ($this->rewardSettings->isRewardPointEnabled()) {
             $rewardSettingsObj = new $this->rewardSettings;
             $epoint_forder_point_value = $rewardSettingsObj->getRewardPointsSettingValue('epoint_forder_point_value');
-            
-            if ($epoint_forder_point_value->epoint_forder_point_value >0 ) {
+            $user = new User;
+
+            if ($epoint_forder_point_value->epoint_forder_point_value > 0 && $user->isThisfirstOrder() <= 1) {
                 $inserted_id  = $this->custRewPts->insertGetId([
-                    'customer_id' => $event->user->id,
+                    'customer_id' => $event->order->customer_id,
                     'reward_type' => 'firstorder',
+                    'order_id' => $event->order->id,
                     'reward_points_earned' => $epoint_forder_point_value->epoint_forder_point_value,
                     'expiry_date' =>  $this->rewardSettings->getRewardPointsExpiryDate()]);
 
                 if ($inserted_id) {
-                    Log::info('Listener Fired!  inserted_id  - ' . $inserted_id . " - ***** ");
-                    Log::info('Event User  - ' .$event->user->email. " - ***** ");
-                    // try {
-
-                    //     if (empty($rewardSettingsObj->getRewardPointsSettingValue('enable_show_points_by_mail'))) {
-                    //         return;
-                    //     }
-                    //     Mail::to($event->user->email)
-                    //         ->send(new RewardPointsEarnedMail($event->user->first_name));
-                    // } catch (Swift_TransportException $e) {
-                    //     //
-                    // }
+                    Log::info('Listener Fired! First Order  inserted_id  - ' . $inserted_id . " - ***** ");
                 }
             }
 
