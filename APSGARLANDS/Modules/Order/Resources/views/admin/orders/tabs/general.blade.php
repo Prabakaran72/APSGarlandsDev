@@ -733,10 +733,11 @@
                                 // }
                                 original_billing_address = shippingData;
                             });
+                            // console.log('original_billing_address', original_billing_address);
 
                             //   shippingAddressDisplay.appendChild(shippingformRadio);
                             if(this.checked && other_address_input.checked == false){
-                                // console.log('original_billing_address.billing_zip', original_billing_address.billing_zip);
+                                //  console.log('original_billing_address.billing_zip', original_billing_address.billing_zip);
                                 zipExists(parseInt(original_billing_address.billing_zip));
                             }
                               
@@ -809,7 +810,7 @@
                                 // }
                             });
                             // console.log('shippingData before update:', shippingData);
-                            // console.log('shippingAddress', original_shipping_address);
+                            //  console.log('shippingAddress', original_shipping_address);
                             if(this.checked && other_address_input.checked == true){
                                 // console.log('original_shipping_address.shipping_zip',original_shipping_address.shipping_zip);
                                 zipExists(parseInt(original_shipping_address.shipping_zip));
@@ -1838,13 +1839,14 @@
 
     const shipping_method = document.getElementsByName('shipping_method');
     shipping_method.forEach(function(element) {
+        const other_address_input = document.getElementById('other_address');
         if (element.value === 'flat_rate' && element.checked === true) {
             other_address.style.display = '';
-            const other_address_input = document.getElementById('other_address');
+            
             other_address_input.addEventListener('change', function() {
                 const shippingAddress = document.getElementById('shipping-address');
                 if (this.checked) {
-                    // console.log('original_shipping_address',original_shipping_address); 
+                    //  console.log('shippingAddress',shippingAddress); 
                     shippingAddress.style.display = 'inline-flex';
                      zipExists(parseInt(original_shipping_address.shipping_zip));
                 } else {
@@ -1860,15 +1862,26 @@
         element.addEventListener('change', function() {
             other_address.style.display = '';
             // console.log('other_address',other_address);
-           
             other_address_input.addEventListener('change', function() {
                 const shippingAddress = document.getElementById('shipping-address');
                 if (this.checked) {
 
                     shippingAddress.style.display = 'inline-flex';
+                    //  console.log('shippingAddresschecked',shippingAddress);
+                     const firstShippingAddressInput = document.querySelector('input[name="shipping-address"]:first-of-type');
+                        firstShippingAddressInput.checked = true;
+                        // Create a new Event
+                        const changeEvent = new Event('change', {
+                        bubbles: true,
+                        cancelable: false,
+                        });
+
+                        // Dispatch the change event on the input element
+                        firstShippingAddressInput.dispatchEvent(changeEvent);
                 } else {
                     shippingAddress.style.display = 'none';
                     const sippingAddress = document.getElementById('shipping-address');
+                    // console.log('shippingAddressunchecked',shippingAddress);
                     // sippingAddress.checked = false;
 
                 }
@@ -1881,6 +1894,7 @@
             if (labelFor == 'local_pickup' && element.checked) {
                 const csrfToken = "{{ csrf_token() }}";
                 const shippingAddress = document.getElementById('shipping-address');
+                // console.log('shippingAddresslocal_pickup',shippingAddress);
                 fetch(route('admin.pickupstores.getLocalPickupAddressManual'), {
                         method: 'GET',
                         headers: {
@@ -2020,7 +2034,7 @@ function handleFlatRateChange(mutationsList) {
             const textContent = mutation.target.textContent.trim();
             const numericValue = parseFloat(textContent.split('MYR')[1].trim());
             
-
+            // console.log('event.target',mutation.target.textContent);
             if(numericValue == 0){
               
                flatRateError.innerText = 'This Pincode not serviceable for flat rate shippment Option';
@@ -2045,6 +2059,7 @@ function handleFlatRateChange(mutationsList) {
                 // if(spanValue === 0 && spanValue !== previousSpanValue){
                 //     console.log('spanValue',spanValue);
                 // }
+               
                 if (observer) {
                 observer.disconnect();
             }
@@ -2513,7 +2528,8 @@ function handleFlatRateChange(mutationsList) {
                         user_type: user_typeInput.value,
                         shipping_method: shipping_method,
                         shipping_cost: shipping_cost,
-                        coupon_id: coupon_id
+                        coupon_id: coupon_id,
+                        delivery_date:CalenderValue
                     };
                     delete data.user;
                     delete data.order_id;
@@ -2531,8 +2547,8 @@ function handleFlatRateChange(mutationsList) {
                     delete data.pre_order_calender;
                     delete data.billing_full_name;
                     delete data.shipping_full_name;
-                    // console.log('data', data);
-                        //  return;
+                    //   console.log('data', data);
+                    //       return;
 
                     fetch(route("admin.orders.store"), {
                             method: 'POST',

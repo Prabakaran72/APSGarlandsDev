@@ -9,7 +9,7 @@
                         <thead>
                             <tr>
                                 <th>{{ trans('order::orders.product') }}</th>
-                                <!--<th>{{ trans('order::orders.delivery_date') }}</th>-->
+                                <th>{{ trans('order::orders.delivery_date') }}</th>
                                 <th>{{ trans('order::orders.unit_price') }}</th>
                                 <th>{{ trans('order::orders.quantity') }}</th>
                                 <th>{{ trans('order::orders.line_total') }}</th>

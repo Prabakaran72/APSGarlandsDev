@@ -16,6 +16,8 @@ use Modules\Coupon\Entities\Coupon;
 use Modules\Shipping\Facades\ShippingMethod;
 use Modules\Support\Money;
 use Modules\Currency\Entities\CurrencyRate;
+use Modules\Address\Entities\DefaultAddress;
+
 
 
 class OrderController
@@ -94,8 +96,9 @@ class OrderController
         if($user_id == 'L'){
 
             $user = User::findOrFail($ids);
-            $addresses = $user->addresses; 
-            $data[] =  ['user' => $user,'address' => $addresses, 'type' => 'user'];
+            $addresses = $user->addresses;
+            $defaultaddresses =  $user->defaultAddress ?? new DefaultAddress; 
+            $data[] =  ['user' => $user,'address' => $addresses, 'type' => 'user', 'defaultaddresses' => $defaultaddresses];
         }
         else{
 
