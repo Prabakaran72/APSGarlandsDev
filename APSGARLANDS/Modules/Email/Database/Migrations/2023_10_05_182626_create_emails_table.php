@@ -18,7 +18,7 @@ return new class extends Migration
             $table->json('subscribers');
             $table->string('subject');
             $table->string('template');            
-            $table->dateTime('date')->nullable();
+            $table->dateTime('date' )->nullable();
             $table->boolean('is_active')->nullable();
             $table->timestamps();
         });

@@ -26,10 +26,10 @@ class SubscriberServiceProvider extends ServiceProvider
 
         $this->registerSubscriberRoute();
    
-        if (config('app.installed')) {
-            $this->app['config']->set('newsletter.apiKey', setting('mailchimp_api_key'));
-            $this->app['config']->set('newsletter.lists.subscribers.id', setting('mailchimp_list_id'));
-        }
+        // if (config('app.installed')) {
+        //     $this->app['config']->set('newsletter.apiKey', setting('mailchimp_api_key'));
+        //     $this->app['config']->set('newsletter.lists.subscribers.id', setting('mailchimp_list_id'));
+        // }
     }
     private function registerSubscriberRoute()
     {

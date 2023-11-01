@@ -4,6 +4,7 @@ namespace Modules\Email\Http\Controllers\Admin;
 
 use Modules\Email\Entities\Email;
 use Modules\Template\Entities\Template;
+use Modules\Template\Entities\TemplateTranslation;
 use Modules\Subscriber\Entities\Subscriber;
 use Modules\Admin\Traits\HasCrudActions;
 use Modules\Email\Http\Requests\SaveEmailRequest;
@@ -14,6 +15,8 @@ use Illuminate\Http\Response;
 class EmailController
 {
     use HasCrudActions;
+
+    public $newTemp;
 
     /**
      * Model for the resource.
@@ -48,8 +51,9 @@ class EmailController
     {
         
         // $email = Email::find($id)->subscriber();
-        $templates = Template::all();
+        $templates = Template::all();        
         $subscribers = Subscriber::all();
+        $templateTranslation = TemplateTranslation::all(); 
         $email=Email::find($id);
         $getSubscriber = [];
         $getTemplate = [];
@@ -66,7 +70,7 @@ class EmailController
             }
 
        
-        return view("{$this->viewPath}.edit", compact('email','subscribers','templates'));
+        return view("{$this->viewPath}.edit", compact('email','subscribers','templates','templateTranslation'));
     }
 
 
@@ -74,11 +78,16 @@ class EmailController
     public function create()
     {
         $templates = Template::all();
+        $templateTranslation = TemplateTranslation::all();        
         $subscribers = Subscriber::all();
-        $email=Email::get();
+        $email=Email::get(); 
+
+        $this->newTemp = $templateTranslation;
 
         $getSubscriber = [];
         $getTemplate = [];
+        
+        // dd($templateTranslation);
        
         // This forLoop for Template
         foreach ($templates as $template) {
@@ -90,7 +99,7 @@ class EmailController
             $getSubscriber[] = $subscriber->email;
         }
 
-        return view("{$this->viewPath}.create", compact('email','subscribers','templates'));
+        return view("{$this->viewPath}.create", compact('email','subscribers','templates','templateTranslation'));
         
     }
 
@@ -98,33 +107,61 @@ class EmailController
     public function store(Request $request) {
        
         // Assuming you have this code to retrieve and store the 'is_active' value
-        $is_active = isset($request->is_active) ? 1 : 0;
-        // dd($request->all());
+        $is_active = isset($request->is_active) ? 1 : 0;   
+        $subscribers = $request->input('subscribers');     
+        $id = $request->input('template');        
+        $getTemplate = TemplateTranslation::find($id);
+
+        $body = $getTemplate->body;
+        $body = str_replace('<img src="', '<img src="'.env('APP_URL'), $body);
+        
+        $htmlContent = "<html>";
+        $htmlContent .= "<body>";
+        $htmlContent .= $body;
+        $htmlContent .= "</body>";
+        $htmlContent .= "<html>";
+        $fromName = env('MAIL_FROM_NAME');
+        
+        
         
         $email = new Email();        
         $email->subscribers = json_encode($request->input('subscribers'));
         $email->subject = $request->input('subject');
-        $email->template = $request->input('template');
+        $email->template = $getTemplate->name;
         $email->date = $request->input('date');
-        $email->is_active = $is_active;  // Use the mapped value
-
+        $email->is_active = $is_active;        
+              
         // Validate the request
         $request->validate([
             'subscribers' => 'required|array|min:1',
             'subject' => 'required',
             'template' => 'required',            
         ]);
-
         $email->save();
-                
-       // Redirect to the specified view
-        // return redirect()->route('admin.emails.index');
-        // return redirect('http://192.168.1.28:8000/admin/emails');
 
-        // Redirect with success message or back to the form with errors
+
+
+                
+        // ***  SEND MAIL  *** //
+        // $to = env('MAIL_USERNAME');                
+        $fromEmail = 'ashik@santhila.co'; // Set the common "Reply-To" address
+        $subject = $email->subject; 
+        $message = $htmlContent;
+        $headers = "MIME-Version: 1.0" . "\r\n"; 
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n"; 
+        $headers .= 'From: ' . $fromName . "\r\n" . 
+        'Reply-To: ' . $fromEmail . "\r\n" . 
+        'X-Mailer: PHP/' . phpversion();
+        foreach ($subscribers as $subscriber) {
+            $to = $subscriber; // Set the recipient's email address for this iteration
+           mail($to, $subject, $message, $headers);
+        }
+        
+
+  
         if ($email->id) {
-            session()->flash('success', 'Email created successfully');
-            return redirect('http://192.168.1.28:8000/admin/emails');
+            session()->flash('success', 'Email created successfully');            
+            return redirect('admin/emails');
         } else {
             return back()->withInput()->withErrors(['error' => 'Email creation failed.']);
         }
@@ -134,9 +171,21 @@ class EmailController
 
     public function update(Request $request, $id) {
 
-        $email = Email::find($id);    
-        
+        $email = Email::find($id);   
+        $subscribers = $request->input('subscribers');           
         $is_active = isset($request->is_active) ? 1 : 0;
+        $temp_id = $request->input('template');        
+        $getTemplate = TemplateTranslation::find($temp_id);
+
+        $body = $getTemplate->body;
+        $body = str_replace('<img src="', '<img src="'.env('APP_URL'), $body);
+        
+        $htmlContent = "<html>";
+        $htmlContent .= "<body>";
+        $htmlContent .= $body;
+        $htmlContent .= "</body>";
+        $htmlContent .= "<html>";
+        $fromName = env('MAIL_FROM_NAME');
 
          // Define validation rules
         $rules = [
@@ -153,13 +202,32 @@ class EmailController
 
         $request->validate($rules, $customMessages);
 
+         // ***  SEND MAIL  *** //
+        // $to = env('MAIL_USERNAME');                
+        $fromEmail = 'ashik@santhila.co'; // Set the common "Reply-To" address
+        $subject = $email->subject; 
+        $message = $htmlContent;
+        $headers = "MIME-Version: 1.0" . "\r\n"; 
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n"; 
+        $headers .= 'From: ' . $fromName . "\r\n" . 
+        'Reply-To: ' . $fromEmail . "\r\n" . 
+        'X-Mailer: PHP/' . phpversion();
+        foreach ($subscribers as $subscriber) {
+            $to = $subscriber; // Set the recipient's email address for this iteration
+            $success = mail($to, $subject, $message, $headers); 
+            dd($success);          
+            if (!$success) {
+                $errorMessage = error_get_last()['message'];
+            }
+        }
+
         
         // Check if the record exists
         if ($email) {
             // Update the fields you want to modify
             $email->subscribers = json_encode($request->input('subscribers'));
             $email->subject = $request->input('subject');
-            $email->template = $request->input('template');
+            $email->template = $getTemplate->name;
             $email->date = $request->input('date');
             $email->is_active = $is_active;
             
@@ -170,7 +238,7 @@ class EmailController
             session()->flash('success', 'Email updated successfully');
     
             // Optionally, you can return a response or redirect            
-            return redirect('http://192.168.1.28:8000/admin/emails');
+            return redirect('admin/emails');
         } else {
             // Handle the case where the record with the given ID was not found
             return response()->json(['message' => 'Email not found'], 404);

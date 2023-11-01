@@ -45,14 +45,14 @@
                     </div>
                     <div class="col-md-10">
                         <select name='template' class='form-control'>
-                            @foreach ($templates as $template)
-                                <option value="{{ $template->slug }}">{{ $template->slug }}</option>             
+                            @foreach ($templateTranslation as $template)
+                                <option value="{{ $template->id }}">{{ $template->name }}</option>             
                             @endforeach
                         </select>        
                     </div>
                 </div>
 
-                <div class="form-group">
+                <!-- <div class="form-group">
                     <div class="col-md-2">
                         <strong>Schedule *</strong>        
                     </div>
@@ -69,11 +69,11 @@
                     <div class="col-md-10">
                         <input type='datetime-local' id="custom-date-time" name='date' class='form-control'></input>        
                     </div>
-                </div>
+                </div> -->
 
                     
 
-                <button class='btn btn-primary' type='submit' >Save</button>
+                <button class='btn btn-primary' type='submit' >Send Mail</button>
                 <!-- <button class='btn btn-success' id='send'>Send Now</button> -->
             </form>
 

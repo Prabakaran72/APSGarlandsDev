@@ -52,14 +52,14 @@ class SubscriberController
         $email = $request->input('email');          
         $subscribe = Newsletter::subscribeOrUpdate($email);
 
-        if(!$subscribe){    
-            if(! Newsletter::lastActionSucceeded()) {                
-                return response()->json([
-                    'message' => str_after(Newsletter::getLastError(), '400: '),
-                ], 403);   
-            }                           
-        }                                 
-        else {
+        // if(!$subscribe){    
+        //     if(! Newsletter::lastActionSucceeded()) {                
+        //         return response()->json([
+        //             'message' => str_after(Newsletter::getLastError(), '400: '),
+        //         ], 403);   
+        //     }                           
+        // }                                 
+        // else {
                 // Find the existing subscriber by email
                 $existingSubscriber = Subscriber::where('email', $email)->first();
                 
@@ -73,7 +73,7 @@ class SubscriberController
                         // You can set other attributes here as needed
                     ]);           
             
-                    return $subscribe['id'];  
+                    // return $subscribe['id'];  // if you uncomment the $subscribe var, you need to uncomment this line also
                     // return response()->json([
                     //     'message' => 'new',
                     // ]);
@@ -98,7 +98,7 @@ class SubscriberController
                 }        
             
             
-        }               
+        // }               
     }
    
     public function delete(Request $request)
