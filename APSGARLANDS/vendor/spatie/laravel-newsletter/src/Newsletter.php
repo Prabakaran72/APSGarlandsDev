@@ -328,4 +328,25 @@ class Newsletter
 
         return $response;
     }
+
+    public function addTemplate(string $name, string $html) 
+    {       
+        $templateContent = [
+            'name' => $name,
+            'html' => $html,
+        ];
+
+        // Create a template
+        $template = $this->mailChimp->post('/templates',$templateContent);
+
+        if ($template !== false) {
+            // Template created successfully
+            $templateId = $template['id'];
+        } else {
+            // Handle the error
+            $errorMessage = $this->mailChimp->getLastError();            
+        }
+
+        return $template;        
+    }
 }

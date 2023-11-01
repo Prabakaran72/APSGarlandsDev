@@ -41,5 +41,8 @@
     "Testimonial": true,
     "Fixedrate": true,
     "Pickupstore": true,
-    "Galleries": true
+    "Galleries": true,
+    "Email": true,
+    "Subscriber": true,
+    "Template": true
 }
