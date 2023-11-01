@@ -368,10 +368,10 @@ export default {
             this.form.recurring_order_dates = this.form.recurring_order_dates || [];
 
             // Check if this.form.recurring_order_dates is an array before using .length
-            if (Array.isArray(this.form.recurring_order_dates) && this.form.recurring_order_dates.length === 0) {
-                // document.getElementById('productSubTotal').innerHTML = "MYR&nbsp;" + (this.cart.subTotal.amount).toFixed(2);
-                return; // Do nothing if form.recurring_order_dates is an empty array
-            }
+            // if (Array.isArray(this.form.recurring_order_dates) && this.form.recurring_order_dates.length === 0) {
+            //     // document.getElementById('productSubTotal').innerHTML = "MYR&nbsp;" + (this.cart.subTotal.amount).toFixed(2);
+            //     return; // Do nothing if form.recurring_order_dates is an empty array
+            // }
 
             this.form.recurring_selected_dates = this.form.recurring_order_dates.slice();
 
@@ -576,6 +576,7 @@ export default {
  });
  } ,
  updateTotalFlatRate() {
+    this.recurringTotalAmountCalc();
     // console.log("HI FROM updateTotalFlatRate");
      const totalFlatRateElement = document.getElementById('total_flat_rate');
      this.totalFlatRateValue = this.fixedrate.total;
@@ -583,6 +584,7 @@ export default {
      if (totalFlatRateElement) {
          totalFlatRateElement.innerText =  this.totalFlatRateValue;
          // this.getFixedRate(price);
+        //  this.recurringTotalAmountCalc();
         // console.log('Updated total_flat_rate: ' + totalFlatRateElement.innerText);
      } else {
         // console.error("Element with ID 'total_flat_rate' not found.");

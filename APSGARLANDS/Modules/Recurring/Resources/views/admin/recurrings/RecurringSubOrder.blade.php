@@ -199,13 +199,10 @@
                     selectedIds: selectedOrderIds
                 },
                 success: function(response) {
-
-                    overallUnsubscribeButton.disabled = false;
-
                     // Handle the response from the controller here
                     console.log(response);
-
                     window.location.reload();
+                    overallUnsubscribeButton.disabled = false;
 
                 },
                 error: function(error) {

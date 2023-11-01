@@ -51,12 +51,12 @@
                 <div class="form-group">
                     <div class="form-radio" v-for="shippingMethod in cart.availableShippingMethods">
                         <input type="radio" name="shipping_method" v-model="form.shipping_method"
-                            :value="shippingMethod.name" :id="shippingMethod.name"
+                            :value="shippingMethod.name"
                             @change="updateShippingMethod(shippingMethod.name)">
                         <label :for="shippingMethod.name" v-text="shippingMethod.label"></label>
 
                         <!-- Use a data-bound id attribute to set the id dynamically -->
-                        <span :id="'price_' + shippingMethod.name" class="price-amount"
+                        <span class="price-amount"
                             v-html="shippingMethod.cost.inCurrentCurrency.formatted">
                         </span>
 
@@ -69,7 +69,9 @@
                 <div class="order-summary-total">
                     <label>{{ trans('storefront::cart.total') }}</label>
                     <!-- Remove single quotes around the id attribute value -->
-                    <span :id="'total_' + form.shipping_method" class="total-price"
+                    {{-- <span :id="'total_' + form.shipping_method" class="total-price"
+                        v-html="cart.total.inCurrentCurrency.formatted"></span> --}}
+                        <span  class="total-price"
                         v-html="cart.total.inCurrentCurrency.formatted"></span>
 
                 </div>
