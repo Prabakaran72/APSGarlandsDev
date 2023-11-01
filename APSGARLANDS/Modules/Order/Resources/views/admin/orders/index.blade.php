@@ -7,11 +7,27 @@
 @endcomponent
 
 @section('content')
+@component('admin::components.page.index_table')
+    @slot('buttons', ['create'])
+    @slot('resource', 'orders')
+    @slot('name', trans('order::orders.orders'))
+
+    
+
+
+<div style="text-align: right;">
+    {{-- <a href="#" class="btn btn-primary btn-actions btn-create">Place Order</a> --}}
+</div>
     <div class="box box-primary">
+      
+       
         <div class="box-body index-table" id="orders-table">
+           
+           
             @component('admin::components.table')
                 @slot('thead')
                     <tr>
+                        @include('admin::partials.table.select_all')
                         <th>{{ trans('admin::admin.table.id') }}</th>
                         <th>{{ trans('order::orders.table.customer_name') }}</th>
                         <th>{{ trans('order::orders.table.customer_email') }}</th>
@@ -23,6 +39,7 @@
             @endcomponent
         </div>
     </div>
+    @endcomponent
 @endsection
 
 @push('scripts')
@@ -30,10 +47,12 @@
         DataTable.setRoutes('#orders-table .table', {
             index: '{{ "admin.orders.index" }}',
             show: '{{ "admin.orders.show" }}',
+            destroy: '{{ "admin.orders.destroy" }}',
         });
 
         new DataTable('#orders-table .table', {
             columns: [
+                { data: 'checkbox', orderable: false, searchable: false, width: '3%' },
                 { data: 'id', width: '5%' },
                 { data: 'customer_name', orderable: false, searchable: false },
                 { data: 'customer_email' },

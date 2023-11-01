@@ -36,6 +36,7 @@
     "Import": true,
     "Address": true,
     "Sms": true,
+    "Customer": false,
     "RewardpointsGift": true,
     "Rewardpoints": true,
     "Testimonial": true,

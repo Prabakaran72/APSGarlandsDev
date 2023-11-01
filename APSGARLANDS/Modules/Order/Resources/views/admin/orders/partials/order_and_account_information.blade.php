@@ -35,7 +35,20 @@
                             </tr>
                             <tr>
                                 <td>{{ trans('order::orders.delivery_date') }}</td>
-                                <td>{{ date('M j, Y', strtotime($order->delivery_date)) }}</td>
+                                
+                                <td>
+                                    @php
+        if($order->delivery_date!=null||$order->delivery_date!=''){
+    @endphp
+    {{ date('M j, Y', strtotime($order->delivery_date)) }}
+    @php
+        }else{
+                                    echo '-';
+                                    
+                                }
+    @endphp
+                                    
+                                </td>
                             </tr>
                             <tr>
                                 <td>{{ trans('order::orders.order_status') }}</td>

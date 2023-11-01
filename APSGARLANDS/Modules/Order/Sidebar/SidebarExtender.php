@@ -27,6 +27,7 @@ class SidebarExtender extends BaseSidebarExtender
                         $this->auth->hasAccess('admin.orders.index')
                     );
                 });
+                
             });
         });
     }

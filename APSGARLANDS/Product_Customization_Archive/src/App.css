@@ -1,0 +1,22 @@
+.App
+{
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+.main
+{
+  margin-top: 50px;
+
+}
+
+.flower_main
+{
+  /* background-color: aqua; */
+  height: 600px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

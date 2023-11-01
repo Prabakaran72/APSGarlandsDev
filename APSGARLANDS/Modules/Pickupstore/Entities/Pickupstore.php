@@ -93,4 +93,12 @@ class Pickupstore extends Model
     {
         return new AdminTable($this->newQuery()->withoutGlobalScope('active'));
     }
+    public function getPickupStoreCountryNameAttribute()
+    {
+        return Country::name($this->store_country);
+    }
+    public function getPickupStoreStateNameAttribute()
+    {
+        return State::name($this->store_country, $this->store_state);
+    }
 }

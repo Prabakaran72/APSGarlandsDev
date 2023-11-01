@@ -6,6 +6,9 @@ use Modules\Admin\Ui\Tab;
 use Modules\Admin\Ui\Tabs;
 use Modules\User\Entities\Role;
 use Modules\User\Repositories\Permission;
+use Modules\Support\Country;
+
+
 
 class UserTabs extends Tabs
 {
@@ -35,6 +38,7 @@ class UserTabs extends Tabs
 
             $tab->view('user::admin.users.tabs.account', [
                 'roles' => Role::list(),
+                'countries' => Country::all()
             ]);
         });
     }

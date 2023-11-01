@@ -11,6 +11,7 @@ use Modules\Shipping\Providers\ShippingServiceProvider;
 use Illuminate\Support\Facades\Config; 
 use Illuminate\Support\Facades\Session;
 
+
 trait HasCrudActions
 {
     /**
@@ -93,6 +94,7 @@ trait HasCrudActions
      */
     public function store()
     {
+
         $this->disableSearchSyncing();
 
         $entity = $this->getModel()->create(
@@ -336,4 +338,14 @@ trait HasCrudActions
             $entity->searchable();
         }
     }
+    public function  getLocalPickupAddressManual(){
+        $pickupstoreDetails = Pickupstore::all();
+        foreach ($pickupstoreDetails as $pickupstore) {
+            $pickupstore['country_name'] = $pickupstore->getPickupStoreCountryNameAttribute();
+            $pickupstore['state_name'] = $pickupstore->getPickupStoreStateNameAttribute();
+        }
+        
+    
+        return response()->json($pickupstoreDetails);
+      }
 }

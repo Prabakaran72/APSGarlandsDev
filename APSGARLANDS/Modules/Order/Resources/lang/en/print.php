@@ -14,7 +14,7 @@ return [
     'product' => 'Product',
     'unit_price' => 'Unit Price',
     'quantity' => 'Quantity',
-    'line_total' => 'Amount',
+    'line_total' => 'Line Total',
     'subtotal' => 'Subtotal',
     'total' => 'Total',
 ];

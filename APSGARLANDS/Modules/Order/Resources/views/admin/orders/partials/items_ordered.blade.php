@@ -9,7 +9,7 @@
                         <thead>
                             <tr>
                                 <th>{{ trans('order::orders.product') }}</th>
-                                <!--<th>{{ trans('order::orders.delivery_date') }}</th>-->
+                                <th>{{ trans('order::orders.delivery_date') }}</th>
                                 <th>{{ trans('order::orders.unit_price') }}</th>
                                 <th>{{ trans('order::orders.quantity') }}</th>
                                 <th>{{ trans('order::orders.line_total') }}</th>
@@ -43,29 +43,18 @@
                                             @endforeach
                                         @endif
                                     </td>
-                                    <!--<td>
-                                        @php
-                                        if($product->delivery_date!=null||$product->delivery_date!=''){
-                                    @endphp
-                                    {{ $product->delivery_date->format('d-m-Y') }}
-                                    @php
-                                        }else{
-                                            echo '-';
-                                        }
-                                    @endphp
-
-                                        {{-- @php
-                                            if($product->delivery_date!=null||$product->delivery_date!=''){
-                                        @endphp
-                                        {{ $product->delivery_date->format('Y-m-d') }}
-                                       
-                                        @php
-                                        else{
+<td>
+    @php
+        if($product->delivery_date!=null||$product->delivery_date!=''){
+    @endphp
+    {{ $product->delivery_date->format('Y-m-d') }}
+    @php
+        }else{
                                     echo '-';
+                                    
                                 }
-                                            }
-                                        @endphp --}}
-                                    </td>-->
+    @endphp
+</td>
                                     <td>
                                         {{ $product->unit_price->format() }}
                                     </td>

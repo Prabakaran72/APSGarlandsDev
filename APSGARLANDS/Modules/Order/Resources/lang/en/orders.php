@@ -30,15 +30,29 @@ return [
     'address_information' => 'Address Information',
     'billing_address' => 'Billing Address',
     'shipping_address' => 'Shipping Address',
+    'pickup_store_address' => 'Pickup Store Address',
     'items_ordered' => 'Items Ordered',
     'product' => 'Product',
     'unit_price' => 'Unit Price',
     'delivery_date' => 'Delivery Date',
     'quantity' => 'Quantity',
-    'line_total' => 'Amount',
+    'line_total' => 'Line Total',
     'subtotal' => 'Subtotal',
     'shipping_method' => 'Shipping Method',
     'coupon' => 'Coupon',
     'tax' => 'Tax',
     'total' => 'Total',
+    'buttons' => [
+        'save' => 'Place Order',
+    ],
+
+    'create_product_sublist' => [
+        'product' => 'Product',
+        'delivery_date' => 'Delivery Date',
+        'unit_price' => 'Unit Price',
+        'quantity' => 'Quantity',
+        'line_total' => 'Line Total',
+    ]
+    
 ];
+ 

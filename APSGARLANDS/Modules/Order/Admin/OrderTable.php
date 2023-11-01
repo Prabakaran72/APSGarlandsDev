@@ -3,7 +3,6 @@
 namespace Modules\Order\Admin;
 
 use Modules\Admin\Ui\AdminTable;
-
 class OrderTable extends AdminTable
 {
     /**

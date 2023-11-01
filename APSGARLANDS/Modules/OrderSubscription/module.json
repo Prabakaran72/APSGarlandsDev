@@ -1,0 +1,9 @@
+{
+    "name": "OrderSubscription",
+    "alias": "ordersubscription",
+    "description": "The category module is responsible for managing categories.",
+    "priority": 70,
+    "providers": [
+        "Modules\\OrderSubscription\\Providers\\OrderSubscriptionServiceProvider"
+    ]
+}
