@@ -154,7 +154,13 @@ class EmailController
         'X-Mailer: PHP/' . phpversion();
         foreach ($subscribers as $subscriber) {
             $to = $subscriber; // Set the recipient's email address for this iteration
-           mail($to, $subject, $message, $headers);
+            
+           $success = mail($to, $subject, $message, $headers);
+           dd($success);
+           if (!$success) {
+            $errorMessage = error_get_last()['message'];
+            dd($errorMessage);
+        }
         }
         
 
@@ -214,8 +220,9 @@ class EmailController
         'X-Mailer: PHP/' . phpversion();
         foreach ($subscribers as $subscriber) {
             $to = $subscriber; // Set the recipient's email address for this iteration
+            dd($to);
             $success = mail($to, $subject, $message, $headers); 
-            dd($success);          
+            // dd($success);          
             if (!$success) {
                 $errorMessage = error_get_last()['message'];
             }

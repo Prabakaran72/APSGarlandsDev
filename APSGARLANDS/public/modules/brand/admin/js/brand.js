@@ -15,7 +15,7 @@
   \*********************************************************/
 /***/ (() => {
 
-eval("window.admin.removeSubmitButtonOffsetOn('#images');//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiLi9Nb2R1bGVzL0JyYW5kL1Jlc291cmNlcy9hc3NldHMvYWRtaW4vanMvbWFpbi5qcyIsIm5hbWVzIjpbIndpbmRvdyIsImFkbWluIiwicmVtb3ZlU3VibWl0QnV0dG9uT2Zmc2V0T24iXSwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsid2VicGFjazovL2ZsZWV0Y2FydC8uL01vZHVsZXMvQnJhbmQvUmVzb3VyY2VzL2Fzc2V0cy9hZG1pbi9qcy9tYWluLmpzPzM2ZGEiXSwic291cmNlc0NvbnRlbnQiOlsid2luZG93LmFkbWluLnJlbW92ZVN1Ym1pdEJ1dHRvbk9mZnNldE9uKCcjaW1hZ2VzJyk7XHJcbiJdLCJtYXBwaW5ncyI6IkFBQUFBLE1BQU0sQ0FBQ0MsS0FBSyxDQUFDQywwQkFBMEIsQ0FBQyxTQUFTLENBQUMifQ==\n//# sourceURL=webpack-internal:///./Modules/Brand/Resources/assets/admin/js/main.js\n");
+eval("window.admin.removeSubmitButtonOffsetOn('#images');//# sourceURL=[module]\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJ3aW5kb3ciLCJhZG1pbiIsInJlbW92ZVN1Ym1pdEJ1dHRvbk9mZnNldE9uIl0sInNvdXJjZXMiOlsid2VicGFjazovL2ZsZWV0Y2FydC8uL01vZHVsZXMvQnJhbmQvUmVzb3VyY2VzL2Fzc2V0cy9hZG1pbi9qcy9tYWluLmpzPzM2ZGEiXSwic291cmNlc0NvbnRlbnQiOlsid2luZG93LmFkbWluLnJlbW92ZVN1Ym1pdEJ1dHRvbk9mZnNldE9uKCcjaW1hZ2VzJyk7XHJcbiJdLCJtYXBwaW5ncyI6IkFBQUFBLE1BQU0sQ0FBQ0MsS0FBSyxDQUFDQywwQkFBMEIsQ0FBQyxTQUFTLENBQUMiLCJmaWxlIjoiLi9Nb2R1bGVzL0JyYW5kL1Jlc291cmNlcy9hc3NldHMvYWRtaW4vanMvbWFpbi5qcyIsInNvdXJjZVJvb3QiOiIifQ==\n//# sourceURL=webpack-internal:///./Modules/Brand/Resources/assets/admin/js/main.js\n");
 
 /***/ })
 
