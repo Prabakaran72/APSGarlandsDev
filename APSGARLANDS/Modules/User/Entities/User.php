@@ -17,7 +17,7 @@ use Modules\Address\Entities\DefaultAddress;
 use Cartalyst\Sentinel\Laravel\Facades\Activation;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
-use Modules\Blogpost\Entities\Blogpost;
+
 class User extends EloquentUser implements AuthenticatableContract
 {
     use Authenticatable;
@@ -194,11 +194,7 @@ class User extends EloquentUser implements AuthenticatableContract
     {
         return $this->hasMany(Testimonial::class, 'user_id');
     }
-    public function blogposts()
-    {
-        return $this->hasMany(Blogpost::class, 'author_id');
-    }
-
+ 
     /**
      * Get the full name of the user.
      *
