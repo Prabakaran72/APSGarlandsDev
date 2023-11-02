@@ -6,6 +6,7 @@ Route::get('/', 'HomeController@index')->name('home');
 Route::get('getpincode', 'FixedrateController@getpincode')->name('Fixedrate.getpincode');
 Route::get('getfixedrates', 'FixedrateController@getfixedrates')->name('Fixedrate.getfixedrates');
 
+Route::post('updateFlatRateAmount','FixedrateController@updateFlatRateAmount')->name('update.fixedrate.amount');
 // Route::get('getpincode',[
 //     'as' => 'admin.fixedrates.getpincode',
 //     'uses'=>'FixedrateController@getPincode',
@@ -15,4 +16,4 @@ Route::get('getfixedrates', 'FixedrateController@getfixedrates')->name('Fixedrat
 //      'as' => 'admin.fixedrates.getfixedrates',
 //      'uses'=>'FixedrateController@getFixedrates',
 //      'middleware' => 'can:admin.fixedrates.index',
-//      ]); 
+//      ]);

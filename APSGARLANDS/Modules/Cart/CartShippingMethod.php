@@ -27,6 +27,10 @@ class CartShippingMethod
 
     public function cost()
     {
+        if(($this->shippingMethodCondition->getAttribute('shipping_method')->name)=='flat_rate'){
+            return Money::inDefaultCurrency(session('flateRateAmount'));
+        }
+
         return Money::inDefaultCurrency($this->calculate());
     }
 
