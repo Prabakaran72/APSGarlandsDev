@@ -73,16 +73,8 @@ trait InputFields
 
         return $html;
     }
-
     protected function selectField($name, $value, $class, $attributes, $options, $list)
     {
-
-        // dd($list);//email
-        // dd($value);
-        // dd($attributes);
-        // dd($options);
-        // dd($name);
-
         $multiple = array_get($options, 'multiple', false);
         $disabled = array_get($options, 'disabled', false);
         $readonly = array_pull($options, 'readonly', false);
@@ -93,8 +85,7 @@ trait InputFields
             id='{$name}'
             {$attributes}"
             . ($disabled ? 'disabled' : '')
-            . ($readonly ? 'readonly ' : '') 
-            . ($multiple ? 'multiple ' : '') .
+            . ($readonly ? 'readonly ' : '') .
         '>';
 
         foreach ($list as $listValue => $listName) {
@@ -109,7 +100,7 @@ trait InputFields
                 $selected = (! is_null($value) && $value == $listValue) ? 'selected' : '';
             }
 
-            $html .= "<option value='{$listName}' {$selected}>{$listName}</option>";
+            $html .= "<option value='{$listValue}' {$selected}>{$listName}</option>";
         }
 
         $html .= '</select>';
