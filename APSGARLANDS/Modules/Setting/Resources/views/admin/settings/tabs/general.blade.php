@@ -10,6 +10,7 @@
         {{ Form::checkbox('auto_approve_reviews', trans('setting::attributes.auto_approve_reviews'), trans('setting::settings.form.approve_reviews_automatically'), $errors, $settings) }}
         {{ Form::checkbox('testimonial_slider_enabled', trans('setting::attributes.testimonial_slider'), trans('setting::settings.form.allow_testimonial_slider'), $errors, $settings) }}
         {{ Form::checkbox('my_testimonial_enabled', trans('setting::attributes.my_testimonial'), trans('setting::settings.form.allow_my_testimonial'), $errors, $settings) }}
+        {{ Form::checkbox('recurring_order_enabled', trans('setting::attributes.recurring_order'), trans('setting::settings.form.allow_recurring_order'), $errors, $settings) }}
         {{ Form::checkbox('cookie_bar_enabled', trans('setting::attributes.cookie_bar_enabled'), trans('setting::settings.form.show_cookie_bar'), $errors, $settings) }}
         {{ Form::checkbox('galleries_enabled', trans('setting::attributes.galleries_enabled'), trans('setting::settings.form.show_galleries'), $errors, $settings) }}
     </div>

@@ -7,7 +7,7 @@
         <div v-if="form.isCheckedRecurringOrder">
             <div class="form-group">
                 <datepicker v-model="form.recurring_order_dates" :multiple="true" :range="false"
-                    :disabled-date="RecurringDisabledDates" @change="recurringDateCalc" ref="recurring_order_dates">
+                    :disabled-date="RecurringDisabledDates"  ref="recurring_order_dates">
                 </datepicker>
             </div>
             {{-- <div class="form-group">
