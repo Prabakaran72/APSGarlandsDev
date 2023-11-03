@@ -1,9 +1,0 @@
-{
-    "name": "Customer",
-    "alias": "customer",
-    "description": "Managing customers.",
-    "priority": 9999,
-    "providers": [
-        "Modules\\Customer\\Providers\\CustomerServiceProvider"
-    ]
-}
