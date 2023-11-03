@@ -1,0 +1,134 @@
+.App
+{
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;  
+}
+body { 
+  /* background: #ebeaea; */
+  /* background: url('./assets/Geometric-bg.jpeg'); */
+  background: url('./assets/Game-bg.jpeg');
+  background-size: cover;
+}
+.main
+{
+  margin-top: 50px;
+
+}
+
+.flower_main
+{  
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;   
+  background-color: #ffe3e3;
+  border-radius: 16px;
+}
+
+.flower_main::before {
+  content: '';
+  background: url('assets/cornerPattern2-removebg-preview.png');
+  color: red;
+  background-repeat: no-repeat;
+  height: 200px;
+  width: 200px;
+  background-size: contain;
+  position: absolute;
+  top: 0;
+  left: -22px;
+}
+/* .flower_main_flower::before {
+  content: '';
+  background: url('assets/cornerPattern2-removebg-preview.png');
+  background-repeat: no-repeat;
+  height: 200px;
+  width: 200px;
+  background-size: contain;
+  position: absolute;
+  bottom: 0;
+  left: -22px;
+  transform: scaleY(-1);  
+}
+.flower_main_flower::after {
+  content: '';
+  background: url('assets/cornerPattern2-removebg-preview.png');
+  background-repeat: no-repeat;
+  height: 200px;
+  width: 200px;
+  background-size: contain;
+  position: absolute;
+  top: 0;
+  right: -22px;
+  transform: scaleX(-1);  
+} */
+.flower_main::after {
+  content: '';
+  background: url('assets/cornerPattern2-removebg-preview.png');
+  background-repeat: no-repeat;
+  height: 200px;
+  width: 200px;
+  background-size: contain;
+  position: absolute;
+  bottom: 0;
+  right: -22px;
+  transform: rotate(180deg);
+}
+
+.Options {
+    padding: 20px 10px;
+    /* box-shadow: 1px 3px 17px #0000001f; */
+    box-shadow:  2px 3px 17px #58505054;
+    border-radius: 8px;
+    height: 100%;
+    background: #ffffff00;
+    position: relative;
+}
+.Options::before {
+  content: '';
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+  backdrop-filter: blur(10px);
+  z-index: -1;
+}
+
+.Options .structure {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.Options .input-align {
+  display: flex;
+  flex-direction: column;  
+  margin: 20px 0;
+}
+
+.Options .input-align .d-flex{
+  justify-content: space-between;
+  align-items: center;
+}
+
+.Options .input-align .d-flex select{
+  margin: 0 10px;
+}
+.Options .input-align .d-flex input{
+  margin: 0 10px;
+}
+
+
+
+.human_btn button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-radius: 30px;
+  box-shadow: 1px 3px 8px #00000069;
+}

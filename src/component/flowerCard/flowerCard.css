@@ -1,0 +1,268 @@
+.flower_content_area
+{
+    /* background-color: blueviolet; */
+
+}
+.base_of_garland
+{
+    /* background-color: chartreuse; */
+    width: 100%;
+    height: 100px;  
+    display: flex;
+    justify-content: center; 
+    align-items: flex-end; 
+}
+.base_pic_garland
+{
+    /* background-color: darksalmon; */
+    height: 50px;
+    width: 270px;  
+}
+.mid_of_garland
+{
+    /* background-color: darkgrey; */
+     display: flex;
+     justify-content: center;
+     
+}
+.topbase_pic1_garland
+{
+   position: relative;
+  
+}
+.topbase_pic2_garland
+{
+    position: relative;
+}
+
+.top-flower {
+    /* height: 25px !important;
+    width: 46px !important; */
+    height: 25px;  /*modified */
+    width: 46px;  /*modified */
+    border-radius: 33px;
+    /* box-shadow: 3px 3px 16px #b0aaaa; */
+    box-shadow: 3px 3px 16px #46464687;
+    transform: scale(1.15);
+    z-index: 11111;
+    position: relative;
+}
+
+
+
+.mid_pic1_garland
+{
+    /* background-color: darkturquoise;
+   height: 24px;
+   width: 47px; */
+   transform: skewX(6deg);
+   /* border-radius: 8px; */
+   position: relative;
+   left: 9px; 
+   z-index: 1;
+}
+.mid_pic2_garland
+{
+   /* background-color: darkturquoise; */
+    /* height: 24px; */
+    /* width: 47px; */
+    transform: skewX(-6deg);
+    /* border-radius: 8px; */
+    position: relative;
+    right: 9px;
+    z-index: 1;
+}
+.center-mid-flower {
+    /* height: 25px !important;
+    width: 46px !important; */
+    height: 25px;   /* modified */
+    width: 46px;   /* modified */
+    border-radius: 30px;
+    box-shadow: 3px 3px 16px #46464687;
+    transform: scale(1.15);
+    z-index: 11111;
+    position: relative;
+}
+
+
+
+
+
+.top_of_garland
+{
+    /* background-color: chocolate; */
+    width: 100%;
+    height: 125px; 
+    display: flex;
+    justify-content: center;   
+}
+.top_pic1_garland
+{
+    /* background-color: darkolivegreen; */
+    /* height: 100%;
+   width: 40px;  */
+   /* border-radius: 10px; */
+   transform: skewX(3deg); 
+   position: relative;
+   left: 4px; 
+}
+.top_pic2_garland
+{
+    /* background-color: darkolivegreen; */
+    /* height: 100%;
+     width: 40px; */
+     /* border-radius: 10px; */
+    transform: skewX(-3deg);
+    position: relative;
+    right: 4px;
+}
+
+.top-garland {
+    /* height: 100% !important; *//* modified */
+    height: 100%;
+    /* width: 46px !important; */
+    width: 46px; /* modified */
+    border-radius: 9px;
+    box-shadow: 5px 9px 16px #b0aaaaa8;
+}
+
+
+
+
+
+.botmid_of_garland
+{
+    /* background-color: chocolate; */
+    height: 100px; 
+    display: flex;
+    justify-content: center;   
+}
+.botmid_pic1_garland
+{
+   /*  background-color: rgb(80, 131, 80); */
+    /* width: 40px; 
+    height: 100%;  */
+    position: relative;
+    left: 36px;
+     /* border-radius: 0px 5px 0px 50px; */
+    transform: skewX(29deg);
+    /* transform: perspective(20px) rotateX(20deg); */
+}
+.botmid_pic2_garland
+{    
+    position: relative;
+    right: 36px;
+    /* border-radius: 5px 0px 50px 0px; */
+    transform: skewX(-29deg);
+    /* transform: perspective(20px) rotateX(20deg); */
+}
+.bottom-garaland1 {
+    height: 100%;
+    width: 46px;    
+    border-top-left-radius: 17px;
+    border-top-right-radius: 23px;
+    border-bottom-left-radius: 80px;
+    border-bottom-right-radius: 40px;
+    box-shadow: 3px 3px 16px #46464687;
+}
+.bottom-garaland2 {
+    height: 100%;
+    width: 46px;   
+    border-top-left-radius: 17px;
+    border-top-right-radius: 17px;
+    border-bottom-left-radius: 40px;
+    border-bottom-right-radius: 80px;
+    /* transform-origin: right; */
+    /* transform: skewY(57deg); */
+    box-shadow: 3px 3px 16px #46464687;
+}
+
+
+
+
+
+.under_of_garland
+{
+    height: 80px;
+    width:100%;  
+   display: flex;
+   justify-content: center;
+}
+.under_pic_garland
+{
+    width: 86px;
+    height: 82px;  
+    border-radius: 50%;
+    position: relative; /* modified */
+}
+.root_full_contain
+{  
+    width: 100%;
+    height: 550px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.flower_content_area .root_contain  /* modified */
+{  
+    height:470px;
+    width: 450px;
+    width: 352px;
+
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* border: 2px solid #c2bcbc; */
+    /* border-radius: 52%; */
+    /* box-shadow: inset 1px 4px 18px #00000078; */
+    /* background: #f0f0f0; */
+    overflow: hidden;
+}
+
+.flower_content_area .root_contain::after {
+    content: '';
+    animation: spring 4s infinite linear;
+}
+
+@keyframes spring {
+    0%{
+        background: red;
+    }
+    100% {
+        background: blue;
+    }
+}
+.image_fitting
+{
+    width: 100%;
+    height: 100%; 
+    display: block; 
+    margin: auto;
+}
+.image1_fitting_bottom
+{
+    max-width: 100%;
+    height: 100%; 
+    display: block; 
+    margin: auto;
+    border-radius: 10px 5px 5px 50px;
+}
+.image2_fitting_bottom
+{
+    max-width: 100%;
+    height: 100%; 
+    display: block; 
+    margin: auto;
+    border-radius: 5px 10px 50px 5px;
+}
+
+.drag {    
+    opacity: 1;
+   
+    &:active, &:focus {
+      opacity: 0.7;  
+    }
+  }
+  
