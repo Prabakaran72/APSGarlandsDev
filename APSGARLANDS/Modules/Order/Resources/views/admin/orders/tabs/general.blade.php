@@ -3,7 +3,8 @@
 <form class="form-horizontal" id="order_create_form" enctype="multipart/form-data" novalidate>
     {{ csrf_field() }}
     <div class="row">
-        <h3 style="
+        <h3
+            style="
     border-bottom: 1px solid black;
     padding-bottom: 8px;
     margin-bottom: 15px;
@@ -11,11 +12,12 @@
     padding-top: 15px;
     padding-left: 15px;
     
-        ">User Details</h3>
+        ">
+            User Details</h3>
         <div class="col-md-8" style="width: 100%;padding-left: 38px">
             <div class="box-content clearfix">
 
-                
+
                 <div class="row">
 
                     <div class="col-md-5">
@@ -35,7 +37,7 @@
                                     </select>
                                 @else
                                     <select name="user" class="form-control custom-select-black " id="user">
-                                        <option value="0">Select Option</option>
+                                        <option value="0">Select Customer</option>
                                         @foreach ($users as $user)
                                             <option value={{ $user->ids }}>{{ $user->fullname }}</option>
                                         @endforeach
@@ -80,10 +82,10 @@
 
                                 @if (isset($order))
                                     <input name="customer_email" class="form-control" id="customer_email"
-                                        value="{{ $order->customer_email }}" readonly>
+                                        value="{{ $order->customer_email }}" type="email" readonly>
                                 @else
                                     <input name="customer_email" class="form-control" id="customer_email" value=""
-                                        labelcol="3" type="email">
+                                        labelcol="3" type="email" readonly>
                                 @endif
                                 <span id="email_error" class="text-red"></span>
                             </div>
@@ -105,7 +107,7 @@
                                         value="{{ $order->customer_phone }}" readonly>
                                 @else
                                     <input name="customer_phone" class="form-control " id="customer_phone"
-                                        value="" labelcol="3" type="text">
+                                        value="" labelcol="3" type="text" readonly>
                                 @endif
 
                                 <span id="phone_error" class="text-red"></span>
@@ -127,7 +129,7 @@
                                 <span id="payment_method_error" class="text-red"></span>
                             </div>
                         </div>
-                        
+
                     </div>
 
 
@@ -145,7 +147,7 @@
                                     <option value="0">Select Option</option>
                                     @foreach (trans('order::statuses') as $name => $label)
                                         <option value="{{ $name }}"
-                                            {{ isset($order) && $order->status === $name ? 'selected' : '' }}>
+                                            {{  $name === 'pending' ? 'selected' : '' }}>
                                             {{ $label }}</option>
                                     @endforeach
                                 </select>
@@ -157,7 +159,7 @@
 
                 </div>
 
-               
+
 
 
 
@@ -188,7 +190,7 @@
                     style="display: none;">
 
 
-                
+
             </div>
 
             <div class="items-ordered-wrapper">
@@ -216,7 +218,7 @@
 
                                                 <select name="order_products" class="order-product" data-info="0"
                                                     id="order_products">
-                                                    <option value="0">Select Option</option>
+                                                    <option value="0" data-info="0.00">Select Option</option>
                                                     @foreach ($products as $product)
                                                         <option value="{{ $product->id }}"
                                                             data-info="{{ $product->price }}"
@@ -225,12 +227,9 @@
                                                             data-in_stock = "{{ $product->in_stock }}"
                                                             data-manage_stock = "{{ $product->manage_stock }}"
                                                             data-qty = "{{ $product->qty }}"
+                                                            data-category = "{{ $product->category_id }}">
 
-
-                                                            
-                                                            >
-
-                                                            {{ $product->slug }}
+                                                            {{ $product->name }}
                                                         </option>
                                                     @endforeach
                                                 </select>
@@ -240,18 +239,20 @@
 
                                             <td>MYR&nbsp;0.00</td>
                                             <td>
-                                                
-                                                    
 
-                                              
-                                               
-                                                <input type="number" name="qty" id="qty" class="quantity" min='1' style="background-color: transparent;
-                                                ;text-align: center;" > 
 
-                                               
-                                            
-                                               
-                                                
+
+
+
+                                                <input type="number" name="qty" id="qty" class="quantity"
+                                                    min='1'
+                                                    style="background-color: transparent;
+                                                ;text-align: center;">
+
+
+
+
+
                                                 <div> <span id="qty_error" class="text-red"></span></div>
 
                                             </td>
@@ -269,21 +270,27 @@
                                         <tr class="subtotal-row">
                                             <td></td>
                                             <td></td>
-                                            <td style="
+                                            <td
+                                                style="
                                             font-weight: 500;
-                                        ">SubTotal:</td>
-                                            <td style="
+                                        ">
+                                                SubTotal:</td>
+                                            <td
+                                                style="
                                             font-weight: 500;
-                                        "> MYR 0.00{{ isset($order) ? $order->sub_total : '' }}</td>
+                                        ">
+                                                MYR 0.00{{ isset($order) ? $order->sub_total : '' }}</td>
                                             <td></td>
                                         </tr>
                                         <tr class="discount-row" style="display:none">
                                             <td></td>
                                             <td></td>
                                             <td></td>
-                                            <td style="
+                                            <td
+                                                style="
                                             font-weight: 500;
-                                        ">MYR: </td>
+                                        ">
+                                                MYR: </td>
                                             <td></td>
 
                                         </tr>
@@ -294,11 +301,11 @@
                                             <tr class="shipping-row">
                                                 <td>
                                                     <input type="text" class="coupon" id="coupon" name="coupon"
-                                                    placeholder="Enter coupon code">
-                                                <button class="btn btn-primary coupon_btn" id="coupon_btn"
-                                                    name="coupon_btn">Apply Coupon</button>
-                                                <br>
-                                                <span id="coupon_error" class="text-green" style="color:green;"></span>
+                                                        placeholder="Enter coupon code">
+                                                    <button class="btn btn-primary coupon_btn" id="coupon_btn"
+                                                        name="coupon_btn">Apply Coupon</button>
+                                                    <br>
+                                                    <span id="coupon_error" class="text-red"></span>
                                                 </td>
                                                 <td></td>
                                                 <td colspan="2">
@@ -306,10 +313,12 @@
                                                     @foreach ($arrays as $array)
                                                         <div class="form-radio">
                                                             <input type="radio" name="shipping_method"
-                                                                id="{{ $array['name'] }}" value="{{ $array['name'] }}" {{ $array['name'] === 'flat_rate' ? 'checked' : '' }}>
-                                                            <label for="{{ $array['name'] }}">{{ $array['label'] }}</label>
-                                                            <span id="price_{{ $array['name'] }}"
-                                                                class="price-amount" style="
+                                                                id="{{ $array['name'] }}" value="{{ $array['name'] }}"
+                                                                {{ $array['name'] === 'flat_rate' ? 'checked' : '' }}>
+                                                            <label
+                                                                for="{{ $array['name'] }}">{{ $array['label'] }}</label>
+                                                            <span id="price_{{ $array['name'] }}" class="price-amount"
+                                                                style="
                                                                 font-weight: 500;
                                                             ">{{ $array['cost']['inCurrentCurrency']['formatted'] }}</span>
                                                             <div>
@@ -320,7 +329,7 @@
 
 
                                                 </td>
-                                                
+
 
 
                                             </tr>
@@ -330,7 +339,8 @@
                                             <td></td>
                                             <td></td>
                                             <td style="font-weight: 500;">Total:</td>
-                                            <td style="font-weight: 500;"> MYR 0.00 {{ isset($order) ? $order->total : '' }}</td>
+                                            <td style="font-weight: 500;"> MYR 0.00
+                                                {{ isset($order) ? $order->total : '' }}</td>
                                             <td></td>
                                         </tr>
                                     </tfoot>
@@ -356,8 +366,9 @@
 
                 </div>
                 <div class="col-md-4">
-                    <div class="pre_order_calender" style="display: none" >
-                        <input type="date" id="pre_order_calender" name="pre_order_calender" style="background-color: transparent;border: none;">
+                    <div class="pre_order_calender" style="display: none">
+                        <input type="date" id="pre_order_calender" name="pre_order_calender"
+                            style="background-color: transparent;border: none;">
                     </div>
 
                 </div>
@@ -465,9 +476,9 @@
                 </div>
             </div>
 
-           
 
-            
+
+
         </div>
     </div>
     <div class="form-group">
@@ -477,9 +488,13 @@
             </button>
         </div>
     </div>
+    <div id="product-data" data-products='{{ json_encode($products) }}'></div>$products
 </form>
 
 <script>
+    const productDataDiv = document.getElementById('product-data');
+    const products = JSON.parse(productDataDiv.dataset.products);
+    console.log(products);
     let backendData = @json($minimumAmount);
     const thirdTD = document.querySelector('tfoot .shipping-row td:nth-child(3) ');
     const firstFormRadio = thirdTD.querySelector('.form-radio');
@@ -641,7 +656,7 @@
             let formRadio = '';
             let span = '';
             let billingLines = [];
-            let shippingData =  {};
+            let shippingData = {};
             const formRadioElements = billingAddressContainer.querySelectorAll('.form-radio');
 
             formRadioElements.forEach((formRadio) => {
@@ -667,7 +682,8 @@
                     label = document.createElement('label');
                     label.appendChild(radioInput);
                     label.htmlFor = `billing-address-${item.id}`;
-                    const addressDetails = ["full_name","address_1", "address_2", "city", "zip", "state_name",
+                    const addressDetails = ["full_name", "address_1", "address_2", "city", "zip",
+                        "state_name",
                         "country_name"
                     ];
                     addressDetails.forEach((detailKey) => {
@@ -677,7 +693,7 @@
                         if (itemValue === null) {
                             return; // Skip this iteration if itemValue is null
                         }
-                        
+
                         const span = document.createElement('span');
                         span.textContent = `${item[detailKey]}`;
                         span.id = `${detailKey}`;
@@ -701,7 +717,7 @@
                             original_billing_address = {};
                             // original_shipping_address = {};
                             billingLines = [];
-                            shippingData =  {};
+                            shippingData = {};
                             // const shippingAddressDisplay = document.getElementById('shipping-address');
                             // const shippingformRadioElements = shippingAddressDisplay.querySelectorAll('.form-radio');
                             // shippingformRadioElements.forEach((formRadio) => {
@@ -713,13 +729,12 @@
                             //    const shippingformRadio = document.createElement('div');
                             //    shippingformRadio.classList.add('form-radio');
                             spanTags.forEach((spanTag) => {
-                                if(spanTag.id === 'state_name'){
+                                if (spanTag.id === 'state_name') {
                                     spanTag.id = 'state'
-                                }
-                                else if(spanTag.id === 'country_name'){
+                                } else if (spanTag.id === 'country_name') {
                                     spanTag.id = 'country'
                                 }
-                                const spanId = 'billing_'+spanTag.id;
+                                const spanId = 'billing_' + spanTag.id;
                                 const data = spanTag.textContent;
                                 shippingData[spanId] = data;
                                 billingLines.push(data);
@@ -736,11 +751,11 @@
                             // console.log('original_billing_address', original_billing_address);
 
                             //   shippingAddressDisplay.appendChild(shippingformRadio);
-                            if(this.checked && other_address_input.checked == false){
+                            if (this.checked && other_address_input.checked == false) {
                                 //  console.log('original_billing_address.billing_zip', original_billing_address.billing_zip);
                                 zipExists(parseInt(original_billing_address.billing_zip));
                             }
-                              
+
                             // console.log('original_billing_address->shipping', original_shipping_address);
 
 
@@ -780,23 +795,22 @@
                             const checkedId = this.id;
                             original_shipping_address = {};
                             billingLines = [];
-                            shippingData =  {};
+                            shippingData = {};
                             const labels = document.querySelector(`label[for="${checkedId}"]`);
                             const spanTags = labels.querySelectorAll('span');
                             spanTags.forEach((spanTag) => {
-                                if(spanTag.id === 'state_name'){
+                                if (spanTag.id === 'state_name') {
                                     spanTag.id = 'state'
-                                }
-                                else if(spanTag.id === 'country_name'){
+                                } else if (spanTag.id === 'country_name') {
                                     spanTag.id = 'country'
                                 }
-                                const spanId = 'shipping_'+spanTag.id;
+                                const spanId = 'shipping_' + spanTag.id;
                                 const data = spanTag.textContent;
                                 shippingData[spanId] = data;
 
                                 // console.log('spanId:', spanId);
-                                
-                               
+
+
                                 billingLines.push(data);
                                 original_shipping_address = shippingData;
                                 // original_shipping_address = {
@@ -811,7 +825,7 @@
                             });
                             // console.log('shippingData before update:', shippingData);
                             //  console.log('shippingAddress', original_shipping_address);
-                            if(this.checked && other_address_input.checked == true){
+                            if (this.checked && other_address_input.checked == true) {
                                 // console.log('original_shipping_address.shipping_zip',original_shipping_address.shipping_zip);
                                 zipExists(parseInt(original_shipping_address.shipping_zip));
                             }
@@ -1144,28 +1158,28 @@
     });
 
 
-// const form = document.getElementById('order_create_form');
-// form.addEventListener('input', function(event) {
-//     const target = event.target;
-//     if((target.tagName === 'INPUT') || (target.tagName === 'SELECT') && target.id){
-//         const fieldId = target.id;
-//         const errorSpan = document.getElementById(fieldId + '_error');
-//         if (errorSpan) {
-//             if (
-//                 (target.tagName === 'INPUT' && target.value.trim() !== '') ||
-//                 (target.tagName === 'SELECT' && target.value !== '0')
-//             ) {
-//                 errorSpan.style.display = 'none';
-//             } else {
-//                 errorSpan.style.display = 'block'; // Show the error span if the field is empty or the 
-//             }
-//         }
-//     }
-// });
+    // const form = document.getElementById('order_create_form');
+    // form.addEventListener('input', function(event) {
+    //     const target = event.target;
+    //     if((target.tagName === 'INPUT') || (target.tagName === 'SELECT') && target.id){
+    //         const fieldId = target.id;
+    //         const errorSpan = document.getElementById(fieldId + '_error');
+    //         if (errorSpan) {
+    //             if (
+    //                 (target.tagName === 'INPUT' && target.value.trim() !== '') ||
+    //                 (target.tagName === 'SELECT' && target.value !== '0')
+    //             ) {
+    //                 errorSpan.style.display = 'none';
+    //             } else {
+    //                 errorSpan.style.display = 'block'; // Show the error span if the field is empty or the 
+    //             }
+    //         }
+    //     }
+    // });
 
 
 
-    
+
 
 
 
@@ -1203,11 +1217,14 @@
 
                 productDataArray.splice(indexToRemove, 1); // Remove the object at the specified index
 
-
+                console.log('delete',productDataArray);
 
             }
 
         } else {
+            // console.log('productDataArray',productDataArray.length);
+             const productSpan = row.querySelector('.order-product').closest('td').querySelector('span');
+
             const product_id = row.querySelector('.order-product').value;
             const unit_price = row.querySelector('td:nth-child(2)').textContent
                 .split(' ')[1];
@@ -1216,7 +1233,25 @@
             const prepare_days = row.querySelector('.order-product option:checked').getAttribute('data-prepare_days');
             const is_preorder_status = row.querySelector('.order-product option:checked').getAttribute(
                 'data-is_preorder_status');
-            const indexToUpdate = productDataArray.findIndex(item => item.product_id === product_id);
+               
+                const product = {
+                product_id: row.querySelector('.order-product').value,
+                unit_price: unit_price,
+                qty: row.querySelector('.quantity').value,
+                line_total: line_total,
+                prepare_days: prepare_days,
+                is_preorder_status: is_preorder_status,
+                productSpan:productSpan.id
+
+            };
+
+            if(productDataArray.length === 0){
+                productDataArray.push(product);
+                // console.log('add ',productDataArray);
+            }else{
+
+                const indexToUpdate = productDataArray.findIndex(item => item.productSpan === productSpan.id);      
+                // console.log('indexToUpdate',indexToUpdate);
             if (indexToUpdate !== -1) {
 
                 //  // If an object with the same product_id exists, replace it
@@ -1226,24 +1261,27 @@
                     qty: row.querySelector('.quantity').value,
                     line_total: line_total,
                     prepare_days: prepare_days,
-                    is_preorder_status: is_preorder_status
+                    is_preorder_status: is_preorder_status,
+                    productSpan:productSpan.id
                 };
-                // console.log('indexToUpdate', productDataArray[indexToUpdate]);
+                //  console.log('Updated', productDataArray[indexToUpdate]);
+                //  console.log('add ',productDataArray);
+                 
                 return false;
+            }else {
+
+                productDataArray.push(product);
+                // console.log('add ',productDataArray);
+
             }
 
-            const product = {
-                product_id: row.querySelector('.order-product').value,
-                unit_price: unit_price,
-                qty: row.querySelector('.quantity').value,
-                line_total: line_total,
-                prepare_days: prepare_days,
-                is_preorder_status: is_preorder_status
+            }
+           
+            
+            
 
-            };
-            productDataArray.push(product);
-
-            // console.log(productDataArray);
+           
+            
 
 
 
@@ -1298,15 +1336,20 @@
         const is_present = sub.is_percent;
         const orderAmount = updateTotal();
         const type = 'percent';
-        //   console.log('is_present',is_present);
         if (is_present && updateTotal() > 0) {
             const valid = handleCouponValidation(sub, orderAmount);
             const discountRow = document.querySelector('.discount-row');
             const validstrng = valid == 'Coupon is Applied' ? true : false;
+            const errorElement = document.getElementById('coupon_error');
             if (valid !== 'Coupon is Applied') {
                 discountRow.style.display = "none";
                 discountRow.querySelector('td:nth-child(3)').textContent = '';
                 discountRow.querySelector('td:nth-child(4)').textContent = '';
+                errorElement.textContent = valid;
+                errorElement.style.color = 'red';
+                const couponElement = document.getElementById('coupon');
+                couponElement.value = sub.code;
+                return valid;
             }
 
             if (valid == 'Coupon is Applied') {
@@ -1318,18 +1361,18 @@
                 const forthtd = discountRow.querySelector('td:nth-child(4)');
                 forthtd.textContent = '-MYR ' + discountAmount;
                 // thirdtd.textContent = 'coupon [' + sub.code + ']:';
-                thirdtd.innerHTML =`Coupon[${sub.code}]  <i class="fa-solid fa-xmark"></i>`;
-
-                const errorElement = document.getElementById('coupon_error');
+                thirdtd.innerHTML = `Coupon[${sub.code}]  <i class="fa-solid fa-xmark"></i>`;
                 errorElement.textContent = valid;
+                errorElement.style.color = 'green';
                 const couponElement = document.getElementById('coupon');
                 couponElement.value = sub.code;
+                console.log('validstrng', valid);
                 return valid;
             }
-            const errorElement = document.getElementById('coupon_error');
-            errorElement.textContent = valid;
-            const couponElement = document.getElementById('coupon');
-            return valid;
+
+
+            // const couponElement = document.getElementById('coupon');
+            // return valid;
 
 
 
@@ -1337,54 +1380,56 @@
     }
 
 
-    const tfoot  = document.querySelector('tfoot');
+    const tfoot = document.querySelector('tfoot');
 
-    tfoot.addEventListener('click', function(){
+    tfoot.addEventListener('click', function() {
         const target = event.target;
-        if(event.target.classList.contains('fa-xmark')){
-             // Check if the clicked element is the third <td> in the "discount-row"
-    if (target.closest('.discount-row td:nth-child(3)')) {
-        const innerText = target.textContent.trim();
-        const row = target.parentElement.parentElement;
-        row.style.display = "none";
-        row.querySelector('td:nth-child(3)').textContent = '';
-        row.querySelector('td:nth-child(4)').textContent = '';
-        updateTotal();
-        // if (innerText !== '') {
-        //     // The third <td> element has a value
-        //     console.log('The third <td> element in the "discount-row" has a value:', innerText);
-        // } else {
-        //     // The third <td> element is empty
-        //     console.log('The third <td> element in the "discount-row" is empty.');
-        // }
-    }
-       
+        if (event.target.classList.contains('fa-xmark')) {
+            // Check if the clicked element is the third <td> in the "discount-row"
+            if (target.closest('.discount-row td:nth-child(3)')) {
+                const innerText = target.textContent.trim();
+                const row = target.parentElement.parentElement;
+                row.style.display = "none";
+                row.querySelector('td:nth-child(3)').textContent = '';
+                row.querySelector('td:nth-child(4)').textContent = '';
+                updateTotal();
+                const errorSpanTag = document.getElementById('coupon_error');
+                errorSpanTag.textContent = '';
+                // if (innerText !== '') {
+                //     // The third <td> element has a value
+                //     console.log('The third <td> element in the "discount-row" has a value:', innerText);
+                // } else {
+                //     // The third <td> element is empty
+                //     console.log('The third <td> element in the "discount-row" is empty.');
+                // }
+            }
+
 
         }
-       
-       
-    
-   
+
+
+
+
     });
-    
-   // Calculate line total when quantity changes
-//    document.getElementById('productTableBody').addEventListener('click', function(event) {
-//         event.preventDefault();
-//         const qty = document.querySelector('.quantity');
-//         if(event.target.classList.contains('fa-angle-left')){
-//             console.log('event.target',event.target);
-//             qty.value = parseInt(qty.value) - 1;
-            
-            
 
-//         }else if(event.target.classList.contains('fa-angle-right')){
-//             qty.value = parseInt(qty.value) + 1;
-           
-//         }
-//         qty.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
-//     });
+    // Calculate line total when quantity changes
+    //    document.getElementById('productTableBody').addEventListener('click', function(event) {
+    //         event.preventDefault();
+    //         const qty = document.querySelector('.quantity');
+    //         if(event.target.classList.contains('fa-angle-left')){
+    //             console.log('event.target',event.target);
+    //             qty.value = parseInt(qty.value) - 1;
 
-    
+
+
+    //         }else if(event.target.classList.contains('fa-angle-right')){
+    //             qty.value = parseInt(qty.value) + 1;
+
+    //         }
+    //         qty.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+    //     });
+
+
 
     // Calculate line total when quantity changes
     document.getElementById('productTableBody').addEventListener('input', function(event) {
@@ -1395,35 +1440,35 @@
             const manageStock = selectedOption.getAttribute('data-manage_stock');
             const dataQty = parseInt(selectedOption.getAttribute('data-qty'));
             const isStock = parseInt(selectedOption.getAttribute('data-in_stock'));
-            const spanDiv =select.nextElementSibling;
+            const spanDiv = select.nextElementSibling;
             const span = spanDiv.querySelector('span');
             span.textContent = '';
-           if(manageStock && event.target.value !== ''){
-            if(!isStock){
-                // console.log('out of stock');
-                
-                span.textContent = 'out of stock';
-                // console.log('span',span);
-                event.target.value = 0;
-                return false;
+            if (manageStock && event.target.value !== '') {
+                if (!isStock) {
+                    // console.log('out of stock');
+
+                    span.textContent = 'out of stock';
+                    // console.log('span',span);
+                    event.target.value = 0;
+                    return false;
+                }
+                span.textContent = '';
+                const qtyValue = parseInt(event.target.value);
+                const stockCheck = qtyValue > dataQty ? true : false;
+                if (stockCheck) {
+                    event.target.value = dataQty;
+                    span.textContent = 'Sorry, we only have ' + dataQty + '  in stock.';
+                    return false;
+                }
+            } else if (!manageStock && event.target.value !== '') {
+                if (!isStock) {
+                    // console.log('out of stock');
+
+                    span.textContent = 'out of stock';
+                    event.target.value = 0;
+                    return false;
+                }
             }
-            span.textContent = '';
-            const qtyValue = parseInt(event.target.value);
-            const stockCheck = qtyValue > dataQty ? true : false;
-            if(stockCheck){
-                event.target.value = dataQty;
-                span.textContent = 'Sorry, we only have '+dataQty+'  in stock.';
-                return false;
-            }
-           }else if( !manageStock && event.target.value !== ''){
-            if(!isStock){
-                // console.log('out of stock');
-                
-                span.textContent = 'out of stock';
-                event.target.value = 0;
-                return false;
-            }
-           }
             calculateLineTotal(event.target.parentElement.parentElement);
             add_couponData();
             if (event.target.value.trim() !== "") {
@@ -1499,7 +1544,7 @@
             isValid = false;
 
 
-        } 
+        }
 
         if (phoneValue === '') {
             displayErrorMessage('phone', 'The phone number field is required.');
@@ -1546,18 +1591,17 @@
 
     function handleCouponValidation(coupon, orderAmount) {
         try {
-            // Check if the coupon code is missing or empty
-            if (!coupon || !coupon.code) {
-                throw new Error('The coupon does not exist.');
-            }
 
-            // Check if the coupon has expired
             const currentDate = new Date();
             const endDate = new Date(coupon.end_date);
+            if(coupon.end_date){
 
-            if (currentDate > endDate) {
+                if (currentDate > endDate) {
                 throw new Error('Coupon has expired');
             }
+
+            }
+           
 
             // Check if the coupon is used up
             if (coupon.usage_limit_per_coupon && coupon.used >= coupon.usage_limit_per_coupon) {
@@ -1599,12 +1643,200 @@
                 throw new Error('The coupon is not valid.');
             }
 
+            // Check if the coupon is exist or not
+            if (coupon.isempty) {
+                throw new Error('The coupon Does not exist.');
+            }
+
+
+               // Check if the coupon category excluded
+
+               if (Array.isArray(coupon.exclude_categories) && coupon.exclude_categories.length !== 0) {
+                const productDataRow = [];
+                const rows = document.querySelectorAll('#productTableBody tr');
+                rows.forEach(function(row) {
+                    const unit_price = row.querySelector('td:nth-child(2)').textContent
+                        .split(' ')[1];
+                    const line_total = row.querySelector('td:nth-child(4)').textContent
+                        .split(' ')[1];
+                    const product = {
+                        product_id: row.querySelector('.order-product').value,
+                        unit_price: unit_price,
+                        qty: row.querySelector('.quantity').value,
+
+
+
+                    };
+                    productDataRow.push(product);
+
+                });
+                const matchingProducts = products.filter(product =>
+                    productDataRow.some(productData => parseInt(productData.product_id) === product.id)
+                );
+
+                const matchingCategories = matchingProducts
+                    .flatMap(product => product.categories) // Flatten categories
+                    .filter(category => {
+                        // Compare the category IDs from coupon and matchingCategories
+                        return coupon.exclude_categories.some(couponCategory => couponCategory.id === category.id);
+                    });
+                console.log('matchingProducts',matchingProducts);
+                console.log('excludedCategories',matchingCategories);
+
+                if (matchingCategories.length !== 0) {
+                    throw new Error('The coupon is not applicable for this excluded cart .');
+                } else {
+                    return 'Coupon is Applied';
+                }
+
+               
+
+            }
+
+            // Check if the coupon category included
+            if (Array.isArray(coupon.categories) && coupon.categories.length !== 0) {
+                const productDataRow = [];
+                const rows = document.querySelectorAll('#productTableBody tr');
+                rows.forEach(function(row) {
+                    const unit_price = row.querySelector('td:nth-child(2)').textContent
+                        .split(' ')[1];
+                    const line_total = row.querySelector('td:nth-child(4)').textContent
+                        .split(' ')[1];
+                    const product = {
+                        product_id: row.querySelector('.order-product').value,
+                        unit_price: unit_price,
+                        qty: row.querySelector('.quantity').value,
+
+
+
+                    };
+                    productDataRow.push(product);
+
+                });
+                const matchingProducts = products.filter(product =>
+                    productDataRow.some(productData => parseInt(productData.product_id) === product.id)
+                );
+
+                const matchingCategories = matchingProducts
+                    .flatMap(product => product.categories) // Flatten categories
+                    .filter(category => {
+                        // Compare the category IDs from coupon and matchingCategories
+                        return coupon.categories.some(couponCategory => couponCategory.id === category.id);
+                    });
+
+                    console.log('matchingProducts',matchingProducts);
+                console.log('includedCategories',matchingCategories);
+
+                if (matchingCategories.length === 0) {
+                    throw new Error('The coupon is not applicable for this cart .');
+                } else {
+                    return 'Coupon is Applied';
+                }
+
+
+
+            }
+
+
+             // Check if the coupon product excluded
+
+             if (Array.isArray(coupon.exclude_products) && coupon.exclude_products.length !== 0) {
+                const productDataRow = [];
+                const rows = document.querySelectorAll('#productTableBody tr');
+                rows.forEach(function(row) {
+                    const unit_price = row.querySelector('td:nth-child(2)').textContent
+                        .split(' ')[1];
+                    const line_total = row.querySelector('td:nth-child(4)').textContent
+                        .split(' ')[1];
+                    const product = {
+                        product_id: row.querySelector('.order-product').value,
+                        unit_price: unit_price,
+                        qty: row.querySelector('.quantity').value,
+
+
+
+                    };
+                    productDataRow.push(product);
+
+                });
+                const matchingProducts = products.filter(product =>
+                    productDataRow.some(productData => parseInt(productData.product_id) === product.id)
+                );
+
+                const matchingProductExclude = matchingProducts 
+                    .filter(product => {
+                        // Compare the category IDs from coupon and matchingCategories
+                        return coupon.exclude_products.some(couponproduct => couponproduct.id === product.id);
+                    });
+                console.log('matchingProducts',matchingProducts);
+                console.log('matchingProductExclude',matchingProductExclude);
+
+                if (matchingProductExclude.length !== 0) {
+                    throw new Error('The coupon is not applicable for this product excluded cart .');
+                } else {
+                    return 'Coupon is Applied';
+                }
+
+               
+
+            }
+
+
+            // Check if the coupon product is included
+            if (Array.isArray(coupon.products) && coupon.products.length !== 0) {
+                const productDataRow = [];
+                const rows = document.querySelectorAll('#productTableBody tr');
+                rows.forEach(function(row) {
+                    const unit_price = row.querySelector('td:nth-child(2)').textContent
+                        .split(' ')[1];
+                    const line_total = row.querySelector('td:nth-child(4)').textContent
+                        .split(' ')[1];
+                    const product = {
+                        product_id: row.querySelector('.order-product').value,
+                        unit_price: unit_price,
+                        qty: row.querySelector('.quantity').value,
+
+
+
+                    };
+                    productDataRow.push(product);
+
+                });
+                const matchingProducts = products.filter(product =>
+                    productDataRow.some(productData => parseInt(productData.product_id) === product.id)
+                );
+
+                const matchingProductsCoupon = matchingProducts
+                    .filter(product => {
+                        // Compare the category IDs from coupon and matchingCategories
+                        return coupon.products.some(couponproducts => couponproducts.id === product.id);
+                    });
+
+                    console.log('matchingProducts',matchingProducts);
+                    console.log('matchingProductsCoupon',matchingProductsCoupon);
+
+                if (matchingProductsCoupon.length === 0) {
+                    throw new Error('The coupon is not applicable for this product cart .');
+                } else {
+                    return 'Coupon is Applied';
+                }
+
+
+
+            }
+
+
+            
+
+
+           
+
             // If all checks pass, you can return a success message
-             return 'Coupon is Applied';
+            return 'Coupon is Applied';
 
         } catch (error) {
             // Handle and log the error or return an error message
-            return `Error: ${error.message}`;
+            return `${error.message}`;
         }
     }
 
@@ -1652,11 +1884,16 @@
         const couponElement = document.getElementById('coupon');
         const coupon = couponElement.value;
         const csrfToken = "{{ csrf_token() }}";
+        const errorElement = document.getElementById('coupon_error');
+
 
         // const url = `/cart/coupon?coupon=${encodeURIComponent(coupon)}`;;
 
-        if (coupon == '') {
-            const msg = 'The coupon does not exist.';
+        if (coupon === '') {
+            const msg = 'Please Enter Valid Coupon.';
+            errorElement.textContent = msg;
+            errorElement.style.color = 'red';
+            console.log('msg', msg);
             return false;
         }
 
@@ -1664,6 +1901,7 @@
 
         fetch(route('cart.coupon.store', {
                 coupon: coupon,
+                products: productDataArray,
                 type: 'manual',
             }), {
                 method: 'POST',
@@ -1691,18 +1929,20 @@
                 const discount_amt = document.getElementById('discount_amt');
                 const is_percent = document.getElementById('discount_type');
                 const coupon_id = document.getElementById('coupon_id');
-                if (validationMessage !== 'Coupon is Applied') {
+                errorElement.textContent = validationMessage;
 
+                if (validationMessage !== 'Coupon is Applied') {
+                    // console.log('validationMessage',validationMessage);
+                    errorElement.style.color = 'red';
                     discountRow.style.display = "none";
                     discountRow.querySelector('td:nth-child(3)').textContent = '';
                     discountRow.querySelector('td:nth-child(4)').textContent = '';
                 }
                 const thirdtd = discountRow.querySelector('td:nth-child(3)');
                 const forthtd = discountRow.querySelector('td:nth-child(4)');
-                errorElement.textContent = validationMessage;
-                errorElement.style.color = 'red';
                 if (validationMessage == 'Coupon is Applied') {
-
+                    console.log('AppliedvalidationMessage', validationMessage);
+                    errorElement.style.color = 'green';
                     const discount = couponObject.value;
                     const discount_type = couponObject.is_percent;
                     coupon_id.value = couponObject.id;
@@ -1711,17 +1951,18 @@
 
                     if (discount_type == 1) {
                         sub = couponObject;
-
+                        // console.log('sub',sub);
                         const type = 'percent';
                         const discountAmount = discounted(discount, orderAmount, type);
                         discountRow.style.display = 'table-row';
                         forthtd.textContent = '-MYR ' + discountAmount;
                         // thirdtd.textContent = 'coupon [' + coupon + ']:';
-                thirdtd.innerHTML =`Coupon[${sub.code}]  <i class="fa-solid fa-xmark"></i>`;
+                        thirdtd.innerHTML = `Coupon[${sub.code}]  <i class="fa-solid fa-xmark"></i>`;
 
 
 
                     } else {
+                        sub = couponObject;
                         const dis = discount.inCurrentCurrency.amount;
                         discount_amt.value = dis;
                         const type = 'fixed';
@@ -1729,7 +1970,7 @@
                         discountRow.style.display = 'table-row';
                         forthtd.textContent = '-MYR ' + discountAmount;
                         // thirdtd.textContent = 'coupon [' + coupon + ']:';
-                        thirdtd.innerHTML =`Coupon[${sub.code}]  <i class="fa-solid fa-xmark"></i>`;
+                        thirdtd.innerHTML = `Coupon[${sub.code}]  <i class="fa-solid fa-xmark"></i>`;
 
                     };
                 }
@@ -1804,7 +2045,7 @@
                     // element.addEventListener('change', function(){
                     const labelFor = element.getAttribute('id');
                     const span = document.querySelector('#price_' + labelFor);
-                    
+
 
                     if (labelFor == 'flat_rate') {
                         span.innerHTML = priceData;
@@ -1842,22 +2083,22 @@
         const other_address_input = document.getElementById('other_address');
         if (element.value === 'flat_rate' && element.checked === true) {
             other_address.style.display = '';
-            
+
             other_address_input.addEventListener('change', function() {
                 const shippingAddress = document.getElementById('shipping-address');
                 if (this.checked) {
                     //  console.log('shippingAddress',shippingAddress); 
                     shippingAddress.style.display = 'inline-flex';
-                     zipExists(parseInt(original_shipping_address.shipping_zip));
+                    zipExists(parseInt(original_shipping_address.shipping_zip));
                 } else {
                     shippingAddress.style.display = 'none';
                     const sippingAddress = document.getElementById('shipping-address');
                     // console.log('shippingAddress',shippingAddress);
-                     zipExists(parseInt(original_billing_address.billing_zip));
+                    zipExists(parseInt(original_billing_address.billing_zip));
 
                 }
             });
-}
+        }
 
         element.addEventListener('change', function() {
             other_address.style.display = '';
@@ -1868,16 +2109,17 @@
 
                     shippingAddress.style.display = 'inline-flex';
                     //  console.log('shippingAddresschecked',shippingAddress);
-                     const firstShippingAddressInput = document.querySelector('input[name="shipping-address"]:first-of-type');
-                        firstShippingAddressInput.checked = true;
-                        // Create a new Event
-                        const changeEvent = new Event('change', {
+                    const firstShippingAddressInput = document.querySelector(
+                        'input[name="shipping-address"]:first-of-type');
+                    firstShippingAddressInput.checked = true;
+                    // Create a new Event
+                    const changeEvent = new Event('change', {
                         bubbles: true,
                         cancelable: false,
-                        });
+                    });
 
-                        // Dispatch the change event on the input element
-                        firstShippingAddressInput.dispatchEvent(changeEvent);
+                    // Dispatch the change event on the input element
+                    firstShippingAddressInput.dispatchEvent(changeEvent);
                 } else {
                     shippingAddress.style.display = 'none';
                     const sippingAddress = document.getElementById('shipping-address');
@@ -1927,13 +2169,14 @@
 
 
                             });
-                            
+
                             // Get the target element by its ID
                             targetElement.innerHTML = template;
                             // targetElement = document.getElementById('pickup-store');
                             targetElement.style.display = 'inline-flex';
                             // Set the innerHTML of the target element to the dynamicHTML
-                            const inputRadio = targetElement.querySelector('.form-radio input[type="radio"]');
+                            const inputRadio = targetElement.querySelector(
+                                '.form-radio input[type="radio"]');
                             inputRadio.checked = true;
                             const checkedId = inputRadio.id;
                             original_shipping_address = {};
@@ -2015,43 +2258,44 @@
     const flatRateError = document.querySelector('#flat_rate_error');
     const submitForm = document.querySelector('#submitForm');
     let observer = null;
+
     function checkInitialState() {
-    if (flatRateInput.checked) {
-        observer = new MutationObserver(handleFlatRateChange);
-        observer.observe(document.querySelector('#price_flat_rate'), {
+        if (flatRateInput.checked) {
+            observer = new MutationObserver(handleFlatRateChange);
+            observer.observe(document.querySelector('#price_flat_rate'), {
                 childList: true,
                 characterData: true,
                 subtree: true
             });
-        // console.log('The "flat_rate" radio button is checked initially.');
-    } 
-}
-checkInitialState();
-
-function handleFlatRateChange(mutationsList) {
-    for (const mutation of mutationsList) {
-        if (mutation.type === 'childList' && mutation.target.id === 'price_flat_rate') {
-            const textContent = mutation.target.textContent.trim();
-            const numericValue = parseFloat(textContent.split('MYR')[1].trim());
-            
-            // console.log('event.target',mutation.target.textContent);
-            if(numericValue == 0){
-              
-               flatRateError.innerText = 'This Pincode not serviceable for flat rate shippment Option';
-               submitForm.setAttribute('disabled','disabled');
-            }else if(numericValue > 0){
-                flatRateError.innerText = '';
-                submitForm.removeAttribute('disabled','disabled');
-            }
-            // console.log('numericValue',numericValue);
-           
+            // console.log('The "flat_rate" radio button is checked initially.');
         }
     }
-}
+    checkInitialState();
+
+    function handleFlatRateChange(mutationsList) {
+        for (const mutation of mutationsList) {
+            if (mutation.type === 'childList' && mutation.target.id === 'price_flat_rate') {
+                const textContent = mutation.target.textContent.trim();
+                const numericValue = parseFloat(textContent.split('MYR')[1].trim());
+
+                // console.log('event.target',mutation.target.textContent);
+                if (numericValue == 0) {
+
+                    flatRateError.innerText = 'This Pincode not serviceable for flat rate shippment Option';
+                    submitForm.setAttribute('disabled', 'disabled');
+                } else if (numericValue > 0) {
+                    flatRateError.innerText = '';
+                    submitForm.removeAttribute('disabled', 'disabled');
+                }
+                // console.log('numericValue',numericValue);
+
+            }
+        }
+    }
     const shippingRow = document.querySelector('.shipping-row');
-   
-    shippingRow.addEventListener('change', function(event){
-        if(event.target.getAttribute('name').includes('shipping_method')){
+
+    shippingRow.addEventListener('change', function(event) {
+        if (event.target.getAttribute('name').includes('shipping_method')) {
             if (event.target.id === 'flat_rate' && event.target.checked) {
                 // const firstSibling = event.target.nextElementSibling;
                 // const secondSibling = firstSibling.nextElementSibling;
@@ -2059,24 +2303,24 @@ function handleFlatRateChange(mutationsList) {
                 // if(spanValue === 0 && spanValue !== previousSpanValue){
                 //     console.log('spanValue',spanValue);
                 // }
-               
-                if (observer) {
-                observer.disconnect();
-            }
-                observer.observe(document.querySelector('#price_flat_rate'), {
-                childList: true,
-                characterData: true,
-                subtree: true
-            });
-                
-        }else {
-            flatRateError.innerText = '';
-            submitForm.removeAttribute('disabled','disabled');
-            observer.disconnect();
 
+                if (observer) {
+                    observer.disconnect();
+                }
+                observer.observe(document.querySelector('#price_flat_rate'), {
+                    childList: true,
+                    characterData: true,
+                    subtree: true
+                });
+
+            } else {
+                flatRateError.innerText = '';
+                submitForm.removeAttribute('disabled', 'disabled');
+                observer.disconnect();
+
+            }
         }
-        }
-       
+
 
     });
     //----------------------------------------------------------------
@@ -2529,7 +2773,7 @@ function handleFlatRateChange(mutationsList) {
                         shipping_method: shipping_method,
                         shipping_cost: shipping_cost,
                         coupon_id: coupon_id,
-                        delivery_date:CalenderValue
+                        delivery_date: CalenderValue
                     };
                     delete data.user;
                     delete data.order_id;
@@ -2588,35 +2832,30 @@ function handleFlatRateChange(mutationsList) {
 </script>
 
 <style>
-     .form-radio span {
+    .form-radio span {
         /* line-height: 26px; */
-    display: block;
-    clear: both;
-    
-            
+        display: block;
+        clear: both;
+
+
     }
+
     label {
         font-weight: lighter;
     }
 
     .price-amount {
-        margin-left: 71%; /* Add spacing to the right of the element */
+        margin-left: 71%;
+        /* Add spacing to the right of the element */
         margin-block-start: -3%;
-}
+    }
 
 
     /* Define a class to set the background icon and padding for the <td> */
 
 
-/* Add a class to hide the selected option */
-.hidden-option {
-    display: none;
-}
-
-    
-
-    
-    
-
-    
+    /* Add a class to hide the selected option */
+    .hidden-option {
+        display: none;
+    }
 </style>

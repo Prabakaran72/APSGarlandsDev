@@ -21,7 +21,7 @@ class SaveUserRequest extends Request
      */
     public function rules()
     {
-        return [
+        $rules =  [
             'first_name' => 'required',
             'last_name' => 'required',
             'email' => ['required', 'email', $this->emailUniqueRule()],
@@ -29,6 +29,19 @@ class SaveUserRequest extends Request
             'password' => 'nullable|confirmed|min:6',
             'roles' => ['required', Rule::exists('roles', 'id')],
         ];
+
+          // Conditional validation based on user_type
+          if ($this->input('user_type')) {
+            $rules = array_merge($rules, [
+                'address_1' => 'required',
+                'city' => 'required',
+                'zip' => 'required',
+                'country' => 'required',
+                'state' => 'required',
+            ]);
+        }
+
+        return $rules;
     }
 
     private function emailUniqueRule()

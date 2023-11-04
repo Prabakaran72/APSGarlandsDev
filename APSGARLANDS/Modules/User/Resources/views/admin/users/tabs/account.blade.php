@@ -18,14 +18,18 @@
 
         
             @php
+            echo '<script>
+                var oldStateObject = "";
+                </script>';
             $filteredAddress = collect($user->addresses)->filter(function ($address) {
                 return $address->user_type == 1;
             })->first();
             // $filteredAddressJson = $filteredAddress ? json_encode($filteredAddress) : null;
             if(isset(  $filteredAddress)){
                 echo '<script>
+                   
                 const oldState = \'' . json_encode($filteredAddress->state) . '\';
-                var oldStateObject = JSON.parse(oldState);
+                oldStateObject = JSON.parse(oldState);
                 </script>';
 
             }
@@ -52,26 +56,28 @@
     const hiddenCheckbox = document.getElementById("hidden_checkbox");
     const form = document.querySelector("form");
     const userAddress = document.getElementById('user_address');
-
-
+    const firstName = document.getElementById('first_name');
     user_type.addEventListener('change', () => {
         addressFields.classList.toggle('hide');
+        countrySelect.dispatchEvent(new Event("change"));
     });
     const countrySelect = document.getElementById("country");
     // const stateSelectDiv = document.querySelector(".store-state.select");
+    countrySelect.value = 'MY';
     const stateSelect = document.getElementById("state");
 
     if (user_type.checked) {
         user_type.addEventListener("click",function(){
             event.preventDefault();
+            
        });
+       countrySelect.dispatchEvent(new Event("change"));
         // Make an AJAX request to fetch states based on the selected country
         fetch(route("countries.states.index", countrySelect.value))
             .then(response => response.json())
             .then(states => {
                 // Clear existing options in the state select
                 stateSelect.innerHTML = "";
-                console.log('Object', Object);
                 // Check if the states object is empty
                 if (Object.keys(states).length === 0) {
                     // If no states are available, add "No states available" option
@@ -90,6 +96,8 @@
                         // console.log('option.value',option.value);
                         if (option.value === oldStateObject) {
                                 option.selected = true;
+                               
+                               
                         }
                     }
                     // console.log('oldStateObject',oldStateObject);
@@ -114,7 +122,6 @@
             .then(states => {
                 // Clear existing options in the state select
                 stateSelect.innerHTML = "";
-                console.log('Object', Object);
                 // Check if the states object is empty
                 if (Object.keys(states).length === 0) {
                     // If no states are available, add "No states available" option
@@ -139,4 +146,13 @@
                 console.error("An error occurred:", error);
             });
     });
+
+    // if(firstName.value === ''){
+    //     countrySelect.dispatchEvent(new Event("change"));
+    // }
+         
+    
+     
 </script>
+
+

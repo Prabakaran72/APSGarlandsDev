@@ -74,8 +74,8 @@ class OrderController
 
         $countries =   Country::all();
         
-         $products = Product::select('id','slug','price','prepare_days','is_preorder_status','manage_stock','qty','in_stock')->get();
-
+         $products = Product::select('id','slug','price','prepare_days','is_preorder_status','manage_stock','qty','in_stock','special_price') ->with('categories')->get();
+        
           $shippingMethods =  ShippingMethod::availableShippingMannual();
           $minimumAmount = Money::inDefaultCurrency(setting('free_shipping_min_amount'));   
 

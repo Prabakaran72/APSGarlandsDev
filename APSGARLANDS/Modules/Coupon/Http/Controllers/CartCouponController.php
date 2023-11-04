@@ -51,13 +51,48 @@ class CartCouponController
             // $coupon = Coupon::whereRaw("BINARY code = ?", [request()->coupon])->first();
             // dd($coupon);
             $coupon = Coupon::findByCode(request('coupon'));
-            $coupon['perCustomerUsageLimitReached'] = $coupon->perCustomerUsageLimitReached();
+            if($coupon == null){
+                $coupon['isempty'] = true;
+                return response()->json([
+                    'coupon' => $coupon
+                   ]);
+
+            }else{
+                if($coupon->categories->isNotEmpty()){
+
+                    $coupon['categories'] = $coupon->categories->isEmpty();
+                    // return $coupon;
+                }
+
+                 if($coupon->excludeCategories->isNotEmpty()) {
+                    $coupon['excludeCategories'] = $coupon->excludeCategories->isEmpty();
+                }
+
+                if($coupon->products->isNotEmpty()){
+
+                    $coupon['products_included'] = $coupon->products->isEmpty();
+
+
+                }
+
+                if($coupon->excludeProducts->isNotEmpty()){
+
+                    $coupon['products_excluded'] = $coupon->excludeProducts->isEmpty();
+
+
+                }
+               
+            //    return $coupon;
+                 $coupon['perCustomerUsageLimitReached'] = $coupon->perCustomerUsageLimitReached();
             resolve(Pipeline::class)
             ->send($coupon)
             ->through($this->checkers);
            return response()->json([
             'coupon' => $coupon
            ]);
+
+            }
+           
         }
         
         $coupon = Coupon::findByCode(request('coupon'));
