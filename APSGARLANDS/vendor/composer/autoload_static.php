@@ -202,6 +202,7 @@ class ComposerStaticInit95bb1f1eaeab06176158b2a344a9d054
             'Modules\\RewardpointsGift\\' => 25,
             'Modules\\Review\\' => 15,
             'Modules\\Report\\' => 15,
+            'Modules\\Recurring\\' => 18,
             'Modules\\Product\\' => 16,
             'Modules\\Pickupstore\\' => 20,
             'Modules\\Payment\\' => 16,
@@ -751,6 +752,10 @@ class ComposerStaticInit95bb1f1eaeab06176158b2a344a9d054
         'Modules\\Report\\' => 
         array (
             0 => __DIR__ . '/../..' . '/Modules/Report',
+        ),
+        'Modules\\Recurring\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/Modules/Recurring',
         ),
         'Modules\\Product\\' => 
         array (
@@ -6814,6 +6819,13 @@ class ComposerStaticInit95bb1f1eaeab06176158b2a344a9d054
         'Modules\\Product\\RecentlyViewed' => __DIR__ . '/../..' . '/Modules/Product/RecentlyViewed.php',
         'Modules\\Product\\Services\\ChosenProductOptions' => __DIR__ . '/../..' . '/Modules/Product/Services/ChosenProductOptions.php',
         'Modules\\Product\\Sidebar\\SidebarExtender' => __DIR__ . '/../..' . '/Modules/Product/Sidebar/SidebarExtender.php',
+        'Modules\\Recurring\\Admin\\RecurringTable' => __DIR__ . '/../..' . '/Modules/Recurring/Admin/RecurringTable.php',
+        'Modules\\Recurring\\Database\\Seeders\\RecurringSubOrderTableSeeder' => __DIR__ . '/../..' . '/Modules/Recurring/Database/Seeders/RecurringSubOrderTableSeeder.php',
+        'Modules\\Recurring\\Database\\Seeders\\RecurringTableSeeder' => __DIR__ . '/../..' . '/Modules/Recurring/Database/Seeders/RecurringTableSeeder.php',
+        'Modules\\Recurring\\Http\\Controllers\\Admin\\RecurringController' => __DIR__ . '/../..' . '/Modules/Recurring/Http/Controllers/Admin/RecurringController.php',
+        'Modules\\Recurring\\Http\\Controllers\\RecurringStoreFrontController' => __DIR__ . '/../..' . '/Modules/Recurring/Http/Controllers/RecurringStoreFrontController.php',
+        'Modules\\Recurring\\Providers\\RecurringServiceProvider' => __DIR__ . '/../..' . '/Modules/Recurring/Providers/RecurringServiceProvider.php',
+        'Modules\\Recurring\\Sidebar\\SidebarExtender' => __DIR__ . '/../..' . '/Modules/Recurring/Sidebar/SidebarExtender.php',
         'Modules\\Report\\AbandonedCartListReport' => __DIR__ . '/../..' . '/Modules/Report/AbandonedCartListReport.php',
         'Modules\\Report\\AbandonedWishlistReport' => __DIR__ . '/../..' . '/Modules/Report/AbandonedWishlistReport.php',
         'Modules\\Report\\BrandedProductsReport' => __DIR__ . '/../..' . '/Modules/Report/BrandedProductsReport.php',

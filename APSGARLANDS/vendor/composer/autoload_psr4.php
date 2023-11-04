@@ -107,6 +107,7 @@ return array(
     'Modules\\RewardpointsGift\\' => array($baseDir . '/Modules/RewardpointsGift'),
     'Modules\\Review\\' => array($baseDir . '/Modules/Review'),
     'Modules\\Report\\' => array($baseDir . '/Modules/Report'),
+    'Modules\\Recurring\\' => array($baseDir . '/Modules/Recurring'),
     'Modules\\Product\\' => array($baseDir . '/Modules/Product'),
     'Modules\\Pickupstore\\' => array($baseDir . '/Modules/Pickupstore'),
     'Modules\\Payment\\' => array($baseDir . '/Modules/Payment'),

@@ -101,38 +101,47 @@
                     // dd($sub_data);
                 @endphp
                 <tr>
+                    <form method='POST' action="{{ route('admin.recurrings.update', ['id' => $sub_data->id]) }}">
+                        @csrf
+                        @method('PUT')
+                        <td>
+                            <input type="checkbox" id='checkRow' class="rowCheckbox" value="{{ $sub_data->id }}"
+                                {{ strtotime($sub_data->selected_date) <= strtotime(date('Y-m-d')) || $sub_data->subscribe_status == 0 ? 'disabled' : '' }}
+                                title="<?php
+                                if (strtotime($sub_data->selected_date) <= strtotime(date('Y-m-d'))) {
+                                    echo 'Delivery date has passed';
+                                } elseif ($sub_data->subscribe_status == 0) {
+                                    echo 'You Already update Unsubscribed';
+                                } else {
+                                    echo 'Click to select';
+                                }
+                                ?>">
+                        </td>
+                        <td>{{ $sub_data->id }}</td>
 
-                    <td>
-                        <input type="checkbox" class="rowCheckbox" value="{{ $sub_data->id }}"
-                            {{ strtotime($sub_data->selected_date) <= strtotime(date('Y-m-d')) || $sub_data->subscribe_status == 0 ? 'disabled' : '' }}
-                            title="<?php
-                            if (strtotime($sub_data->selected_date) <= strtotime(date('Y-m-d'))) {
-                                echo 'Delivery date has passed';
-                            } elseif ($sub_data->subscribe_status == 0) {
-                                echo 'You Already update Unsubscribed';
-                            } else {
-                                echo 'Click to select';
-                            }
-                            ?>">
-                    </td>
-                    <td>{{ $sub_data->id }}</td>
+                        <td>{{ $sub_data->selected_date }}</td>
 
-                    <td>{{ $sub_data->selected_date }}</td>
+                        <td>
+                            @if ($sub_data->subscribe_status == 1)
+                                <span class="dot green"></span>
+                            @else
+                                <span class="dot red"></span>
+                            @endif
+                        </td>
+                        <td>
+                        
 
-                    <td>
-                        @if ($sub_data->subscribe_status == 1)
-                            <span class="dot green"></span>
-                        @else
-                            <span class="dot red"></span>
-                        @endif
-                    </td>
-                    <td>
-                        <select name="" id="">
-                            @foreach (trans('order::statuses') as $name => $label)
-                                <option value="{{ $name }}" {{ $sub_data->order_status === $name ? 'selected' : '' }}>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                    </td>
+                            @if($sub_data->subscribe_status == 1)      
+                                <select name="order_status" id="order_status" onchange="this.form.submit()">
+                                    @foreach (trans('order::statuses') as $name => $label)
+                                        <option value="{{ $name }}" {{ $sub_data->order_status === $name ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            @else
+                                <span>--</span>
+                            @endif
+                        </td>
+                    </form>
                 </tr>
                 @php
                     $sno++; // Increment the serial number counter
@@ -156,20 +165,58 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-        const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
+        const rowCheckboxes = document.querySelectorAll('.rowCheckbox');        
+        const checkboxes = document.querySelectorAll('.rowCheckbox');
         const overallUnsubscribeButton = document.getElementById('overallUnsubscribeButton');
+        overallUnsubscribeButton.disabled = true;
+
 
         // Add a click event listener to the "Select All" checkbox
-        selectAllCheckbox.addEventListener('click', function() {
-            // Iterate through all row checkboxes and set their checked state to match the "Select All" checkbox
-            rowCheckboxes.forEach(function(checkbox) {
+        // selectAllCheckbox.addEventListener('click', function() {            
+        //     // Iterate through all row checkboxes and set their checked state to match the "Select All" checkbox
+        //     const selectedCheckboxes = document.querySelectorAll('.rowCheckbox:checked');
+        //     rowCheckboxes.forEach(function(checkbox) {                
+        //         if (!checkbox.disabled) {
+        //             checkbox.checked = selectAllCheckbox.checked;                    
+        //         }
+        //     });
+        // });
+
+        
+        // Modfied
+        rowCheckboxes.forEach(function(checkbox) {                
+            selectAllCheckbox.addEventListener('change', function() {            
+                // Iterate through all row checkboxes and set their checked state to match the "Select All" checkbox
+                const selectedCheckboxes = document.querySelectorAll('.rowCheckbox:checked');               
                 if (!checkbox.disabled) {
-                    checkbox.checked = selectAllCheckbox.checked;
+                    checkbox.checked = selectAllCheckbox.checked;                                          
+                }
+
+
+                if(selectAllCheckbox.checked == true) {                    
+                    return overallUnsubscribeButton.disabled = false;
+                }
+                else {                    
+                    return overallUnsubscribeButton.disabled = true;
                 }
             });
         });
-
+                                       
+        // individual checkbox
+        checkboxes.forEach(function(checkbox) {
+            checkbox.addEventListener('change', function() {
+                const selectedCheckboxes = document.querySelectorAll('.rowCheckbox:checked');               
+                if(selectedCheckboxes.length == 0)
+                {                                     
+                    return overallUnsubscribeButton.disabled = true;
+                }
+                else{                    
+                    return overallUnsubscribeButton.disabled = false;
+                }                                    
+            });
+        });
     });
+
 
     function unsubscribeMultipleOrders() {
 

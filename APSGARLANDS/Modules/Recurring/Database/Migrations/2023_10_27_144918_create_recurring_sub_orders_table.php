@@ -18,8 +18,10 @@ return new class extends Migration
             $table->unsignedInteger('recurring_id');
             $table->date('selected_date')->nullable();
             $table->enum('subscribe_status', ['0', '1'])->default('1');
+            $table->string('order_status')->default(null)->nullable();
             // $table->unsignedInteger('updated_user_id')->nullable();
             $table->unsignedInteger('updated_user_id')->nullable()->default(NULL);
+
             // $table->timestamp('updated_at')->nullable();
 
             // Add foreign key constraints

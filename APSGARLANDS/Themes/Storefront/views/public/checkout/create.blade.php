@@ -16,7 +16,7 @@
                             <div class="checkout-inner">
                                 <div class="checkout-left">
                                     <div class="checkout-form">
-                                        @include('public.checkout.create.form.account_details')
+                                        @include('public.checkout.create.form.account_details') 
                                         @include('public.checkout.create.form.billing_details')
                                         @include('public.checkout.create.form.pickupstore_details')
                                         @include('public.checkout.create.form.shipping_details')

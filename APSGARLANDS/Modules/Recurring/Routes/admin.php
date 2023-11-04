@@ -15,6 +15,12 @@ Route::get('recurringSubOrder/{id}/edit', [
     'middleware' => 'can:admin.recurrings.edit',
 ]);
 
+Route::put('recurringSubOrder/{id}/update', [
+    'as' => 'admin.recurrings.update',
+    'uses' => 'RecurringSubOrderController@update',
+    'middleware' => 'can:admin.recurrings.edit',
+]);
+
 Route::get('orderToRecurring/{id}', [
     'as' => 'admin.recurring.mainorder.edit',
     'uses' => 'RecurringSubOrderController@orderToRecurringRedirection',

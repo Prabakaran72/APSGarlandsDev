@@ -1,4 +1,4 @@
-@if (setting('recurring_order_enabled'))
+
     <div>
         <label>
             <br><br><input type="checkbox" v-model="form.isCheckedRecurringOrder" @change="handleRecurringOrderPayment"> Recurring Order
@@ -24,4 +24,3 @@
             </div>
         </div>
     </div>
-@endif
