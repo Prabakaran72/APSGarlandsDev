@@ -12,7 +12,7 @@ return [
     'auto_approve_reviews' => 'Auto Approve Reviews',
     'cookie_bar_enabled' => 'Cookie Bar',
     'galleries_enabled' => 'Youtube Galleries',
-    
+
     'maintenance_mode' => 'Maintenance Mode',
 
     'translatable.store_tagline' => 'Store Tagline',
@@ -122,5 +122,8 @@ return [
 
     //MY TESTIMONIAL
     'my_testimonial' => 'My Testimonial',
+
+    //RECURRING ORDER
+    'recurring_order' => 'Recurring Orders'
 
 ];

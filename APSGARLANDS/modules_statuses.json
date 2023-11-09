@@ -44,5 +44,6 @@
     "Galleries": true,
     "Email": true,
     "Subscriber": true,
-    "Template": true
+    "Template": true,
+    "Recurring": true
 }

@@ -49,6 +49,7 @@ return [
         'quantity' => 'QUANTITY',
         'line_total' => 'AMOUNT',
         'subtotal' => 'Subtotal',
+        'recurringSubtotal' => 'Recurring Subtotal',
         'coupon' => 'Coupon',
         'total' => 'Total',
     ],

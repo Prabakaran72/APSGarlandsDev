@@ -2,6 +2,7 @@
 
 namespace Modules\Checkout\Services;
 
+use Carbon\Carbon;
 use Modules\Cart\CartTax;
 use Modules\Cart\CartItem;
 use Modules\Cart\Facades\Cart;
@@ -12,6 +13,9 @@ use Modules\Currency\Entities\CurrencyRate;
 use Modules\Address\Entities\DefaultAddress;
 use Modules\Shipping\Facades\ShippingMethod;
 use Illuminate\Support\Facades\Session;
+use Modules\Recurring\Entities\Recurring;
+use Modules\Recurring\Entities\recurringSubOrder;
+
 class OrderService
 {
     public function create($request)
@@ -78,9 +82,9 @@ class OrderService
     {
         if (
             auth()
-                ->user()
-                ->addresses()
-                ->count() > 1
+            ->user()
+            ->addresses()
+            ->count() > 1
         ) {
             return;
         }
@@ -99,16 +103,23 @@ class OrderService
     }
 
     private function store($request)
-    { //dd($request);
+    {
+
+        //GET RECURRING DETAILS
+        $recurring_selected_date_count = $request->recurring_selected_date_count;
+        $recurring_format_order_dates = $request->recurring_format_order_dates;
+        $maxPreparingDays = $request->maxPreparingDays;
+        $recurring_time = $request->recurring_time;
+
         $shippingMethod = Cart::shippingMethod()->name();
         $shippingCost = 0;
 
         // Retrieve the dynamic flat rate cost from the session
         $dynamicFlatRateCost = Session::get('dynamic_flat_rate_cost');
-       //dd( $dynamicFlatRateCost);
+
         if ($shippingMethod === 'flat_rate') {
             // Use the dynamic flat rate cost if available, fallback to 99 if not set
-            $flatRateShippingCost = $dynamicFlatRateCost ;
+            $flatRateShippingCost = $dynamicFlatRateCost;
             $shippingCost = $flatRateShippingCost;
         } else {
             $otherShippingCost = Cart::shippingCost()->amount();
@@ -118,11 +129,11 @@ class OrderService
 
         // Check if the selected shipping method is 'local pickup'
         if ($shippingMethod === 'local_pickup') {
-            
+
             // Use the selected pickup store details as the shipping address
             $shippingAddress = $request->selectedPickupstoreDetails;
             //dd($shippingAddress);
-            
+
         } else {
             // Use the regular shipping address details
             $shippingAddress = $request->shipping;
@@ -131,48 +142,80 @@ class OrderService
 
         // Calculate the total by adding the subTotal, discount, and shippingCost
         $total = Cart::subTotal()->amount() - Cart::discount()->amount() + $shippingCost;
+        $subTotal = (Cart::subTotal()->amount());
+        $discount = (Cart::discount()->amount());
 
-    return Order::create([
-        'customer_id' => auth()->id(),
-        'customer_email' => $request->customer_email,
-        'customer_phone' => $request->customer_phone,
-        'customer_first_name' => $request->billing['first_name'],
-        'customer_last_name' => $request->billing['last_name'],
-        'billing_first_name' => $request->billing['first_name'],
-        'billing_last_name' => $request->billing['last_name'],
-        'billing_address_1' => $request->billing['address_1'],
-        'billing_address_2' => $request->billing['address_2'] ?? null,
-        'billing_city' => $request->billing['city'],
-        'billing_state' => $request->billing['state'],
-        'billing_zip' => $request->billing['zip'],
-        'billing_country' => $request->billing['country'],
-        // Here, store the pickup store details when the shipping method is 'local pickup.'
-        // If the shipping method is 'flat rate,' use details from the address table and store them in the same shipping field names.
-        'shipping_first_name' => $shippingAddress['first_name'],
-        'shipping_last_name' => $shippingAddress['last_name'] ?? null,
-        'shipping_address_1' => $shippingAddress['address_1'],
-        'shipping_address_2' => $shippingAddress['address_2'] ?? null,
-        'shipping_city' => $shippingAddress['city'],
-        'shipping_state' => $shippingAddress['state'],
-        'shipping_zip' => $shippingAddress['zip'],
-        'shipping_country' => $shippingAddress['country'],
-        'pickupstore_address_id' => $shippingAddress['id'] ?? null,
-        
-        'sub_total' => Cart::subTotal()->amount(),
-        'shipping_method' => Cart::shippingMethod()->name(),
-        'shipping_cost' => $shippingCost,
-        'coupon_id' => Cart::coupon()->id(),
-        'discount' => Cart::discount()->amount(),
-        'total' => $total, // Use the calculated total
-        'payment_method' => $request->payment_method,
-        'currency' => currency(),
-        'currency_rate' => CurrencyRate::for(currency()),
-        'locale' => locale(),
-        'status' => Order::PENDING_PAYMENT,
-        'note' => $request->order_note,
-        'delivery_date'=>$request->delivery_date,
-    ]);
-}
+        //Recurring Order - Amount Calculation
+        if ($recurring_selected_date_count > 0) {
+            $isRecurring = 1;
+        }else{
+            $isRecurring = 0;
+        }
+
+
+        $createOrder =  Order::create([
+            'customer_id' => auth()->id(),
+            'customer_email' => $request->customer_email,
+            'customer_phone' => $request->customer_phone,
+            'customer_first_name' => $request->billing['first_name'],
+            'customer_last_name' => $request->billing['last_name'],
+            'billing_first_name' => $request->billing['first_name'],
+            'billing_last_name' => $request->billing['last_name'],
+            'billing_address_1' => $request->billing['address_1'],
+            'billing_address_2' => $request->billing['address_2'] ?? null,
+            'billing_city' => $request->billing['city'],
+            'billing_state' => $request->billing['state'],
+            'billing_zip' => $request->billing['zip'],
+            'billing_country' => $request->billing['country'],
+            'shipping_first_name' => $request->shipping['first_name'],
+            'shipping_last_name' => $request->shipping['last_name'],
+            'shipping_address_1' => $request->shipping['address_1'],
+            'shipping_address_2' => $request->shipping['address_2'] ?? null,
+            'shipping_city' => $request->shipping['city'],
+            'shipping_state' => $request->shipping['state'],
+            'shipping_zip' => $request->shipping['zip'],
+            'shipping_country' => $request->shipping['country'],
+            'sub_total' => Cart::subTotal()->amount(),
+            // 'sub_total' => $subTotal, //MODIFY THE CODE BASED ON RECURRING ORDER - 26.10.2023
+            'shipping_method' => Cart::shippingMethod()->name(),
+            'shipping_cost' => $shippingCost,
+            'coupon_id' => Cart::coupon()->id(),
+            'discount' => Cart::discount()->amount(),
+            // 'discount' => $discount, //MODIFY THE CODE BASED ON RECURRING ORDER - 26.10.2023
+            'total' => $total, // Use the calculated total
+            'payment_method' => $request->payment_method,
+            'currency' => currency(),
+            'currency_rate' => CurrencyRate::for(currency()),
+            'locale' => locale(),
+            'status' => Order::PENDING_PAYMENT,
+            'note' => $request->order_note,
+            'isRecurring' => $isRecurring,
+        ]);
+
+        //STORE THE RECURRING DETAILS IN THE RECURRING TABLE
+        if ($recurring_selected_date_count > 0) {
+            $recurringDateArray = explode(', ', $recurring_format_order_dates);
+            // Create a Recurring record
+            $recurring = Recurring::create([
+                'order_id' => $createOrder->id,
+                'recurring_date_count' => $recurring_selected_date_count,
+                'max_preparing_days' => $maxPreparingDays,
+                'delivery_time' => $recurring_time,
+            ]);
+
+            // Iterate over the date array and create recurringSubOrder records for each date
+            foreach ($recurringDateArray as $date) {
+                recurringSubOrder::create([
+                    'recurring_id' => $recurring->id, // Use the ID of the newly created Recurring record
+                    'selected_date' => $date,
+                    'subscribe_status' => '1',
+                    'order_status' => Order::PENDING,
+                    'updated_user_id' => null,
+                ]);
+            }
+        }
+        return $createOrder;
+    }
 
 
     private function storeOrderProducts(Order $order)

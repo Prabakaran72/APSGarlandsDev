@@ -181,7 +181,7 @@
                                 <a href="{{ route('account.dashboard.index') }}" class="menu-link">
                                     <li class="dropdown top-nav-menu pull-right">
                                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-            
+
                                         @switch(true)
                                             @case(auth()->user()->sso_google == '1' || auth()->user()->sso_fb == '1')
                                                 <img src="{{ auth()->user()->sso_avatar }}" alt="User Profile Image"

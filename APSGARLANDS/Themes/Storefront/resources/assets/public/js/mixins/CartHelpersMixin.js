@@ -44,7 +44,7 @@ export default {
                 return;
             }
            // console.log('zipvalue',this.form.billing.zip);
-            this.updateTotalFlatRate();
+            // this.updateTotalFlatRate();
             this.loadingOrderSummary = true;
             this.applyingCoupon = true;
             this.zipExists(this.form.billing.zip);
@@ -55,7 +55,7 @@ export default {
                 this.couponCode = null;
                 store.updateCart(cart);
                 // console.log('form.shipping.zip',this.form.shipping.zip);
-                //this.zipExists(newZip); 
+                //this.zipExists(newZip);
             }).catch((xhr) => {
                 this.couponError = xhr.responseJSON.message;
             }).always(() => {
@@ -66,7 +66,7 @@ export default {
 
         removeCoupon() {
             this.loadingOrderSummary = true;
-            this.updateTotalFlatRate();
+            // this.updateTotalFlatRate();
             this.zipExists(this.form.billing.zip);
             $.ajax({
                 method: 'DELETE',
@@ -86,7 +86,7 @@ export default {
             }
 
             this.loadingOrderSummary = true;
-            this.getLocalpickupAddress();
+           this.getLocalpickupAddress();
             this.changeShippingMethod(shippingMethodName);
             //console.log('getLocalpickupAddress');
             $.ajax({
@@ -94,7 +94,7 @@ export default {
                 url: route('cart.shipping_method.store', { shipping_method: shippingMethodName }),
             }).then((cart) => {
                 store.updateCart(cart);
-                this.updateTotalFlatRate();
+                // this.updateTotalFlatRate();
                 // this.getLocalpickupAddress();
             }).catch((xhr) => {
                 this.$notify(xhr.responseJSON.message);

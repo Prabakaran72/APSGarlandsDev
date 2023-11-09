@@ -17,8 +17,15 @@
 
         <div class="order-summary-middle" :class="{ loading: loadingOrderSummary }">
             <ul class="list-inline order-summary-list">
-                <li>
+
+                {{-- <li v-if="form.isCheckedRecurringOrder">
                     <label>{{ trans('storefront::cart.subtotal') }}</label>
+                    <p>{{form.initalSubTotal}}</p>
+                    <input type="text" disabled name="" id="" :value="form.initalSubTotal">
+                </li> --}}
+                <li>
+                    <label v-if="!form.isCheckedRecurringOrder">{{ trans('storefront::cart.subtotal') }}</label>
+                    <label v-if="form.isCheckedRecurringOrder">{{ trans('storefront::cart.recurringSubtotal') }}</label>
 
                     <span class="price-amount" v-html="cart.subTotal.inCurrentCurrency.formatted">
                     </span>
@@ -44,55 +51,63 @@
                 <div class="form-group">
                     <div class="form-radio" v-for="shippingMethod in cart.availableShippingMethods">
                         <input type="radio" name="shipping_method" v-model="form.shipping_method"
-                            :value="shippingMethod.name" :id="shippingMethod.name"
+                            :value="shippingMethod.name"
                             @change="updateShippingMethod(shippingMethod.name)">
                         <label :for="shippingMethod.name" v-text="shippingMethod.label"></label>
-                
+
                         <!-- Use a data-bound id attribute to set the id dynamically -->
-                        <span :id="'price_' + shippingMethod.name" class="price-amount" v-html="shippingMethod.cost.inCurrentCurrency.formatted">
+                        <span class="price-amount"
+                            v-html="shippingMethod.cost.inCurrentCurrency.formatted">
                         </span>
-                        
+
                     </div>
-                    <span id="pincode_not_servicable" class="pincode-message" style="display: none;"> This Pincode not serviceable for flat rate shippment Option</span>
+                    <span id="pincode_not_servicable" class="pincode-message" style="display: none;"> This Pincode not
+                        serviceable for flat rate shippment Option</span>
                 </div>
-                
+
                 {{-- <div v-if="form.shipping_method== 'flat_rate'" > --}}
                 <div class="order-summary-total">
                     <label>{{ trans('storefront::cart.total') }}</label>
                     <!-- Remove single quotes around the id attribute value -->
-                    <span :id="'total_' + form.shipping_method" class="total-price" v-html="cart.total.inCurrentCurrency.formatted"></span>
-                    
+                    {{-- <span :id="'total_' + form.shipping_method" class="total-price"
+                        v-html="cart.total.inCurrentCurrency.formatted"></span> --}}
+                        <span  class="total-price"
+                        v-html="cart.total.inCurrentCurrency.formatted"></span>
+
                 </div>
                 {{-- </div> --}}
-                
-        </div>
 
-        <div class="order-summary-bottom">
-            <div class="form-group checkout-terms-and-conditions">
-                <div class="form-check">
-                    <input type="checkbox" v-model="form.terms_and_conditions" id="terms-and-conditions" :disabled="shouldDisableCheckbox">
-                    {{-- <input type="checkbox" v-model="form.terms_and_conditions" id="terms-and-conditions" :disabled="form.shipping_method === 'flat_rate' && !serviceAvailable"> --}}
-                    <label for="terms-and-conditions" class="form-check-label">
-                        {{ trans('storefront::checkout.i_agree_to_the') }}
-                        {{-- <a href="{{ $termsPageURL }}">
-                            {{ trans('storefront::checkout.terms_&_conditions') }}
-                        </a> --}}
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#showTermsModal" id="termslink" @click.prevent="openModal('{{ $termsPageURL }}')"> {{ trans('storefront::checkout.terms_&_conditions') }} </a>
-                    </label>
-
-                    <span class="error-message" v-if="errors.has('terms_and_conditions')"
-                        v-text="errors.get('terms_and_conditions')"></span>
-                </div>
             </div>
 
-            <div id="paypal-button-container" v-if="form.payment_method === 'paypal'"></div>
+            <div class="order-summary-bottom">
+                <div class="form-group checkout-terms-and-conditions">
+                    <div class="form-check">
+                        <input type="checkbox" v-model="form.terms_and_conditions" id="terms-and-conditions"
+                            :disabled="shouldDisableCheckbox">
+                        {{-- <input type="checkbox" v-model="form.terms_and_conditions" id="terms-and-conditions" :disabled="form.shipping_method === 'flat_rate' && !serviceAvailable"> --}}
+                        <label for="terms-and-conditions" class="form-check-label">
+                            {{ trans('storefront::checkout.i_agree_to_the') }}
+                            {{-- <a href="{{ $termsPageURL }}">
+                            {{ trans('storefront::checkout.terms_&_conditions') }}
+                        </a> --}}
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#showTermsModal" id="termslink"
+                                @click.prevent="openModal('{{ $termsPageURL }}')">
+                                {{ trans('storefront::checkout.terms_&_conditions') }} </a>
+                        </label>
 
-            <button type="submit" class="btn btn-primary btn-place-order" :class="{ 'btn-loading': placingOrder }"
-                :disabled="!form.terms_and_conditions" v-else v-cloak>
-                {{ trans('storefront::checkout.place_order') }}
-            </button>
+                        <span class="error-message" v-if="errors.has('terms_and_conditions')"
+                            v-text="errors.get('terms_and_conditions')"></span>
+                    </div>
+                </div>
+
+                <div id="paypal-button-container" v-if="form.payment_method === 'paypal'"></div>
+
+                <button type="submit" class="btn btn-primary btn-place-order" :class="{ 'btn-loading': placingOrder }"
+                    :disabled="!form.terms_and_conditions" v-else v-cloak>
+                    {{ trans('storefront::checkout.place_order') }}
+                </button>
+            </div>
         </div>
-    </div>
 </aside>
 
 
@@ -106,8 +121,9 @@
                 <div v-html="termsModalContent" class="termsmodalcontent"></div>
             </div>
             <div class="modal-footer">
-              {{-- <button type ="button" class="btn btn-primary" @click.prevent="acceptTerms()">Accept</button> --}}
-              <button type ="button" class="btn btn-primary" @click.prevent="hideTermsModal()" data-bs-dismiss="modal">Close</button>
+                {{-- <button type ="button" class="btn btn-primary" @click.prevent="acceptTerms()">Accept</button> --}}
+                <button type ="button" class="btn btn-primary" @click.prevent="hideTermsModal()"
+                    data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

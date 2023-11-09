@@ -31,7 +31,7 @@ return [
         'allow_reviews' => 'Allow customers to give reviews & ratings',
         'approve_reviews_automatically' => 'Customer reviews will be approved automatically',
         'show_cookie_bar' => 'Show cookie bar in your website',
-		 'show_galleries'    =>  'Enable Youtube Galleries',											  
+		 'show_galleries'    =>  'Enable Youtube Galleries',
         'privacy_settings' => 'Privacy Settings',
         'hide_store_phone' => 'Hide store phone from the storefront',
         'hide_store_email' => 'Hide store email from the storefront',
@@ -71,6 +71,8 @@ return [
         'allow_testimonial_slider' => 'Show Testimonial Slider in your website',
         //MY TESTIMONIALS IN MY ACCOUNT
         'allow_my_testimonial' => 'Show My Testimonial option in My Account',
+        
+        'allow_recurring_order' =>'Allow Recurring Orders',
     ],
     'validation' => [
         'sqlite_is_not_installed' => 'SQLite is not installed.',

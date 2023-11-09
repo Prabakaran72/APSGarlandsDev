@@ -22,6 +22,7 @@
                                         @include('public.checkout.create.form.delivery_details')
                                         @include('public.checkout.create.form.shipping_details')
                                         @include('public.checkout.create.form.order_note')
+                                        @include('public.checkout.create.form.recurring_order')
                                     </div>
                                 </div>
                                 <div class="checkout-right">
