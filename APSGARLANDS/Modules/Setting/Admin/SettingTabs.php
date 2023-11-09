@@ -51,7 +51,7 @@ class SettingTabs extends Tabs
             $tab->active();
             $tab->weight(5);
 
-            $tab->fields(['supported_countries.*', 'default_country', 'supported_locales.*', 'default_locale', 'default_timezone', 'customer_role']);
+            $tab->fields(['supported_countries.*', 'default_country', 'supported_locales.*', 'default_locale', 'default_timezone', 'customer_role','recurring_order_enabled']);
 
             $tab->view('setting::admin.settings.tabs.general', [
                 'locales' => Locale::all(),

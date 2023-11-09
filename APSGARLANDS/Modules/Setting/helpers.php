@@ -12,6 +12,10 @@ if (! function_exists('setting')) {
      */
     function setting($key = null, $default = null)
     {
+        // if($key == "recurring_order_enabled")
+        // {
+        //     dd(app('setting')->get($key, $default));
+        // }
     
         if (is_null($key)) {
             return app('setting');
@@ -24,6 +28,7 @@ if (! function_exists('setting')) {
         try {
             return app('setting')->get($key, $default);
         } catch (PDOException $e) {
+            dd($e);
             return $default;
         }
     }

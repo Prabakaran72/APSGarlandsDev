@@ -57,8 +57,9 @@ trait HasCrudActions
     }
   public function  getLocalPickupAddress(){
     $pickupstoreDetails = Pickupstore::all();
-
+    dd(response()->json($pickupstoreDetails));
     return response()->json($pickupstoreDetails);
+    
   }
 
  public function getfixedrates(Request $request)

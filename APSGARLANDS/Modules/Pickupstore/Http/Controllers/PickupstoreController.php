@@ -20,4 +20,10 @@ class PickupstoreController
 
         return view('public.pickupstore.show', compact('pickupstore', 'logo'));
     }
+    public function  getLocalPickupAddress(){
+        $pickupstoreDetails = Pickupstore::all();
+       // dd(response()->json($pickupstoreDetails));
+        return response()->json($pickupstoreDetails);
+        
+      }
 }

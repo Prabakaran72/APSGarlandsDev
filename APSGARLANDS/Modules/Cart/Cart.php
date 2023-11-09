@@ -10,6 +10,7 @@ use Modules\Coupon\Entities\Coupon;
 use Modules\Product\Entities\Product;
 use Modules\Shipping\Facades\ShippingMethod;
 use Darryldecode\Cart\Cart as DarryldecodeCart;
+use Illuminate\Support\Facades\Session;
 use Modules\Product\Services\ChosenProductOptions;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
@@ -20,6 +21,8 @@ class Cart extends DarryldecodeCart implements JsonSerializable
      *
      * @return $this
      */
+
+
     public function instance()
     {
         return $this;
@@ -166,8 +169,16 @@ class Cart extends DarryldecodeCart implements JsonSerializable
         if ($this->allItemsAreVirtual()) {
             return collect();
         }
+        $shippingMethods = ShippingMethod::available();
 
-        return ShippingMethod::available();
+        // Check if the dynamic_flat_rate_cost is set in the session
+
+        // Update the cost for the "flat_rate" method if it exists
+        if ($shippingMethods->has('flat_rate')) {
+            $shippingMethods->get('flat_rate')->cost = Money::inDefaultCurrency(session('flateRateAmount'));
+        }
+
+        return $shippingMethods;
     }
 
     public function allItemsAreVirtual()
@@ -187,12 +198,22 @@ class Cart extends DarryldecodeCart implements JsonSerializable
         if (!$this->hasShippingMethod()) {
             return new NullCartShippingMethod();
         }
-
+        // dd($this->getConditionsByType('shipping_method')->first());
         return new CartShippingMethod($this, $this->getConditionsByType('shipping_method')->first());
     }
 
     public function shippingCost()
     {
+        // Check if the shipping method is a flat rate option
+        // if ($this->shippingMethod()->name() === 'flat_rate') {
+        //     // Retrieve the dynamic_flat_rate_cost from the session
+        //     $dynamicFlatRateCost = Session::get('dynamic_flat_rate_cost', 0);
+        //     //dd(Money::inDefaultCurrency($dynamicFlatRateCost));
+        //     // Use the dynamic flat rate cost
+        //     return Money::inDefaultCurrency($dynamicFlatRateCost);
+        // }
+
+        // If it's not a flat rate option, return the default shipping cost
         return $this->shippingMethod()->cost();
     }
 
@@ -379,8 +400,10 @@ class Cart extends DarryldecodeCart implements JsonSerializable
 
     public function subTotal()
     {
-        return Money::inDefaultCurrency($this->getSubTotal())->add($this->optionsPrice());
+        $recurringOrderCount = session('recurringOrderCount', 1); // 1 is the default value if not set in session
+        return Money::inDefaultCurrency($this->getSubTotal(true, $recurringOrderCount))->add($this->optionsPrice());
     }
+
 
     private function optionsPrice()
     {
@@ -399,10 +422,11 @@ class Cart extends DarryldecodeCart implements JsonSerializable
 
     public function total()
     {
+
         return $this->subTotal()
             ->add($this->shippingMethod()->cost())
-            ->subtract($this->coupon()->value())
-            ->add($this->tax());
+            ->subtract($this->coupon()->value());
+        // ->add($this->tax());
     }
 
     public function toArray()
@@ -428,5 +452,18 @@ class Cart extends DarryldecodeCart implements JsonSerializable
     public function __toString()
     {
         return json_encode($this->jsonSerialize());
+    }
+    public function recurringsubTotal($count)
+    {
+        if ($count > 0) {
+            session(['recurringOrderCount' => $count]);
+        } else {
+            session()->forget('recurringOrderCount');
+        }
+    }
+
+    public function storeFlatRateAmount($amt){
+        $flateRateAmount = floatval($amt);
+        session(['flateRateAmount' => $flateRateAmount]);
     }
 }

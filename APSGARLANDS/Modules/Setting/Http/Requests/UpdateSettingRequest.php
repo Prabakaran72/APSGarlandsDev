@@ -8,6 +8,7 @@ use Modules\Support\TimeZone;
 use Modules\Currency\Currency;
 use Illuminate\Validation\Rule;
 use Modules\Core\Http\Requests\Request;
+use Illuminate\Contracts\Validation\Validator;
 
 class UpdateSettingRequest extends Request
 {
@@ -176,5 +177,11 @@ class UpdateSettingRequest extends Request
         }
 
         return $this->all();
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        $errors = $validator->errors()->toArray();
+        $this->session()->put('validationErrors', $errors);
     }
 }

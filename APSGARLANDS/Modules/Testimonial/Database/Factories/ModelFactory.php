@@ -10,4 +10,11 @@ $factory->define(Testimonial::class, function (Faker\Generator $faker) {
         'comment' => $faker->text(),
         'is_active' => $faker->boolean(),
     ];
+    // return [
+    //     'user_id' => \App\Models\User::all()->random()->id,
+    //     'user_name' => $this->faker->name,
+    //     'comment' => $this->faker->text,
+    //     'is_active' => $this->faker->randomElement([0, 1]),
+    //     'created_at' => now(), // Default date
+    // ];
 });
