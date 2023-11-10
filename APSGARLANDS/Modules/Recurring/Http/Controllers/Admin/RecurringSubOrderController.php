@@ -26,6 +26,7 @@ class RecurringSubOrderController extends Controller
     public function edit($id)
     {
         $recurringMainOrders = Recurring::find($id);
+        $getRecurringSubOrders = recurringSubOrder::find($id);
         $created_id = $recurringMainOrders->created_user_id;
 
         if (!$recurringMainOrders) {
@@ -37,7 +38,8 @@ class RecurringSubOrderController extends Controller
         $recurringSubOrders = $recurringMainOrders->recurringSubOrders()->paginate('20');
 
         // Pass the data to a view
-        return view('recurring::admin.recurrings.RecurringSubOrder', compact('recurringMainOrders', 'recurringSubOrders'));
+        return view('recurring::admin.recurrings.RecurringSubOrder', compact('recurringMainOrders', 'recurringSubOrders', 'getRecurringSubOrders'));
+        
     }
 
     public function orderToRecurringRedirection($id){
@@ -67,5 +69,21 @@ class RecurringSubOrderController extends Controller
         } else {
             return response()->json(['message' => 'not']);
         }
+    }
+
+    public function update(Request $request, $id) 
+    {
+        $getRecurringSubOrders = recurringSubOrder::find($id);        
+        $getRecurringSubOrders->order_status = $request->input('order_status');        
+        $getRecurringSubOrders->save();
+
+        if($getRecurringSubOrders)
+        {            
+            return redirect()->back()->with('success', 'Order Status Updated Successfully');;
+        }
+        else
+        {            
+            return 'Update Failed';
+        }                
     }
 }
