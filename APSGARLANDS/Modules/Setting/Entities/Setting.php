@@ -157,4 +157,5 @@ class Setting extends Model
     {
         $this->attributes['plain_value'] = serialize($value);
     }
+    
 }

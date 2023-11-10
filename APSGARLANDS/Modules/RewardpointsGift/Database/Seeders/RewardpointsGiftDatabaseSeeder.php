@@ -17,8 +17,8 @@ class RewardpointsGiftDatabaseSeeder extends Seeder
     public function run()
     {
         // factory(CustomerRewardPoint::class, 30)->create();
-        factory(RewardpointsGift::class, 6)->create();
-        factory(CustomerRewardPoint::class, 30)->create();
+        // factory(RewardpointsGift::class, 6)->create();
+        factory(CustomerRewardPoint::class, 10)->create();
         // $this->call("OthersTableSeeder");
 
         // RewardpointsGift::factory()->count(6)->create();

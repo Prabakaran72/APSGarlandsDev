@@ -1,4 +1,4 @@
-.cookie-bar-wrap {
+.rewardpoint-bar-wrap {
     position: fixed;
     left: 0;
     right: 0;
@@ -18,20 +18,20 @@
     }
 }
 
-.cookie-bar {
+.rewardpoint-bar {
     display: flex;
     flex-wrap: nowrap;
     justify-content: center;
     align-items: center;
     padding: 15px 0;
 
-    .cookie-bar-text {
+    .rewardpoint-bar-text {
         font-size: 14px;
         margin-right: 100px;
         color: $color-white-dark;
     }
 
-    .cookie-bar-action {
+    .rewardpoint-bar-action {
         display: flex;
         white-space: nowrap;
 
@@ -42,11 +42,11 @@
 }
 
 @media screen and (max-width: $lg) {
-    .cookie-bar {
+    .rewardpoint-bar {
         flex-direction: column;
         padding: 16px 0 20px;
 
-        .cookie-bar-text {
+        .rewardpoint-bar-text {
             margin: 0 0 14px 0;
             text-align: center;
         }

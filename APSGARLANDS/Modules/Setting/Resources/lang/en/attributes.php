@@ -124,6 +124,7 @@ return [
     'my_testimonial' => 'My Testimonial',
 
     //RECURRING ORDER
-    'recurring_order' => 'Recurring Orders'
+    'recurring_order' => 'Recurring Orders',
 
+    'rewardpoints_enabled' => 'Rewardpoints',
 ];

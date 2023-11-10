@@ -8,14 +8,18 @@ use Modules\Tax\Entities\TaxRate;
 use Illuminate\Support\Collection;
 use Modules\Coupon\Entities\Coupon;
 use Modules\Product\Entities\Product;
+use Modules\RewardpointsGift\Entities\CustomerRewardPoint;
 use Modules\Shipping\Facades\ShippingMethod;
 use Darryldecode\Cart\Cart as DarryldecodeCart;
 use Illuminate\Support\Facades\Session;
 use Modules\Product\Services\ChosenProductOptions;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
+
 class Cart extends DarryldecodeCart implements JsonSerializable
 {
+    protected $redemptionRewardAmount;
+    protected $redeemedpoints;
     /**
      * Get the current instance.
      *
@@ -281,6 +285,7 @@ class Cart extends DarryldecodeCart implements JsonSerializable
         return new CartCoupon($this, $coupon, $couponCondition);
     }
 
+
     public function discount()
     {
         return $this->coupon()->value();
@@ -422,9 +427,9 @@ class Cart extends DarryldecodeCart implements JsonSerializable
 
     public function total()
     {
-
         return $this->subTotal()
             ->add($this->shippingMethod()->cost())
+            ->subtract($this->rewardpoints())
             ->subtract($this->coupon()->value());
         // ->add($this->tax());
     }
@@ -439,6 +444,8 @@ class Cart extends DarryldecodeCart implements JsonSerializable
             'shippingMethodName' => $this->shippingMethod()->name(),
             'shippingCost' => $this->shippingCost(),
             'coupon' => $this->coupon(),
+            'redemptionRewardAmount' => $this->rewardpoints(),
+            'redemptionRewardPoints' => $this->getrewardpoints(),
             'taxes' => $this->taxes(),
             'total' => $this->total(),
         ];
@@ -465,5 +472,62 @@ class Cart extends DarryldecodeCart implements JsonSerializable
     public function storeFlatRateAmount($amt){
         $flateRateAmount = floatval($amt);
         session(['flateRateAmount' => $flateRateAmount]);
+    }
+
+    public function rewardpoints()
+    {
+    $currency = 0;    
+    if($this->redemptionRewardAmount > 0)
+    {
+        $currency = new Money($this->redemptionRewardAmount, "MYR");
+    }
+    // else if($resetSession && $this->session->exists('redemptionRewardAmount') ){
+    //     // dd($this->session->get('redemptionRewardAmount'));
+    //     // $currency =   new Money($this->session->get('redemptionRewardAmount'),'MYR');
+    //     $currency  = $this->session->get('redemptionRewardAmount');
+    // }
+    else{
+        // dd('else');
+        // $currency = new Money($this->redemptionRewardAmount, "MYR");
+        $currency = new Money(0, 'MYR');
+        
+    }
+        $this->session->put('redemptionRewardAmount', $currency);
+        $this->session->put('redeemedpoints', $this->redeemedpoints);
+
+        // dd($this->session->get('redemptionRewardAmount'));
+        return $currency;
+    }
+    public function redeemRewardPoints($redeemedAmount = 0, $redeemedpoints = 0, $resetSession=false)
+    {
+        if($resetSession){
+            if($this->session->exists('redemptionRewardAmount')){
+                $currency = $this->session->get('redemptionRewardAmount');
+                $this->redemptionRewardAmount = $currency->amount();
+                $this->redeemedpoints = $this->session->get('redeemedpoints');
+                return $currency;
+            }
+            else{
+                $this->redemptionRewardAmount = 0 ;
+                $this->redeemedpoints = 0;
+            }
+        }
+        else{
+            
+            $this->redemptionRewardAmount = $redeemedAmount;
+            $this->redeemedpoints = $redeemedpoints;            
+        }
+        $this->rewardpoints();
+    }
+    public function clearRedemption(){
+        $this->redemptionRewardAmount=0;
+        $this->session->forget('redemptionRewardAmount');
+        $this->session->forget('redeemedpoints');
+        $this->redeemedpoints = 0;
+        $this->rewardpoints();
+    }
+    public function getrewardpoints(){
+        return  $this->redeemedpoints;
+        return $this->session('redeemedpoints');
     }
 }

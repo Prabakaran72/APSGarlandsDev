@@ -5,7 +5,7 @@ namespace Modules\Review\Http\Controllers;
 use Modules\Review\Entities\Review;
 use Modules\Product\Entities\Product;
 use Modules\Review\Http\Requests\StoreReviewRequest;
-
+use Modules\Review\Events\ReviewSubmitted;
 class ProductReviewController
 {
     /**
@@ -32,7 +32,7 @@ class ProductReviewController
             return;
         }
 
-        return Product::findOrFail($productId)
+        $review = Product::findOrFail($productId)
             ->reviews()
             ->create([
                 'reviewer_id' => auth()->id(),
@@ -41,5 +41,7 @@ class ProductReviewController
                 'comment' => $request->comment,
                 'is_approved' => setting('auto_approve_reviews', 0),
             ]);
+            event(new ReviewSubmitted($review));
+            return $review;
     }
 }

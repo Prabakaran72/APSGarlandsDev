@@ -73,6 +73,7 @@ return [
         'allow_my_testimonial' => 'Show My Testimonial option in My Account',
         
         'allow_recurring_order' =>'Allow Recurring Orders',
+        'rewardpoints_enabled' => 'Enable Rewardpoints',
     ],
     'validation' => [
         'sqlite_is_not_installed' => 'SQLite is not installed.',

@@ -99,3 +99,20 @@
         padding-right: 0;
     }
 }
+@media screen and (min-width: 1281px) {
+    .checkout-right {
+        .rewardpoints-wrap {
+            .form-group {
+                input {
+                    width: auto;
+                }
+
+                .btn-apply-rewardpoints {
+                    width: 100%;
+                    padding: 7px 15px;
+                    white-space: nowrap;
+                }
+            }
+        }
+    }
+}

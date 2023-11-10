@@ -13,5 +13,6 @@
         {{ Form::checkbox('recurring_order_enabled', trans('setting::attributes.recurring_order'), trans('setting::settings.form.allow_recurring_order'), $errors, $settings) }}
         {{ Form::checkbox('cookie_bar_enabled', trans('setting::attributes.cookie_bar_enabled'), trans('setting::settings.form.show_cookie_bar'), $errors, $settings) }}
         {{ Form::checkbox('galleries_enabled', trans('setting::attributes.galleries_enabled'), trans('setting::settings.form.show_galleries'), $errors, $settings) }}
+        {{ Form::checkbox('rewardpoints_enabled', trans('setting::attributes.rewardpoints_enabled'), trans('setting::settings.form.rewardpoints_enabled'), $errors, $settings) }}
     </div>
 </div>

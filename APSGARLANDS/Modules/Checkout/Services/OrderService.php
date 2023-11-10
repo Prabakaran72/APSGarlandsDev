@@ -16,6 +16,10 @@ use Illuminate\Support\Facades\Session;
 use Modules\Recurring\Entities\Recurring;
 use Modules\Recurring\Entities\recurringSubOrder;
 
+use Modules\Rewardpoints\Entities\Rewardpoints;
+use Modules\RewardpointsGift\Entities\CustomerRewardPoint;
+use Illuminate\Support\Carbon;
+
 class OrderService
 {
     public function create($request)
@@ -141,7 +145,19 @@ class OrderService
         }
 
         // Calculate the total by adding the subTotal, discount, and shippingCost
-        $total = Cart::subTotal()->amount() - Cart::discount()->amount() + $shippingCost;
+        $total = Cart::subTotal()->amount() - Cart::discount()->amount() + $shippingCost - Cart::rewardpoints()->amount();
+        
+        //Insert customer claimed rewardpoints in customer_reward_points table
+        //Have to ensure customer has enough valid reward points        
+        if( $request->redemptionRewardPoints > 0)
+        {
+            $customer_rewards_id=CustomerRewardPoint::insertGetId([
+                'customer_id'=>  auth()->id(),
+                'reward_points_claimed' => $request->redemptionRewardPoints,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ]);
+        }
         $subTotal = (Cart::subTotal()->amount());
         $discount = (Cart::discount()->amount());
 
@@ -189,6 +205,8 @@ class OrderService
             'locale' => locale(),
             'status' => Order::PENDING_PAYMENT,
             'note' => $request->order_note,
+            'rewardpoints_id'=> isset($customer_rewards_id) ? $customer_rewards_id: null,
+            'redemption_amount'=>isset($customer_rewards_id) ? $request->redemptionRewardAmount['amount'] : null,
             'isRecurring' => $isRecurring,
         ]);
 
@@ -215,7 +233,8 @@ class OrderService
             }
         }
         return $createOrder;
-    }
+    
+}
 
 
     private function storeOrderProducts(Order $order)

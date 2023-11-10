@@ -20016,7 +20016,7 @@ span.flatpickr-weekday {
 
 .coupon-wrap .form-group {
   display: flex;
-  margin-bottom: 0;
+  margin-bottom: 5px;
 }
 .coupon-wrap .form-group .form-input input {
   height: 40px;
@@ -20116,6 +20116,23 @@ span.flatpickr-weekday {
   .coupon-wrap > .error-message {
     display: none;
   }
+
+  .rewardpoints-wrap .form-group {
+    flex-direction: column;
+  }
+  .rewardpoints-wrap .form-group .form-input input {
+    width: 100%;
+  }
+  .rewardpoints-wrap .form-group .form-input .error-message {
+    display: block;
+  }
+  .rewardpoints-wrap .form-group .btn-apply-coupon {
+    margin: 15px 0 0 0;
+    align-self: stretch;
+  }
+  .rewardpoints-wrap > .error-message {
+    display: none;
+  }
 }
 .arrow-black {
   -webkit-appearance: none;
@@ -20202,6 +20219,22 @@ span.flatpickr-weekday {
     transform: scale(1);
   }
 }
+.rewardpoints-wrap .form-group {
+  display: flex;
+  margin-bottom: 5px;
+}
+.rewardpoints-wrap .form-group .form-input input {
+  height: 40px;
+  width: 150px;
+}
+.rewardpoints-wrap .form-group .error-message {
+  display: none;
+}
+.rewardpoints-wrap .form-group .btn-apply-rewardpoints {
+  margin-left: 10px;
+  align-self: flex-start;
+}
+
 html {
   font-family: "Rubik", Arial, Helvetica, sans-serif;
 }
@@ -23253,7 +23286,7 @@ textarea.form-control {
     margin: 15px 0 0 0;
   }
 }
-.cookie-bar-wrap {
+.rewardpoint-bar-wrap {
   position: fixed;
   left: 0;
   right: 0;
@@ -23266,38 +23299,38 @@ textarea.form-control {
   z-index: 50;
   transition: 600ms ease;
 }
-.cookie-bar-wrap.show {
+.rewardpoint-bar-wrap.show {
   opacity: 1;
   visibility: visible;
   transform: translateY(-200px);
 }
 
-.cookie-bar {
+.rewardpoint-bar {
   display: flex;
   flex-wrap: nowrap;
   justify-content: center;
   align-items: center;
   padding: 15px 0;
 }
-.cookie-bar .cookie-bar-text {
+.rewardpoint-bar .rewardpoint-bar-text {
   font-size: 14px;
   margin-right: 100px;
   color: #f9f9f9;
 }
-.cookie-bar .cookie-bar-action {
+.rewardpoint-bar .rewardpoint-bar-action {
   display: flex;
   white-space: nowrap;
 }
-.cookie-bar .cookie-bar-action .btn-accept {
+.rewardpoint-bar .rewardpoint-bar-action .btn-accept {
   padding: 5px 24px;
 }
 
 @media screen and (max-width: 991px) {
-  .cookie-bar {
+  .rewardpoint-bar {
     flex-direction: column;
     padding: 16px 0 20px;
   }
-  .cookie-bar .cookie-bar-text {
+  .rewardpoint-bar .rewardpoint-bar-text {
     margin: 0 0 14px 0;
     text-align: center;
   }
@@ -23431,6 +23464,54 @@ textarea.form-control {
   padding-top: 70px;
 }
 
+.rewardpoint-bar-wrap {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: -200px;
+  background: #3b4045;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(0);
+  z-index: 50;
+  transition: 600ms ease;
+}
+.rewardpoint-bar-wrap.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-200px);
+}
+
+.rewardpoint-bar {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+  padding: 15px 0;
+}
+.rewardpoint-bar .rewardpoint-bar-text {
+  font-size: 14px;
+  color: #f9f9f9;
+}
+.rewardpoint-bar .rewardpoint-bar-action {
+  display: flex;
+  white-space: nowrap;
+}
+.rewardpoint-bar .rewardpoint-bar-action .btn-accept {
+  padding: 5px 24px;
+}
+
+@media screen and (max-width: 991px) {
+  .rewardpoint-bar {
+    flex-direction: column;
+    padding: 16px 0 20px;
+  }
+  .rewardpoint-bar .rewardpoint-bar-text {
+    margin: 0 0 14px 0;
+    text-align: center;
+  }
+}
 .home-slider {
   border-radius: 2px;
   overflow: hidden;
@@ -26922,6 +27003,16 @@ textarea.form-control {
 @media screen and (max-width: 991px) {
   .checkout-right {
     padding-right: 0;
+  }
+}
+@media screen and (min-width: 1281px) {
+  .checkout-right .rewardpoints-wrap .form-group input {
+    width: auto;
+  }
+  .checkout-right .rewardpoints-wrap .form-group .btn-apply-rewardpoints {
+    width: 100%;
+    padding: 7px 15px;
+    white-space: nowrap;
   }
 }
 .checkout-wrap {

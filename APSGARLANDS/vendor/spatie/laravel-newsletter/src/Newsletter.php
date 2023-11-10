@@ -18,7 +18,7 @@ class Newsletter
 
         $this->lists = $lists;
     }
-
+  
     public function subscribe(string $email, array $mergeFields = [], string $listName = '', array $options = [])
     {
         $list = $this->lists->findByName($listName);
@@ -225,7 +225,7 @@ class Newsletter
 
         return $response;
     }
-
+    
     public function updateContent(string $campaignId, string $html, array $options = [])
     {
         $defaultOptions = compact('html');

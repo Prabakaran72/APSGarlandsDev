@@ -89,7 +89,7 @@ class Cart
         $this->sessionKeyCartItems = $this->sessionKey . '_cart_items';
         $this->sessionKeyCartConditions = $this->sessionKey . '_cart_conditions';
         $this->config = $config;
-        $this->currentItem = null;
+        $this->currentItemId = null;
         $this->fireEvent('created');
     }
 
@@ -612,6 +612,7 @@ class Cart
 
             $newTotal = $cond->applyCondition($toBeCalculated);
 
+            
             $process++;
         });
 

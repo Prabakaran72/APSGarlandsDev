@@ -17,6 +17,8 @@ class EventServiceProvider extends ServiceProvider
             \Modules\Checkout\Listeners\SendNewOrderEmails::class,
             \Modules\Checkout\Listeners\SendNewOrderSms::class,
             \Modules\Checkout\Listeners\AddPlacedOrderToSession::class,
+            \Modules\Checkout\Listeners\EarnFirstRMSPayment::class,
+            \Modules\Checkout\Listeners\EarnFirstOrderReward::class,
         ],
     ];
 }

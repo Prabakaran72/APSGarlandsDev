@@ -15,6 +15,7 @@ use Modules\Support\Eloquent\Translatable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\User\Entities\Role;
 use Carbon\Carbon;
+use Modules\Setting\Entities\Setting;
 
 class Rewardpoints extends Model
 {
@@ -455,6 +456,12 @@ class Rewardpoints extends Model
     {
         $expiration_days = $this->select('add_days_reward_points_expiry')->where('id', 1)->first();
         return Carbon::now()->addDays($expiration_days->add_days_reward_points_expiry);
+    }
+    public function isRewardPointEnabled(){
+        return Setting::get('rewardpoints_enabled');
+    }
+    public function getRewardPointsSettingValue($key){
+        return $this->where('id', 1)->select($key)->first();
     }
 
 }

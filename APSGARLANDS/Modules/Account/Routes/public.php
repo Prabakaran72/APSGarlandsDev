@@ -26,4 +26,5 @@ Route::middleware('auth')->group(function () {
     Route::delete('addresses/{id}', 'AccountAddressController@destroy')->name('account.addresses.destroy');
 
     Route::post('addresses/change-default-address', 'AccountDefaultAddressController@update')->name('account.change_default_address');
+    Route::get('account/rewardpoints', 'AccountRewardpointsController@index')->name('account.rewardpoints.index');
 });

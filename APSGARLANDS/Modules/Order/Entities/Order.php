@@ -286,4 +286,5 @@ class Order extends Model
 
         return new OrderTable($query);
     }
+    
 }

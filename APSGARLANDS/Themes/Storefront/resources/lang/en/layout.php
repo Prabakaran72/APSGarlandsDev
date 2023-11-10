@@ -41,4 +41,8 @@ return [
     'tags' => 'Tags',
     'my_Profile'=>'Profile',
     'logout' => 'Logout',
+    'rewardpoint' => 'Rewardpoint',
+    'rewardpoints' => 'Rewardpoints',
+    'customer_have_rewardpoints_to_claim' => 'You have :activeRewardPoints reward points to claim. You Can Redeem upto :maxLimitRewardpoints pts',
+    'claim_reward_button'=>'Redeem',
 ];

@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('reward_points_gifted', function (Blueprint $table) {
-            $table->integer('customer_reward_id')->index();
+            $table->integer('customer_reward_id')->index()->comment('reference to customer_reward_points table id value');
         });
     }
 

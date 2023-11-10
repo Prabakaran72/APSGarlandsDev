@@ -27,4 +27,10 @@ return [
     'your_cart_is_empty' => 'Your cart is empty',
     'looks_like_you_haven\'t_made_any_choice_yet' => 'Looks like you haven\'t made any choice yet.',
     'continue_shopping' => 'Continue Shopping',
+    'enter_reward_points' => 'Enter Reward Points',
+    'apply_Reward'=>'Apply Reward Points',
+    'reward_points'=> 'Reward Points',
+    'redeemed_amount' =>'Reward Amount',
+    'redeem_reward' => 'CLAIM REWARD',
+    'enter_reward_point' => 'Enter Reward Points',
 ];

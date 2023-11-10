@@ -14,6 +14,8 @@ use Modules\Menu\MegaMenu\MegaMenu;
 use Illuminate\Support\Facades\Cache;
 use Modules\Category\Entities\Category;
 use Modules\Product\Entities\SearchTerm;
+use Modules\RewardpointsGift\Entities\CustomerRewardPoint;
+use Modules\User\Entities\User;
 
 class LayoutComposer
 {
@@ -60,6 +62,7 @@ class LayoutComposer
             'copyrightText' => $this->getCopyrightText(),
             'acceptedPaymentMethodsImage' => $this->getAcceptedPaymentMethodsImage(),
             'schemaMarkup' => $this->getSchemaMarkup(),
+            // 'rewardPoints' => $this->getUserRewardPoints(),
         ]);
     }
 
@@ -206,4 +209,11 @@ class LayoutComposer
             ->target(route('products.index') . '?query={search_term_string}')
             ->setProperty('query-input', 'required name=search_term_string');
     }
+    // public function getUserRewardPoints()
+    // {
+    //     if(auth()->user())
+    //     {
+    //         return auth()->user()->getUsersActiveRewardpoints();
+    //     }
+    // }
 }

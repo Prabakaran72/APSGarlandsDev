@@ -3,6 +3,7 @@ import store from "../../store";
 import Errors from "../../Errors";
 import CartHelpersMixin from "../../mixins/CartHelpersMixin";
 import ProductHelpersMixin from "../../mixins/ProductHelpersMixin";
+import RewardPointClaimingBar from "../layout/RewardPointClaimingBar";
 // import Datepicker from 'vuejs-datepicker';
 import Datepicker from 'vue2-datepicker';
 import 'vue2-datepicker/index.css';
@@ -12,7 +13,7 @@ import { addDays, isBefore } from 'date-fns';
 
 
 export default {
-    mixins: [CartHelpersMixin, ProductHelpersMixin],
+    mixins: [CartHelpersMixin, ProductHelpersMixin, RewardPointClaimingBar],
 
     props: [
         "customerEmail",
@@ -21,6 +22,7 @@ export default {
         "defaultAddress",
         "addresses",
         "countries",
+        "customerrewardpoints",
     ],
     components: {
         Datepicker
@@ -179,7 +181,6 @@ export default {
 
         paymentInstructions() {
             if (this.shouldShowPaymentInstructions) {
-                // console.log('instruction',this.gateways[this.form.payment_method].instructions);
                 return this.gateways[this.form.payment_method].instructions;
             }
         },
@@ -240,7 +241,6 @@ export default {
                 this.form.terms_and_conditions = false;
             }
         },
-
         "form.billingAddressId": function () {
             this.mergeSavedBillingAddress();
 
@@ -318,7 +318,6 @@ export default {
         },
 
         "form.payment_method": function (newPaymentMethod) {
-            // console.log('this.form.payment_method',this.form.payment_method);
             if (newPaymentMethod === "paypal") {
                 this.$nextTick(this.renderPayPalButton);
             }
@@ -638,7 +637,6 @@ export default {
             if (!this.form.terms_and_conditions || this.placingOrder) {
                 return;
             }
-            //  console.log("this.selectedLocalpickupAddressId",this.selectedAddressDetails);
             this.placingOrder = true;
 
             // Check if isCheckedRecurringOrder is enabled
@@ -651,17 +649,20 @@ export default {
             }
 
             this.placingOrder = true;
+            let sendData = {
+                ...this.form,
+                    selectedPickupstoreDetails:
+                        this.selectedAddressDetails,
+                ship_to_a_different_address:
+                    +this.form.ship_to_a_different_address,
+                    delivery_date: this.selectedDeliveryDate,
+                redemptionRewardPoints: store.state.cart.redemptionRewardPoints,
+                redemptionRewardAmount: store.state.cart.redemptionRewardAmount,
+            };
             $.ajax({
                 method: "POST",
                 url: route("checkout.create"),
-                data: {
-                    ...this.form,
-                    selectedPickupstoreDetails:
-                        this.selectedAddressDetails,
-                    ship_to_a_different_address:
-                        +this.form.ship_to_a_different_address,
-                    delivery_date: this.selectedDeliveryDate,
-                },
+                data: sendData,
 
             })
                 .then((response) => {
@@ -998,9 +999,8 @@ export default {
                 redirectedurl,
                 ref,
                 vcode,
-                verifykey
+                verifykey,
             } = response;
-
 
             const url = `${redirectedurl}?amount=${amount}&country=${country}&bill_email=${bill_email}&bill_mobile=${bill_mobile}&bill_name=${bill_name}&currency=${currency}&key=${key}&orderid=${orderid}&ref=${ref}&vcode=${vcode}&verifykey=${verifykey}&callback=?`;
             window.location.href = url;
@@ -1021,9 +1021,7 @@ export default {
             //         // Handle any errors here
             //         console.error(error);
             //     });
-        }
-
-        ,
+        },
 
         openModal(termsUrl) {
             // Make an AJAX request to the Laravel named route

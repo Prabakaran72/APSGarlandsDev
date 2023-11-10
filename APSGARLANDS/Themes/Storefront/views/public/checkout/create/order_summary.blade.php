@@ -40,7 +40,19 @@
                             </span>
                         </span>
                     </label>
-                    <span class="price-amount" v-html="'-' + cart.coupon.value.inCurrentCurrency.formatted">
+                    <span class="price-amount" v-html="'(-) ' + cart.coupon.value.inCurrentCurrency.formatted">
+                    </span>
+                </li>
+                <li v-if="cart.redemptionRewardAmount.amount > 0" v-cloak>
+                    <label>
+                        {{ trans('storefront::cart.redeemed_amount') }}
+                        <span class="coupon-code">
+                            <span class="btn-remove-coupon" @click="removeReward">
+                                <i class="las la-times"></i>
+                            </span>
+                        </span>
+                    </label>
+                    <span class="price-amount" v-html="'(-) ' + cart.redemptionRewardAmount.inCurrentCurrency.formatted">
                     </span>
                 </li>
             </ul>

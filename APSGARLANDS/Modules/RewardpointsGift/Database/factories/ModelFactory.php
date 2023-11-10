@@ -23,12 +23,13 @@ $user1 = DB::table('users')
     ->get();
 $userIdsArray = $user1->pluck('id')->toArray();
 $factory->define(CustomerRewardPoint::class, function ($faker) use ($type, $userIdsArray) {  
+    $bool = $faker->boolean(70);
     return [
         'customer_id' =>Arr::random($userIdsArray),
-        'reward_type' => Arr::random($type),
-        'reward_points_earned' => floor($faker->numberBetween(100, 1000)) / 10,
-        'reward_points_claimed' => $faker->boolean(20) ? ($faker->numberBetween(1, 50)) : null,
-        'expiry_date' => (Carbon::now()->addDays(Rewardpoints::first()->add_days_reward_points_expiry))
+        'reward_type' => $bool ? Arr::random($type) : null,
+        'reward_points_earned' => $bool ? (floor($faker->numberBetween(100, 1000)) / 10) : null,
+        'reward_points_claimed' => !$bool ? ($faker->numberBetween(1, 50)) : null,
+        'expiry_date' => $bool ?((Carbon::now()->addDays(Rewardpoints::first()->add_days_reward_points_expiry))) : null
     ];
 });
 

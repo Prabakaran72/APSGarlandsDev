@@ -17,6 +17,7 @@ use Modules\Order\Http\Requests\StoreOrderRequest;
 use Modules\Cart\Http\Middleware\CheckCouponUsageLimit;
 use Modules\Cart\Http\Middleware\RedirectIfCartIsEmpty;
 use Illuminate\Support\Facades\DB;
+use Modules\RewardpointsGift\Entities\CustomerRewardPoint;
 class CheckoutController extends Controller
 {
     /**
@@ -48,6 +49,7 @@ class CheckoutController extends Controller
             'defaultAddress' => auth()->user()->defaultAddress ?? new DefaultAddress,
             'addresses' => $this->getAddresses(),
             'termsPageURL' => Page::urlForPage(setting('storefront_terms_page')),
+            'customerrewardpoints' => CustomerRewardPoint::getUserRewardPoints(),
         ]);
         
     }
@@ -76,11 +78,12 @@ class CheckoutController extends Controller
      */
     public function store(StoreOrderRequest $request, CustomerService $customerService, OrderService $orderService)
     {
+      
         if (auth()->guest() && $request->create_an_account) {
             $customerService->register($request)->login();
         }
         $order = $orderService->create($request);
-
+        
         $gateway = Gateway::get($request->payment_method);
 
         try {

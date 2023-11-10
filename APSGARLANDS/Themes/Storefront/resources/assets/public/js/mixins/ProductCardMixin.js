@@ -99,7 +99,8 @@ export default {
                     product_id: this.product.id,
                     qty: 1,
                 }),
-            })
+            })   
+            
                 .then((cart) => {
                     store.updateCart(cart);
 

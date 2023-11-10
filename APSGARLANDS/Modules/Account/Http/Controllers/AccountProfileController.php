@@ -25,8 +25,10 @@ class AccountProfileController
      * @return \Illuminate\Http\Response
      */
     public function update(UpdateProfileRequest $request)
-    {
+    {   $image_url='';
+       
         if ($request->hasFile('image_url')) {
+            
             try {
                 $request->validate([
                     'image_url' => 'required|image|mimes:png,jpg|max:2048',
@@ -34,6 +36,7 @@ class AccountProfileController
             } catch (\Exception $e) {
                 return back()->with('error', trans('account::messages.errors.invalid_image'));
             }
+        
             $user_id = auth()->user()->id;
             $directoryPath = public_path("storage/profile/{$user_id}");
             if (!file_exists($directoryPath)) {
@@ -47,12 +50,10 @@ class AccountProfileController
             $request->file('image_url')->move($directoryPath, $filename);
             if ($request->hasFile('image_url')) {
                 $image_url = "storage/profile/{$user_id}/{$filename}";
-            } else {
-                $image_url = '';
-            }
+            } 
         }
         $request->bcryptPassword($request);
-        
+        // dd(auth()->user()->update([$request->all(), 'image_url' => $image_url]));
         try{
             auth()->user()->update([$request->all(), 'image_url' => $image_url]);
             return back()->with('success', trans('account::messages.profile_updated'));
