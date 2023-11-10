@@ -22,11 +22,13 @@
                         class="form-control mx-input pr-2" v-model="form.recurring_time" ref="recurring_time"></div>
             </div>
 
-            <div class="form-group d-flex">
-                <div class="form-label col-md-12 pr-2 pl-3"><label>Selected Order Date<span>*</span></label>
+            <div class="form-group d-flex" v-if="form.recurring_order_dates.length > 0">
+                <div class="form-label col-md-12 pr-2 pl-3"><label>Selected Order Date(s)</label>
                 </div>
-                <div class="form-input pl-0"><input type="time" id="recurring_time"
-                        class="form-control mx-input pr-2" v-model="form.recurring_time" ref="recurring_time"></div>
+                <div class="form-input pl-0">
+    
+                    <textarea rows="4" cols="100" width="250px" class="form-control mx-input pr-2" v-text="form.recurring_format_order_dates" disabled></textarea>
+                </div>
             </div>
 
         </div>

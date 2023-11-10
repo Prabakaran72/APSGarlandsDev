@@ -225,8 +225,10 @@ export default {
         },
 
         "form.recurring_order_dates": function (val) {
+            console.log("watched");
             // if (this.form.recurring_selected_date_count == 0) {
-                this.recurringTotalAmountCalc();
+                // this.recurringTotalAmountCalc();
+                this.recurringDateCalc();
             // } else {
                 // this.recurringTotalAmountCalc();
             // }
@@ -379,15 +381,8 @@ export default {
             this.form.recurring_time = `${hours}:${minutes}`;
         },
 
-        recurringDateCalc() {
-
+        recurringDateCalc() {      
             this.form.recurring_order_dates = this.form.recurring_order_dates || [];
-
-            // Check if this.form.recurring_order_dates is an array before using .length
-            // if (Array.isArray(this.form.recurring_order_dates) && this.form.recurring_order_dates.length === 0) {
-            //     // document.getElementById('productSubTotal').innerHTML = "MYR&nbsp;" + (this.cart.subTotal.amount).toFixed(2);
-            //     return; // Do nothing if form.recurring_order_dates is an empty array
-            // }
 
             this.form.recurring_selected_dates = this.form.recurring_order_dates.slice();
 
@@ -399,12 +394,13 @@ export default {
             this.form.recurring_format_order_dates = formattedDates.join(", ");
             this.form.recurring_selected_date_count = formattedDates.length;
 
+            console.log("this.form.recurring_format_order_dates",this.form.recurring_format_order_dates);
             this.recurringTotalAmountCalc();
         },
 
         recurringTotalAmountCalc() {
-
-            const recurringDateCount = parseFloat(this.form.recurring_selected_date_count);
+            
+            const recurringDateCount = this.form.recurring_selected_dates.length;
 
             //TO UPDATE THE SUB TOTAL AMOUNT
             $.ajax({
