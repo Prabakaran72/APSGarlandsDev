@@ -2,7 +2,6 @@
 
 namespace Modules\Checkout\Services;
 
-use Carbon\Carbon;
 use Modules\Cart\CartTax;
 use Modules\Cart\CartItem;
 use Modules\Cart\Facades\Cart;
