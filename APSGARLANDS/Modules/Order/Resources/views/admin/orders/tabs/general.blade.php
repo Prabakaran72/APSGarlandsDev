@@ -218,7 +218,7 @@
 
                                                 <select name="order_products" class="order-product" data-info="0"
                                                     id="order_products">
-                                                    <option value="0" data-info="0.00">Select Option</option>
+                                                    <option value="0" data-info="0.00">Select Product</option>
                                                     @foreach ($products as $product)
                                                         <option value="{{ $product->id }}"
                                                             data-info="{{ $product->price }}"
@@ -494,7 +494,7 @@
 <script>
     const productDataDiv = document.getElementById('product-data');
     const products = JSON.parse(productDataDiv.dataset.products);
-    console.log(products);
+    // console.log(products);
     let backendData = @json($minimumAmount);
     const thirdTD = document.querySelector('tfoot .shipping-row td:nth-child(3) ');
     const firstFormRadio = thirdTD.querySelector('.form-radio');
@@ -1192,6 +1192,8 @@
         // If the current time is before the threshold, add prepareDays, else add prepareDays + 1
         const daysToAdd = currentTime < thresholdTime ? prepareDays : prepareDays + 1;
 
+        // console.log('daysToAdd',daysToAdd);
+
         const futureDate = new Date();
         futureDate.setDate(currentDate.getDate() + daysToAdd);
 
@@ -1201,7 +1203,7 @@
 
     function addProductData(row, type = '') {
 
-
+        // console.log('addProductData');
         if (type === 'delete') {
             const product_id = row.querySelector('.order-product').value;
             const indexToRemove = productDataArray.findIndex(item => item.product_id === product_id);
@@ -1217,7 +1219,7 @@
 
                 productDataArray.splice(indexToRemove, 1); // Remove the object at the specified index
 
-                console.log('delete',productDataArray);
+                // console.log('delete',productDataArray);
 
             }
 
@@ -1264,10 +1266,11 @@
                     is_preorder_status: is_preorder_status,
                     productSpan:productSpan.id
                 };
+                
                 //  console.log('Updated', productDataArray[indexToUpdate]);
-                //  console.log('add ',productDataArray);
+                //   console.log('indexToUpdate ',productDataArray);
                  
-                return false;
+                // return false;
             }else {
 
                 productDataArray.push(product);
@@ -1278,7 +1281,7 @@
             }
            
             
-            
+            //  console.log('add ',productDataArray);
 
            
             
@@ -1289,12 +1292,15 @@
         }
 
         const preorderDiv = document.querySelector('.pre_order');
+        // console.log('preorderDiv',preorderDiv);
         const preorderCheckbox = document.getElementById('preorderCheckbox');
 
 
-        const hasPreorder = productDataArray.some(item => item.is_preorder_status === "1");
+        // const hasPreorder = productDataArray.some(item => item.is_preorder_status === "1");
+        // console.log('hasPreorder',hasPreorder);
 
-        if (hasPreorder) {
+
+        // if (hasPreorder) {
             const maxPrepareDays = Math.max(...productDataArray.map(item => parseInt(item.prepare_days)));
             const thresholdHour = 13;
             const thresholdMinute = 0;
@@ -1304,7 +1310,7 @@
             pre_order_calender.min = futureDateString;
             // console.log('preorderCalender', pre_order_calender);
 
-        }
+        // }
 
 
 
@@ -1319,6 +1325,7 @@
     const currentDate = new Date();
     const currentDateString = currentDate.toISOString().split('T')[0];
     pre_order_calender.min = currentDateString;
+    pre_order_calender.value = currentDateString;
     preorderCheckbox.addEventListener('change', function(event) {
         if (event.target.checked) {
             preorderCalender.style.display = 'inline';
@@ -1328,7 +1335,25 @@
         }
     });
 
+const targetNode = pre_order_calender;
 
+// Create an observer instance
+const observerPreOrder = new MutationObserver((mutationsList) => {
+    for (const mutation of mutationsList) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'min') {
+            // The 'min' attribute has changed
+            const newMinValue = mutation.target.min;
+            pre_order_calender.value = newMinValue;
+            // console.log('New min value:', newMinValue);
+
+            // Perform your task here
+            // For example, trigger a function or do something with the new value
+            // yourTaskFunction(newMinValue);
+        }
+    }
+});
+const config = { attributes: true };
+observerPreOrder.observe(targetNode, config);
 
 
     function add_couponData() {
@@ -1366,7 +1391,7 @@
                 errorElement.style.color = 'green';
                 const couponElement = document.getElementById('coupon');
                 couponElement.value = sub.code;
-                console.log('validstrng', valid);
+                // console.log('validstrng', valid);
                 return valid;
             }
 
@@ -1376,6 +1401,45 @@
 
 
 
+        } else if((!is_present && is_present !== undefined) && updateTotal() > 0 ){
+            // console.log('sub',sub);
+
+            const valid = handleCouponValidation(sub, orderAmount);
+            const discountRow = document.querySelector('.discount-row');
+            const validstrng = valid == 'Coupon is Applied' ? true : false;
+            const errorElement = document.getElementById('coupon_error');
+            const type = 'fixed';
+            if (valid !== 'Coupon is Applied') {
+                discountRow.style.display = "none";
+                discountRow.querySelector('td:nth-child(3)').textContent = '';
+                discountRow.querySelector('td:nth-child(4)').textContent = '';
+                errorElement.textContent = valid;
+                errorElement.style.color = 'red';
+                const couponElement = document.getElementById('coupon');
+                couponElement.value = sub.code;
+                return valid;
+            }
+
+            if (valid == 'Coupon is Applied') {
+                const discount = sub.value.amount;
+                // console.log('discount',discount);
+                const discountAmount = discounted(discount, orderAmount, type);
+                discountRow.style.display = '';
+                // console.log('sub', sub);
+                const thirdtd = discountRow.querySelector('td:nth-child(3)');
+                const forthtd = discountRow.querySelector('td:nth-child(4)');
+                forthtd.textContent = '-MYR ' + discountAmount;
+                // thirdtd.textContent = 'coupon [' + sub.code + ']:';
+                thirdtd.innerHTML = `Coupon[${sub.code}]  <i class="fa-solid fa-xmark"></i>`;
+                errorElement.textContent = valid;
+                errorElement.style.color = 'green';
+                const couponElement = document.getElementById('coupon');
+                couponElement.value = sub.code;
+                // console.log('validstrng', valid);
+                return valid;
+            }
+
+           
         }
     }
 
@@ -1395,6 +1459,10 @@
                 updateTotal();
                 const errorSpanTag = document.getElementById('coupon_error');
                 errorSpanTag.textContent = '';
+                const coupon = document.getElementById('coupon');
+                coupon.value = '';
+                const couponId = document.getElementById('coupon_id');
+                couponId.value = '';
                 // if (innerText !== '') {
                 //     // The third <td> element has a value
                 //     console.log('The third <td> element in the "discount-row" has a value:', innerText);
@@ -1680,8 +1748,8 @@
                         // Compare the category IDs from coupon and matchingCategories
                         return coupon.exclude_categories.some(couponCategory => couponCategory.id === category.id);
                     });
-                console.log('matchingProducts',matchingProducts);
-                console.log('excludedCategories',matchingCategories);
+                // console.log('matchingProducts',matchingProducts);
+                // console.log('excludedCategories',matchingCategories);
 
                 if (matchingCategories.length !== 0) {
                     throw new Error('The coupon is not applicable for this excluded cart .');
@@ -1724,8 +1792,8 @@
                         return coupon.categories.some(couponCategory => couponCategory.id === category.id);
                     });
 
-                    console.log('matchingProducts',matchingProducts);
-                console.log('includedCategories',matchingCategories);
+                    // console.log('matchingProducts',matchingProducts);
+                // console.log('includedCategories',matchingCategories);
 
                 if (matchingCategories.length === 0) {
                     throw new Error('The coupon is not applicable for this cart .');
@@ -1768,8 +1836,8 @@
                         // Compare the category IDs from coupon and matchingCategories
                         return coupon.exclude_products.some(couponproduct => couponproduct.id === product.id);
                     });
-                console.log('matchingProducts',matchingProducts);
-                console.log('matchingProductExclude',matchingProductExclude);
+                // console.log('matchingProducts',matchingProducts);
+                // console.log('matchingProductExclude',matchingProductExclude);
 
                 if (matchingProductExclude.length !== 0) {
                     throw new Error('The coupon is not applicable for this product excluded cart .');
@@ -1812,8 +1880,8 @@
                         return coupon.products.some(couponproducts => couponproducts.id === product.id);
                     });
 
-                    console.log('matchingProducts',matchingProducts);
-                    console.log('matchingProductsCoupon',matchingProductsCoupon);
+                    // console.log('matchingProducts',matchingProducts);
+                    // console.log('matchingProductsCoupon',matchingProductsCoupon);
 
                 if (matchingProductsCoupon.length === 0) {
                     throw new Error('The coupon is not applicable for this product cart .');
@@ -1864,11 +1932,11 @@
             }
 
         } else {
-            const discountAmount = amount - discount;
+            const discountAmount = amount - parseFloat(discount);
             // updateTotal(discountAmount.toFixed(2));
-            updateTotal(discount.toFixed(2));
+            updateTotal(parseFloat(discount).toFixed(2));
             // console.log('discountAmount', discountAmount);
-            return discount.toFixed(2);
+            return parseFloat(discount).toFixed(2);
 
         }
 
@@ -1893,7 +1961,7 @@
             const msg = 'Please Enter Valid Coupon.';
             errorElement.textContent = msg;
             errorElement.style.color = 'red';
-            console.log('msg', msg);
+            // console.log('msg', msg);
             return false;
         }
 
@@ -1941,7 +2009,7 @@
                 const thirdtd = discountRow.querySelector('td:nth-child(3)');
                 const forthtd = discountRow.querySelector('td:nth-child(4)');
                 if (validationMessage == 'Coupon is Applied') {
-                    console.log('AppliedvalidationMessage', validationMessage);
+                    // console.log('AppliedvalidationMessage', validationMessage);
                     errorElement.style.color = 'green';
                     const discount = couponObject.value;
                     const discount_type = couponObject.is_percent;
@@ -2792,7 +2860,9 @@
                     delete data.billing_full_name;
                     delete data.shipping_full_name;
                     //   console.log('data', data);
-                    //       return;
+                    //   console.log('selectedProducts', selectedProducts);
+
+                        //   return;
 
                     fetch(route("admin.orders.store"), {
                             method: 'POST',

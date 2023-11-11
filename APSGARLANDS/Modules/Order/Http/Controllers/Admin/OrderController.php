@@ -22,6 +22,9 @@ use Modules\Address\Entities\DefaultAddress;
 
 class OrderController
 {
+    public $formatted_sub_total = 0;
+    public $formatted_discount = 0;
+
     use HasCrudActions;
 
     /**
@@ -117,10 +120,15 @@ class OrderController
 
 
     public function store(Request $request){
+        
         $countries = new  Country;
         $state = new State;
         $s_code = '';
         $data = $request->data; // Assuming $request->data is already an array or object
+        // Calculate the total by adding the subTotal, discount, and shippingCost
+        $shippingCost = floatval($data['shipping_cost']);
+        $total = $this->sub_total($request->product) - $this->getDiscountAmount($data['coupon_id']) + $shippingCost;
+        // dd($total);
         $billingCountry = $countries->supportedCodes($data['billing_country']);
          $billingStates = $state->get($billingCountry[0]);
           foreach($billingStates as $stateCode =>$states){
@@ -134,8 +142,10 @@ class OrderController
        $data['billing_state'] = $state_code;
        $data['shipping_country'] = $country;
        $data['shipping_state'] = $state_code;
-        $data['total'] =  Money::inDefaultCurrency($data['total']);
-        $data['sub_total'] =  Money::inDefaultCurrency($data['sub_total']);
+        $data['total'] =  Money::inDefaultCurrency($total);
+        // $data['sub_total'] =  Money::inDefaultCurrency($data['sub_total']);
+        // $data['discount'] =  Money::inDefaultCurrency($data['discount']);
+        $data['sub_total'] =  Money::inDefaultCurrency($this->sub_total($request->product));
         $data['discount'] =  Money::inDefaultCurrency($data['discount']);
         $data['currency'] =  currency();
         $data['currency_rate'] = CurrencyRate::for(currency());
@@ -317,11 +327,34 @@ class OrderController
 
     }
 
+    
+    public function sub_total($products){
+        $sub_total=0;
+        foreach($products as $item){
+                $productId = $item["product_id"];
+                $unitPrice = $item["unit_price"];
+                $linetotal = $unitPrice * intval($item["qty"]);
+                 $sub_total += $linetotal;
+            
+           
+        }
+        $this->formatted_sub_total = number_format($sub_total, 2);
+        return  floatval(str_replace(',', '', $this->formatted_sub_total));
+        
+    }
 
-    public function coupontest(){
-        return response()->json([
-            'status' => 'test',
-        ]);
+
+    public function getDiscountAmount($couponId){
+        if(!empty($couponId)){
+
+            $coupon = Coupon::findOrFail($couponId);
+            $this->formatted_discount = number_format($coupon['value']->amount(), 2);
+            return floatval($this->formatted_discount);
+            
+
+        }
+        
+
     }
 
     
