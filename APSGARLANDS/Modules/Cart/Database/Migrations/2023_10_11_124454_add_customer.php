@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('cart_products', function (Blueprint $table) {
-            $table->integer('customer_id')->nullable()->default(0);
+            $table->integer('customer_id')->nullable()->default(0)->length(10);
         });
     }
 
