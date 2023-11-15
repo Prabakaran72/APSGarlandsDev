@@ -38,13 +38,13 @@
                         </td>
 
                         <td>
-                            {{ $abandoned->quantity }}
+                            {{ $abandoned->qty }}
                         </td>
                         <td>
-                            {{ $abandoned->rate }}
+                            {{ $abandoned->price }}
                         </td>
                         <td>
-                            {{ $abandoned->created_at->format('d-m-Y') }}
+                            {{ $abandoned->deleted_at->format('d-m-Y') }}
                         </td>
                         <td>
                             {{ $abandoned->first_name }}{{ $abandoned->last_name }}

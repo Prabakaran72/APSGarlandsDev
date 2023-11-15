@@ -14,7 +14,8 @@ use Modules\Product\Services\ChosenProductOptions;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Modules\Cart\Entities\UserCart;
 use Modules\Cart\Entities\CartProduct;
-
+use Modules\Cart\Entities\CartProductOption;
+use Modules\Cart\Entities\CartProductOptionValue;
 class Cart extends DarryldecodeCart implements JsonSerializable
 {
     /**
@@ -52,15 +53,12 @@ class Cart extends DarryldecodeCart implements JsonSerializable
      */
     public function store($productId, $qty, $options = [])
     {
-        //dd($options);
-        $options = array_filter($options);
-        //dd($options);
-        $product = Product::with('files', 'categories')->findOrFail($productId);
-        //dd($product);
-        //exit;
-        $chosenOptions = new ChosenProductOptions($product, $options);
 
-        //dd($chosenOptions);
+        $options = array_filter($options);
+
+        $product = Product::with('files', 'categories')->findOrFail($productId);
+
+        $chosenOptions = new ChosenProductOptions($product, $options);
 
         $this->add([
             'id' => md5("product_id.{$product->id}:options." . serialize($options)),
@@ -87,13 +85,26 @@ class Cart extends DarryldecodeCart implements JsonSerializable
 
     public function items()
     {
+
+    if(auth()->check()){
+        $cartItems = CartProduct::with('product','usercart')->where([
+            'customer_id' => auth()->id(),
+            'deleted_at' => NULL,
+        ])->get();
+
+        foreach($cartItems as $item)
+{
+    $this->store($item->product_id, $item->qty, $item->options_id ?? []);
+}
+    }
+    // else{
         return $this->getContent()
             ->sortBy('attributes.created_at')
             ->map(function ($item) {
                 return new CartItem($item);
             });
-    }
-
+        // }
+}
     public function addedQty($productId)
     {
         return $this->findByProductId($productId)->sum('qty');
@@ -182,6 +193,7 @@ class Cart extends DarryldecodeCart implements JsonSerializable
 
     public function allItemsAreVirtual()
     {
+ //dd($this->items());
         return $this->items()->every(function (CartItem $cartItem) {
             return $cartItem->product->is_virtual;
         });
@@ -450,32 +462,37 @@ class Cart extends DarryldecodeCart implements JsonSerializable
             $customer_id = auth()->user()->id;
             $first_name = auth()->user()->first_name;
             $last_name = auth()->user()->last_name;
-       
-       
+
+
         $UserCartList = UserCart::where([
             'customer_id' => $customer_id,
-                  
+
      ])->first();
+     if(empty($UserCartList))
+     {
+        //$$$
+        return false;
+     }
         $cart_id       = $UserCartList->id;
 
-        $CartProductSelect = CartProduct::where([            
-            'cart_id' => $cart_id,  
-            
-            'deleted_at' => NULL,               
+        $CartProductSelect = CartProduct::where([
+            'cart_id' => $cart_id,
+
+            'deleted_at' => NULL,
         ])->get();
 
         // dd($CartProductSelect);
         // fetch data from cart_products
        foreach($CartProductSelect as $CartProduct)
        {
-        
+
 
         $productId = $CartProduct->product_id;
         $qty = $CartProduct->qty;
         $option_id = $CartProduct->option_id;
         $CartProduct_id = $CartProduct->id;
-         
-        
+
+
 
         if($option_id!=0){
             if($option_id==6)
@@ -486,7 +503,7 @@ class Cart extends DarryldecodeCart implements JsonSerializable
         else{
         $options = [];
         }
-       
+
        // dd($options);
 
 
