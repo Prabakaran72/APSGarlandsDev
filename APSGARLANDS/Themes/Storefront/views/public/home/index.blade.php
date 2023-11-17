@@ -51,10 +51,88 @@
         <div id="testimonial_slide_div"></div>
     @endif
     @if (setting('galleries_enabled'))
-    <div id="galleries_slide_div">
-    </div>
+        <div id="galleries_slide_div">
+        </div>
     @endif
-    {{-- @if (setting('newsletter_enabled'))
-    @include('public.home.sections.subscribe')
-    @endif --}}
 @endsection
+
+@if (setting('testimonial_slider_enabled'))
+    @push('scripts')
+        <script>
+            $(document).ready(function() {
+                $.ajax({
+                    url: '{{ route('testimonials.slider') }}',
+                    method: 'GET',
+                    dataType: 'html',
+                    success: function(response) {
+                        $('#testimonial_slide_div').html(response);
+                        //testimonial_slide_div - THE ELEMENT IS LOCATED IN THE FILE PATH->Themes\Storefront\views\public\home\index.blade.php
+                        $('#testimonials-list').owlCarousel({
+                            loop: true,
+                            center: true,
+                            items: 5, // Display 5 testimonials at a time
+                            margin: 0,
+                            autoplay: true,
+                            dots: true,
+                            autoplayTimeout: 5000,
+                            smartSpeed: 450,
+                            responsive: {
+                                0: {
+                                    items: 1
+                                },
+                                768: {
+                                    items: 2
+                                },
+                                1170: {
+                                    items: 3
+                                }
+                            }
+                        });
+                    },
+                    error: function() {
+                        console.error('Error loading testimonials');
+                    }
+                });
+            });
+        </script>
+    @endpush
+@endif
+
+@if (setting('galleries_enabled'))
+    @push('scripts')
+        <script>
+            $.ajax({
+                url: '{{ route('galleries.slider') }}',
+                method: 'GET',
+                dataType: 'html',
+                success: function(response) {
+                    $('#galleries_slide_div').html(response);
+                    $('#galleries-list').owlCarousel({
+                        loop: true,
+                        center: true,
+                        items: 5, // Display 5 testimonials at a time
+                        margin: 0,
+                        autoplay: true,
+                        dots: true,
+                        autoplayTimeout: 30000,
+                        smartSpeed: 450,
+                        responsive: {
+                            0: {
+                                items: 1
+                            },
+                            768: {
+                                items: 2
+                            },
+                            1170: {
+                                items: 3
+                            }
+                        }
+                    });
+                },
+                error: function() {
+                    console.error('Error loading galleries');
+                }
+            });
+        </script>
+    @endpush
+@endif

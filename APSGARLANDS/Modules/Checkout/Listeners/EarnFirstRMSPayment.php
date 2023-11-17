@@ -43,9 +43,7 @@ class EarnFirstRMSPayment
             $epoint_fpay_point_value = $this->rewardSettings->getRewardPointsSettingValue('epoint_fpay_point_value');
             $user = new User;
 
-            if ($epoint_fpay_point_value->epoint_fpay_point_value > 0 && $user->isThisfirstRMSPayment() <= 1) {
-
-
+            if ($epoint_fpay_point_value->epoint_fpay_point_value > 0 && $user->isThisfirstRMSPayment() == 1) {
                 $inserted_id  = $this->custRewPts->insertGetId([
                     'customer_id' => $event->order->customer_id,
                     'reward_type' => 'firstpayment',
