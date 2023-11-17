@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Oct 04, 2023 at 11:59 AM
+-- Generation Time: Nov 17, 2023 at 11:57 AM
 -- Server version: 10.4.27-MariaDB
 -- PHP Version: 8.1.12
 
@@ -21,6 +21,62 @@ SET time_zone = "+00:00";
 -- Database: `apsgarlands`
 --
 
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetAllCustomerActivePoints` ()   BEGIN
+          SELECT customer_id,earned_total FROM(SELECT * FROM (SELECT *,IF(customer_change!=0,@e:=0,IF(current_status=0,@e:=@e+1,@e:=@e+0)) as chk,IF(customer_change!=0,@d:=1,IF(current_status=0 OR @e!=0,@d:=0,@d:=@d+1)) as checking FROM (SELECT customer_id,IF(reward_points_earned!='',DATE_FORMAT(expiry_date,'%Y-%m-%d'),DATE_FORMAT(created_at,'%Y-%m-%d')) as entry_date,IFNULL(reward_points_earned,0) as reward,IFNULL(reward_points_claimed,0) as claimed,IF(@a=customer_id OR @a=0,@b:=@b+IFNULL(reward_points_earned,0)-IFNULL(reward_points_claimed,0),@b:=IFNULL(reward_points_earned,0)) as earned_total,IF(customer_id!=@a,@a:=customer_id,0) as customer_change,IF(DATE_FORMAT(expiry_date,'%Y-%m-%d')>='2023-10-09' OR IFNULL(reward_points_earned,0)=0,1,0) as current_status FROM customer_reward_points,(SELECT @a:=0) s,(SELECT @b:=0) t ORDER BY customer_id ASC,entry_date DESC) s, (SELECT @d:=0) t, (SELECT @e:=0) u) s ORDER by customer_id ASC, checking DESC) t GROUP by customer_id;
+        END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetCustomerEarnedTotal` (IN `CustomerID` BIGINT(11))   BEGIN
+		SELECT customer_id, earned_total FROM (
+			SELECT * FROM (
+				SELECT *, IF(customer_change != 0, @e := 0, IF(current_status = 0, @e := @e + 1, @e := @e + 0)) as chk,
+				IF(customer_change != 0, @d := 1, IF(current_status = 0 OR @e != 0, @d := 0, @d := @d + 1)) as checking
+				FROM (
+					SELECT customer_id,
+						IF(reward_points_earned != '', DATE_FORMAT(expiry_date, '%Y-%m-%d'), DATE_FORMAT(created_at, '%Y-%m-%d')) as entry_date,
+						IFNULL(reward_points_earned, 0) as reward,
+						IFNULL(reward_points_claimed, 0) as claimed,
+						IF(@a = customer_id OR @a = 0, @b := @b + IFNULL(reward_points_earned, 0) - IFNULL(reward_points_claimed, 0), @b := IFNULL(reward_points_earned, 0)) as earned_total,
+						IF(customer_id != @a, @a := customer_id, 0) as customer_change,
+						IF(DATE_FORMAT(expiry_date, '%Y-%m-%d') >= DATE(NOW()) OR IFNULL(reward_points_earned, 0) = 0, 1, 0) as current_status
+					FROM customer_reward_points , (SELECT @a := 0) s, (SELECT @b := 0)  t
+					where customer_id = CustomerID ORDER BY customer_id ASC, entry_date DESC
+				) s,
+				(SELECT @d := 0) t,
+				(SELECT @e := 0) u
+			)  s
+
+			ORDER by customer_id ASC, checking DESC
+		) t
+		GROUP by customer_id;
+	END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `rewardPointsCalc` (IN `CustomerID` BIGINT(11))   BEGIN
+    SELECT 
+        customer_id,
+        SUM(reward_points_earned) AS reward_points_earned_total,
+        SUM(reward_points_claimed) AS reward_points_claimed_total,
+        SUM(CASE WHEN expiry_date < '2023-09-11' THEN reward_points_earned ELSE 0 END) AS expired_earned_rewardpoints,
+        SUM(CASE WHEN reward_points_claimed IS NOT NULL AND created_at < '2023-09-11' THEN reward_points_claimed ELSE 0 END) AS expired_claimed_rewardpoints,
+        SUM(CASE WHEN reward_points_earned IS NOT NULL AND expiry_date > '2023-09-11' THEN reward_points_earned ELSE 0 END) - 
+        SUM(CASE WHEN expiry_date < '2023-09-11' THEN reward_points_earned ELSE 0 END) AS in_live_earned_rewardpoints,
+        (CASE WHEN SUM(reward_points_earned) IS NOT NULL AND SUM(reward_points_claimed) IS NOT NULL AND SUM(CASE WHEN expiry_date < '2023-09-11' THEN reward_points_earned ELSE 0 END) > 0 
+            THEN SUM(reward_points_earned) - SUM(CASE WHEN expiry_date < '2023-09-11' THEN reward_points_earned ELSE 0 END) - SUM(reward_points_claimed) 
+            ELSE 0 END) AS expired_points
+    FROM 
+        customer_reward_points
+    WHERE 
+        customer_id = CustomerID
+        AND deleted_at IS NULL
+    GROUP BY 
+        customer_id;
+END$$
+
+DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
@@ -36,7 +92,7 @@ CREATE TABLE `abandonedcartlistreport` (
   `product_id` varchar(191) NOT NULL,
   `first_name` varchar(191) NOT NULL,
   `last_name` varchar(191) NOT NULL,
-  `reason` longtext NOT NULL,
+  `reason` longtext DEFAULT '',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -46,16 +102,16 @@ CREATE TABLE `abandonedcartlistreport` (
 --
 
 INSERT INTO `abandonedcartlistreport` (`id`, `slug`, `customer_id`, `quantity`, `rate`, `product_id`, `first_name`, `last_name`, `reason`, `created_at`, `updated_at`) VALUES
-(1, 'lotus', '1', 1.00, 199.00, '2', 'GIRISH', 'SHANKAR', 'zbc', '2023-09-25 05:35:52', NULL),
-(2, 'lotus', '1', 1.00, 199.00, '2', 'GIRISH', 'SHANKAR', 'avb', '2023-09-25 05:36:12', NULL),
-(3, 'wedding-garlands-with-white-and-green-color-mixing', '1', 1.00, 20.00, '3', 'GIRISH', 'SHANKAR', 'bfda', '2023-09-25 05:36:13', NULL),
-(4, 'arali-saram-flowers', '4', 1.00, 9.00, '24', 'APS', 'Admin', 'Test', '2023-09-28 08:52:56', NULL),
-(5, 'vettiver-malai-for-god', '0', 1.00, 24.00, '15', '', '', 'zvsd', '2023-09-28 10:23:29', NULL),
-(6, 'arali-saram-flowers', '5', 1.00, 9.00, '24', 'Prabakaran', 'V', 'TEst', '2023-09-28 10:24:57', NULL),
-(7, 'jasmine-saram', '5', 1.00, 2.00, '17', 'Prabakaran', 'V', 'TEst', '2023-09-28 10:24:57', NULL),
-(8, 'arali-saram-flowers', '5', 2.00, 9.00, '24', 'Prabakaran', 'V', 'Clear\n', '2023-10-04 04:57:18', NULL),
-(9, 'lotus-yeVHn5rz', '5', 1.00, 250.00, '14', 'Prabakaran', 'V', 'All Clear', '2023-10-04 04:57:28', NULL),
-(10, 'vettiver-malai-for-god', '5', 1.00, 24.00, '15', 'Prabakaran', 'V', 'All Clear', '2023-10-04 04:57:28', NULL);
+(1, 'jasmine', '4', 1.00, 999.00, '6', 'APS', 'Admin', NULL, '2023-10-28 08:18:52', NULL),
+(2, 'manoranjitham', '4', 1.00, 150.00, '9', 'APS', 'Admin', 'Single product clearing', '2023-10-28 08:19:21', NULL),
+(3, 'lotus-yeVHn5rz', '4', 1.00, 250.00, '14', 'APS', 'Admin', 'Bulk Product Clearing', '2023-10-28 08:19:41', NULL),
+(4, 'loose-flower-red', '4', 1.00, 19.00, '10', 'APS', 'Admin', 'Bulk Product Clearing', '2023-10-28 08:19:41', NULL),
+(5, 'vettiver-malai-for-god', '1', 1.00, 24.00, '15', 'GIRISH', 'SHANKAR', NULL, '2023-11-03 09:37:46', NULL),
+(6, 'red-rose-bouquet', '1', 1.00, 145.00, '8', 'GIRISH', 'SHANKAR', NULL, '2023-11-03 09:37:47', NULL),
+(7, 'combo-losse-flower', '1', 1.00, 14.00, '16', 'GIRISH', 'SHANKAR', NULL, '2023-11-03 09:39:33', NULL),
+(8, 'arali-saram-flowers', '6', 3.00, 9.00, '24', 'Sangeetha', 'M', NULL, '2023-11-17 08:06:36', NULL),
+(9, 'malli-saram', '6', 4.00, 8.28, '26', 'Sangeetha', 'M', NULL, '2023-11-17 08:08:21', NULL),
+(10, 'violet-bouquet', '23', 1.00, 99.00, '27', 'udhaya', 's', NULL, '2023-11-17 09:50:25', NULL);
 
 -- --------------------------------------------------------
 
@@ -84,7 +140,10 @@ INSERT INTO `activations` (`id`, `user_id`, `code`, `completed`, `completed_at`,
 (4, 4, 'TveyR9rvS1pumbnTwCerCFJ8H6ssW2i2', 1, '2023-08-09 11:54:33', '2023-08-09 06:24:33', '2023-08-09 06:24:33'),
 (5, 5, 'KQZCydY9de62PpKXmw3v8woZo7ZUWqNf', 1, '2023-08-24 15:35:50', '2023-08-24 10:05:50', '2023-08-24 10:05:50'),
 (6, 6, 'hFz3Kvx4X8zEdBHMkIMtGlLu4kFFfccF', 1, '2023-08-24 19:16:46', '2023-08-24 13:46:45', '2023-08-24 13:46:46'),
-(7, 7, 'qR2Qzlu1SxURIiWWawreZAB5RhMThpBa', 1, '2023-09-25 13:18:06', '2023-09-25 07:48:06', '2023-09-25 07:48:06');
+(7, 7, 'qR2Qzlu1SxURIiWWawreZAB5RhMThpBa', 1, '2023-09-25 13:18:06', '2023-09-25 07:48:06', '2023-09-25 07:48:06'),
+(8, 8, 'dHQxLHYaLiqplinfjCojXouBFzokWR3i', 1, '2023-10-28 16:41:01', '2023-10-28 11:11:01', '2023-10-28 11:11:01'),
+(22, 22, 'yOASOGK4PEzpecDIByOJeuy289TXsMKh', 1, '2023-10-30 20:08:17', '2023-10-30 14:38:17', '2023-10-30 14:38:17'),
+(23, 23, 'Spnm6WCzOLsXKYNdw5JkefP63QSBp4im', 1, '2023-11-17 17:24:21', '2023-11-17 11:54:21', '2023-11-17 11:54:21');
 
 -- --------------------------------------------------------
 
@@ -103,6 +162,7 @@ CREATE TABLE `addresses` (
   `state` varchar(191) NOT NULL,
   `zip` varchar(191) NOT NULL,
   `country` varchar(191) NOT NULL,
+  `user_type` tinyint(4) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -111,15 +171,19 @@ CREATE TABLE `addresses` (
 -- Dumping data for table `addresses`
 --
 
-INSERT INTO `addresses` (`id`, `customer_id`, `first_name`, `last_name`, `address_1`, `address_2`, `city`, `state`, `zip`, `country`, `created_at`, `updated_at`) VALUES
-(1, 1, 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '2023-08-10 12:13:43', '2023-08-10 12:13:43'),
-(2, 3, 'Mahendran', 'Sadhasivam', '338/1A LVR colony', NULL, 'Erode', 'TN', '638004', 'IN', '2023-08-22 11:00:26', '2023-08-22 11:00:26'),
-(3, 3, 'Navin', 'Elangovan', '121-Kovil Street', NULL, 'Erode', 'TN', '638004', 'IN', '2023-08-22 11:01:14', '2023-08-22 11:01:14'),
-(4, 5, 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', '2023-08-24 13:22:14', '2023-08-24 14:17:52'),
-(5, 4, 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', '2023-08-24 13:27:42', '2023-08-24 13:27:42'),
-(6, 1, 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '2023-08-24 13:38:49', '2023-08-24 13:38:49'),
-(7, 6, 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'SGR', '6380000', 'MY', '2023-08-24 13:49:41', '2023-08-24 13:49:41'),
-(8, 1, 'santhila', 'S', 'kulalumpur', NULL, 'kulalumpur', 'KUL', '59003', 'MY', '2023-09-28 11:40:46', '2023-09-28 11:40:46');
+INSERT INTO `addresses` (`id`, `customer_id`, `first_name`, `last_name`, `address_1`, `address_2`, `city`, `state`, `zip`, `country`, `user_type`, `created_at`, `updated_at`) VALUES
+(1, 1, 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 0, '2023-08-10 12:13:43', '2023-08-10 12:13:43'),
+(2, 3, 'Mahendran', 'Sadhasivam', '338/1A LVR colony', NULL, 'Erode', 'TN', '638004', 'IN', 0, '2023-08-22 11:00:26', '2023-08-22 11:00:26'),
+(3, 3, 'Navin', 'Elangovan', '121-Kovil Street', NULL, 'Erode', 'TN', '638004', 'IN', 0, '2023-08-22 11:01:14', '2023-08-22 11:01:14'),
+(4, 5, 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', 0, '2023-08-24 13:22:14', '2023-08-24 14:17:52'),
+(5, 4, 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', 0, '2023-08-24 13:27:42', '2023-08-24 13:27:42'),
+(6, 1, 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 0, '2023-08-24 13:38:49', '2023-08-24 13:38:49'),
+(7, 6, 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'SGR', '6380000', 'MY', 0, '2023-08-24 13:49:41', '2023-08-24 13:49:41'),
+(8, 1, 'santhila', 'S', 'kulalumpur', NULL, 'kulalumpur', 'KUL', '59003', 'MY', 0, '2023-09-28 11:40:46', '2023-09-28 11:40:46'),
+(9, 7, 'Indumathi', 'E', 'kulalumpur', NULL, 'kulalumpur', 'TRG', '59000', 'MY', 0, '2023-10-26 06:30:50', '2023-10-26 06:30:50'),
+(10, 8, 'Prabakaran1', 'V', 'Address 1', 'Address 2', 'Kualalumpur', 'KUL', '59000', 'MY', 0, '2023-10-28 11:11:01', '2023-10-28 11:11:01'),
+(11, 6, 'Sangeetha', 'M', 'erode', NULL, 'erode', 'CCU', '59000', 'AO', 1, '2023-11-17 10:55:22', '2023-11-17 10:55:22'),
+(12, 23, 'udhya', 's', 'Malaysia', 'Malaysia', 'Malaysia', 'SGR', '59000', 'MY', 0, '2023-11-17 11:59:46', '2023-11-17 11:59:46');
 
 -- --------------------------------------------------------
 
@@ -310,6 +374,168 @@ INSERT INTO `attribute_value_translations` (`id`, `attribute_value_id`, `locale`
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `blogcategorys`
+--
+
+CREATE TABLE `blogcategorys` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `category_name` varchar(50) NOT NULL,
+  `category_code` varchar(5) NOT NULL,
+  `description` varchar(50) DEFAULT NULL,
+  `is_active` tinyint(4) DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `blogcategorys`
+--
+
+INSERT INTO `blogcategorys` (`id`, `category_name`, `category_code`, `description`, `is_active`, `created_at`, `updated_at`, `deleted_at`) VALUES
+(1, 'Nature', '001', 'About Nature', 1, '2023-10-21 11:01:38', '2023-10-21 11:01:38', NULL),
+(2, 'Ophelia Greenholt PhD', '763', 'Earum ut.', 1, '2023-10-30 14:14:33', '2023-10-30 14:14:33', NULL),
+(3, 'Cecil Kirlin V', '324', 'Quia.', 1, '2023-10-30 14:14:33', '2023-10-30 14:14:33', NULL),
+(4, 'Leanne Gerlach', '984', 'Aut et.', 1, '2023-10-30 14:14:33', '2023-10-30 14:14:33', NULL),
+(5, 'Flavio Nikolaus', '355', 'Minima.', 1, '2023-10-30 14:14:33', '2023-10-30 14:14:33', NULL),
+(6, 'Elmer Bashirian', '144', 'Laborum.', 1, '2023-10-30 14:14:33', '2023-10-30 14:14:33', NULL),
+(7, 'Mittie Breitenberg', '486', 'Atque.', 1, '2023-10-30 14:14:33', '2023-10-30 14:14:33', NULL),
+(8, 'Prof. Tiana Pfeffer', '799', 'Modi.', 1, '2023-10-30 14:14:33', '2023-10-30 14:14:33', NULL),
+(9, 'Salvador Keeling', '146', 'Sed.', 1, '2023-10-30 14:14:33', '2023-10-30 14:14:33', NULL),
+(10, 'Prof. Dina Pfannerstill MD', '229', 'A dolorem.', 1, '2023-10-30 14:14:33', '2023-10-30 14:14:33', NULL),
+(11, 'Delia Greenfelder', '659', 'Mollitia.', 1, '2023-10-30 14:14:33', '2023-10-30 14:14:33', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `blogcomment`
+--
+
+CREATE TABLE `blogcomment` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `comments` longtext NOT NULL,
+  `post_id` int(10) UNSIGNED NOT NULL,
+  `author_id` int(10) UNSIGNED NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `blogcomment`
+--
+
+INSERT INTO `blogcomment` (`id`, `comments`, `post_id`, `author_id`, `created_at`, `updated_at`, `deleted_at`, `is_active`) VALUES
+(1, 'test', 2, 1, '2023-10-30 14:11:17', '2023-10-30 14:11:17', NULL, 1),
+(2, 'hi test from prabhu', 1, 1, '2023-10-31 07:43:18', '2023-10-31 07:43:18', NULL, 1),
+(3, 'hi prabhu testing', 1, 1, '2023-10-31 07:46:55', '2023-10-31 07:46:55', NULL, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `blogfeedback`
+--
+
+CREATE TABLE `blogfeedback` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `likes` tinyint(1) NOT NULL,
+  `dislikes` tinyint(1) NOT NULL,
+  `post_id` int(10) UNSIGNED NOT NULL,
+  `author_id` int(10) UNSIGNED NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `blogposts`
+--
+
+CREATE TABLE `blogposts` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `post_title` varchar(50) NOT NULL,
+  `post_body` longtext NOT NULL,
+  `category_id` int(10) UNSIGNED NOT NULL,
+  `tag_id` int(10) UNSIGNED NOT NULL,
+  `author_id` int(10) UNSIGNED NOT NULL,
+  `post_status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+  `approved_by` int(10) UNSIGNED DEFAULT NULL,
+  `approved_date` date DEFAULT NULL,
+  `is_active` tinyint(4) DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `blogposts`
+--
+
+INSERT INTO `blogposts` (`id`, `post_title`, `post_body`, `category_id`, `tag_id`, `author_id`, `post_status`, `approved_by`, `approved_date`, `is_active`, `created_at`, `updated_at`, `deleted_at`) VALUES
+(1, 'test', '<p>tset</p>', 1, 1, 1, 'approved', 1, '2023-10-30', 1, '2023-10-30 13:09:55', '2023-10-30 13:09:55', NULL),
+(2, 'Flowers', 'For other uses, see Flower (disambiguation).\r\n\"Floral\" redirects here. For other uses, see Floral (disambiguation).\r\n\r\nA flower, sometimes known as a bloom or blossom, is the reproductive structure found in flowering plants (plants of the division Angiospermae). Flowers produce gametophytes, which in flowering plants consist of a few haploid cells which produce gametes. The \"male\" gametophyte, which produces non-motile sperm, is enclosed within pollen grains; the \"female\" gametophyte is contained within the ovule. When pollen from the anther of a flower is deposited on the stigma, this is called pollination. Some flowers may self-pollinate, producing seed using pollen from the same flower or a different flower of the same plant, but others have mechanisms to prevent self-pollination and rely on cross-pollination, when pollen is transferred from the anther of one flower to the stigma of another flower on a different individual of the same species.\r\n\r\nSelf-pollination happens in flowers where the stamen and carpel mature at the same time, and are positioned so that the pollen can land on the flower\'s stigma. This pollination does not require an investment from the plant to provide nectar and pollen as food for pollinators.[1]\r\n\r\nSome flowers produce diaspores without fertilization (parthenocarpy). Flowers contain sporangia and are the site where gametophytes develop.\r\n\r\nMost flowering plants depend on animals, such as bees, moths, and butterflies, to transfer their pollen between different flowers, and have evolved to attract these pollinators by various strategies, including brightly colored, conspicuous petals, attractive scents, and the production of nectar, a food source for pollinators.[2] In this way, many flowering plants have co-evolved with pollinators to be mutually dependent on services they provide to one another—in the plant\'s case, a means of reproduction; in the pollinator\'s case, a source of food.[3] After fertilization, the ovary of the flower develops into fruit containing seeds.\r\n\r\nFlowers have long been appreciated by humans for their beauty and pleasant scents, and also hold cultural significance as religious, ritual, or symbolic objects, or sources of medicine and food.', 1, 1, 1, 'pending', NULL, NULL, 1, '2023-10-30 14:10:19', '2023-10-30 14:10:19', NULL),
+(3, 'Lawson Flatley', '632', 1, 1, 1, 'pending', 1, '2015-05-04', 1, '2023-10-30 14:12:45', '2023-10-30 14:12:45', NULL),
+(4, 'Tierra Welch', '615', 1, 1, 1, 'pending', 6, '1987-03-07', 1, '2023-10-30 14:12:45', '2023-10-30 14:12:45', NULL),
+(5, 'Norwood Bins', '269', 1, 1, 1, 'pending', 9, '1989-07-04', 1, '2023-10-30 14:12:45', '2023-10-30 14:12:45', NULL),
+(6, 'Narciso Conn', '256', 1, 1, 1, 'pending', 4, '1982-03-16', 1, '2023-10-30 14:12:45', '2023-10-30 14:12:45', NULL),
+(7, 'Bret Kuhn', '912', 1, 1, 1, 'pending', 6, '2012-11-01', 1, '2023-10-30 14:12:45', '2023-10-30 14:12:45', NULL),
+(8, 'Dr. Esteban Prosacco', '491', 1, 1, 1, 'pending', 4, '2016-12-07', 1, '2023-10-30 14:12:45', '2023-10-30 14:12:45', NULL),
+(9, 'Dr. Trycia O\'Conner DDS', '790', 1, 1, 1, 'pending', 8, '1991-10-04', 1, '2023-10-30 14:12:45', '2023-10-30 14:12:45', NULL),
+(10, 'Lisa Halvorson', '39', 1, 1, 1, 'pending', 9, '2004-06-08', 1, '2023-10-30 14:12:45', '2023-10-30 14:12:45', NULL),
+(11, 'Gilberto Pouros IV', '443', 1, 1, 1, 'pending', 9, '2012-04-27', 1, '2023-10-30 14:12:45', '2023-10-30 14:12:45', NULL),
+(12, 'Lambert Grant Sr.', '238', 1, 1, 1, 'pending', 7, '2002-04-04', 1, '2023-10-30 14:12:45', '2023-10-30 14:12:45', NULL),
+(13, 'Jayme Price Sr.', 'Voluptas reprehenderit atque perspiciatis perspiciatis officia molestias et. Laudantium dolor ut soluta exercitationem illum deserunt. Facere voluptas exercitationem nisi vitae officia aperiam quisquam. Neque autem reiciendis ea aut.', 1, 1, 1, 'pending', 5, '1992-08-31', 1, '2023-10-30 14:15:37', '2023-10-30 14:15:37', NULL),
+(14, 'Miss Jessica Quigley', 'Quo laboriosam et deleniti esse fugiat dolorem. Nostrum dolorem eveniet quae deleniti et minus. Unde quam deleniti nihil earum recusandae expedita quod.', 1, 1, 1, 'pending', 1, '1993-02-02', 1, '2023-10-30 14:15:37', '2023-10-30 14:15:37', NULL),
+(15, 'Prof. Abraham Swift DVM', 'Cupiditate odit repellat dolor deleniti qui rerum. Voluptatem ipsam modi culpa maxime sunt voluptatem rerum. Eum facere maiores voluptatibus optio. Provident nobis aliquam earum nihil ad quis eos.', 1, 1, 1, 'pending', 5, '2000-08-26', 1, '2023-10-30 14:15:37', '2023-10-30 14:15:37', NULL),
+(16, 'D\'angelo Tillman', 'Et delectus aut ea qui consequatur vitae. Ipsum in magni perspiciatis placeat deleniti.', 1, 1, 1, 'pending', 9, '1975-12-12', 1, '2023-10-30 14:15:37', '2023-10-30 14:15:37', NULL),
+(17, 'Abel King Jr.', 'Minima odit ad cupiditate et. Et reiciendis eligendi delectus totam. Inventore minus voluptatibus nihil amet. Reprehenderit voluptate ipsum aliquid sapiente rerum qui. Sit sint perferendis accusantium et quo officiis.', 1, 1, 1, 'pending', 2, '2020-04-05', 1, '2023-10-30 14:15:37', '2023-10-30 14:15:37', NULL),
+(18, 'Miss Clara Pagac', 'Laudantium excepturi numquam unde et. Voluptas nesciunt necessitatibus dolor fugiat voluptatem. Ipsa et omnis rerum. Doloremque sed veniam et eum laborum quisquam vel nostrum.', 1, 1, 1, 'pending', 10, '1979-12-03', 1, '2023-10-30 14:15:37', '2023-10-30 14:15:37', NULL),
+(19, 'Terrence Grady', 'Fugiat qui eos provident molestiae et consequatur recusandae. Nulla saepe ipsum quia commodi hic laboriosam. Animi maxime maxime quos soluta.', 1, 1, 1, 'pending', 2, '1992-11-16', 1, '2023-10-30 14:15:37', '2023-10-30 14:15:37', NULL),
+(20, 'Jaylon Greenholt', 'Unde quia fugit hic eos explicabo. Voluptatem tenetur error ut provident animi reprehenderit et. Quas consequatur eaque qui modi voluptatem non.', 1, 1, 1, 'pending', 7, '1993-01-03', 1, '2023-10-30 14:15:37', '2023-10-30 14:15:37', NULL),
+(21, 'Prof. Lewis Rowe', 'Et nesciunt harum corporis. Repudiandae doloremque fugit quia. A fuga perferendis voluptas eos aut.', 1, 1, 1, 'pending', 1, '2017-04-20', 1, '2023-10-30 14:15:37', '2023-10-30 14:15:37', NULL),
+(22, 'Clarabelle Gorczany', 'Distinctio animi similique odio et excepturi. Ratione veniam nam et aut consequuntur ipsam aut.', 1, 1, 1, 'pending', 10, '2000-07-29', 1, '2023-10-30 14:15:37', '2023-10-30 14:15:37', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `blogtags`
+--
+
+CREATE TABLE `blogtags` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `tag_name` varchar(50) NOT NULL,
+  `tag_code` varchar(5) NOT NULL,
+  `is_active` tinyint(4) DEFAULT 1,
+  `description` varchar(50) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `blogtags`
+--
+
+INSERT INTO `blogtags` (`id`, `tag_name`, `tag_code`, `is_active`, `description`, `created_at`, `updated_at`, `deleted_at`) VALUES
+(1, 'flowers', '001', 1, 'for testing purpose', '2023-10-30 13:09:02', '2023-10-30 13:09:02', NULL),
+(2, 'Flossie Schoen', '631', 1, 'Iste et.', '2023-10-30 14:10:13', '2023-10-30 14:10:13', NULL),
+(3, 'Julien Larson', '328', 1, 'Quasi sed.', '2023-10-30 14:15:03', '2023-10-30 14:15:03', NULL),
+(4, 'Shanon Berge', '302', 1, 'Ut.', '2023-10-30 14:15:03', '2023-10-30 14:15:03', NULL),
+(5, 'Tessie Goldner', '702', 1, 'Nostrum.', '2023-10-30 14:15:03', '2023-10-30 14:15:03', NULL),
+(6, 'Destiny Bode', '19', 1, 'Voluptas.', '2023-10-30 14:15:03', '2023-10-30 14:15:03', NULL),
+(7, 'Augustine Kuhlman', '918', 1, 'Ut et.', '2023-10-30 14:15:03', '2023-10-30 14:15:03', NULL),
+(8, 'Brittany Hand', '466', 1, 'Et enim.', '2023-10-30 14:15:03', '2023-10-30 14:15:03', NULL),
+(9, 'Rosemary Yost DDS', '923', 1, 'Illo.', '2023-10-30 14:15:03', '2023-10-30 14:15:03', NULL),
+(10, 'Derrick Haag DDS', '505', 1, 'Dolores.', '2023-10-30 14:15:03', '2023-10-30 14:15:03', NULL),
+(11, 'Simone Abernathy', '451', 1, 'In.', '2023-10-30 14:15:03', '2023-10-30 14:15:03', NULL),
+(12, 'Mr. Dion Adams', '540', 1, 'Veritatis.', '2023-10-30 14:15:03', '2023-10-30 14:15:03', NULL);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `brands`
 --
 
@@ -386,8 +612,7 @@ INSERT INTO `categories` (`id`, `parent_id`, `slug`, `position`, `is_searchable`
 (22, 3, 'main-garland', NULL, 0, 1, '2023-08-14 07:46:50', '2023-08-14 07:46:50'),
 (23, 3, 'bouquet', NULL, 0, 1, '2023-08-14 07:47:17', '2023-08-14 07:47:17'),
 (24, 3, 'hand-bouquet', NULL, 0, 1, '2023-08-14 07:47:48', '2023-08-14 07:47:48'),
-(25, 3, 'hand-bouquet-1yQ0zKX4', NULL, 0, 1, '2023-08-14 07:48:03', '2023-08-14 07:48:03'),
-(26, 23, 'with-vase', NULL, 0, 1, '2023-08-14 08:05:30', '2023-08-14 08:05:30');
+(25, 3, 'hand-bouquet-1yQ0zKX4', NULL, 0, 1, '2023-08-14 07:48:03', '2023-08-14 07:48:03');
 
 -- --------------------------------------------------------
 
@@ -421,8 +646,31 @@ INSERT INTO `category_translations` (`id`, `category_id`, `locale`, `name`) VALU
 (22, 22, 'en', 'Main Garland'),
 (23, 23, 'en', 'Bouquet'),
 (24, 24, 'en', 'Hand Bouquet'),
-(25, 25, 'en', 'Loose Flowers'),
-(26, 26, 'en', 'With Vase');
+(25, 25, 'en', 'Loose Flowers');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `countries`
+--
+
+CREATE TABLE `countries` (
+  `countryId` int(100) NOT NULL,
+  `countryUUID` char(36) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL,
+  `countryCode` varchar(255) NOT NULL,
+  `countryName` varchar(255) NOT NULL,
+  `isEnable` tinyint(1) DEFAULT NULL,
+  `dialCode` varchar(255) NOT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `countries`
+--
+
+INSERT INTO `countries` (`countryId`, `countryUUID`, `countryCode`, `countryName`, `isEnable`, `dialCode`, `createdAt`, `updatedAt`) VALUES
+(1, '27c66275-e9da-45c8-9c72-142ab11b168e', 'IND', 'India', 1, '+91', '2023-11-06 12:19:38', '2023-11-06 12:19:38');
 
 -- --------------------------------------------------------
 
@@ -459,7 +707,10 @@ INSERT INTO `coupons` (`id`, `code`, `value`, `is_percent`, `free_shipping`, `mi
 (3, 'ShipFree0114', '25.0000', 0, 1, '100.0000', NULL, 10, 1, 1, 1, NULL, NULL, NULL, '2023-08-24 13:14:17', '2023-08-24 13:27:43'),
 (4, 'FSOFF00147', '35.0000', 1, 1, NULL, NULL, NULL, NULL, 2, 1, '2023-08-22', '2023-08-25', NULL, '2023-08-24 13:18:17', '2023-08-25 14:22:07'),
 (5, 'n157y123', '100.0000', 1, 0, NULL, NULL, 5, 5, 3, 1, '2023-08-25', '2023-09-01', NULL, '2023-08-25 09:32:04', '2023-08-25 09:50:36'),
-(6, 'OONAMFEST0187', '100.0000', 0, 0, NULL, NULL, NULL, NULL, 0, 1, '2023-08-27', '2023-08-31', NULL, '2023-08-28 09:27:40', '2023-08-28 09:27:46');
+(6, 'OONAMFEST0187', '50.0000', 0, 0, NULL, NULL, NULL, NULL, 2, 1, '2023-10-15', '2023-11-16', NULL, '2023-08-28 09:27:40', '2023-11-03 09:32:39'),
+(7, 'PFEST1023', '25.0000', 1, 0, '50.0000', '250.0000', 50, 10, 0, 1, NULL, NULL, NULL, '2023-10-12 07:27:21', '2023-10-12 07:27:54'),
+(8, 'NovOFF23', '60.0000', 0, 0, NULL, NULL, NULL, NULL, 0, 1, '2023-11-01', '2023-11-30', NULL, '2023-11-02 09:07:20', '2023-11-03 09:43:29'),
+(9, 'NOVOFF23', '11.0000', 1, 0, NULL, NULL, 100, 5, 2, 1, '2023-11-01', '2023-11-30', NULL, '2023-11-02 09:07:56', '2023-11-17 10:56:56');
 
 -- --------------------------------------------------------
 
@@ -472,6 +723,13 @@ CREATE TABLE `coupon_categories` (
   `category_id` int(10) UNSIGNED NOT NULL,
   `exclude` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `coupon_categories`
+--
+
+INSERT INTO `coupon_categories` (`coupon_id`, `category_id`, `exclude`) VALUES
+(9, 19, 1);
 
 -- --------------------------------------------------------
 
@@ -508,7 +766,10 @@ INSERT INTO `coupon_translations` (`id`, `coupon_id`, `locale`, `name`) VALUES
 (3, 3, 'en', 'Free Shipping'),
 (4, 4, 'en', 'FestiveOff'),
 (5, 5, 'en', 'New Year'),
-(6, 6, 'en', 'Oonam Fest');
+(6, 6, 'en', 'Oonam Fest'),
+(7, 7, 'en', 'Pooja Festival'),
+(8, 9, 'en', 'November offer'),
+(9, 8, 'en', 'NovOFF23');
 
 -- --------------------------------------------------------
 
@@ -576,7 +837,9 @@ INSERT INTO `cross_sell_products` (`product_id`, `cross_sell_product_id`) VALUES
 (24, 13),
 (24, 14),
 (24, 15),
-(24, 16);
+(24, 16),
+(26, 16),
+(26, 17);
 
 -- --------------------------------------------------------
 
@@ -609,36 +872,49 @@ INSERT INTO `currency_rates` (`id`, `currency`, `rate`, `created_at`, `updated_a
 CREATE TABLE `customer_reward_points` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `customer_id` int(11) NOT NULL,
-  `reward_type` enum('birthday','firstsignup','firstorder','firstpayment','firstreview','manualoffer') DEFAULT NULL,
+  `reward_type` enum('birthday','signup','firstorder','firstpayment','firstreview','manualoffer','order') DEFAULT NULL,
+  `order_id` int(10) UNSIGNED DEFAULT NULL,
+  `review_id` int(10) UNSIGNED DEFAULT NULL,
   `reward_points_earned` int(11) DEFAULT NULL,
   `reward_points_claimed` int(11) DEFAULT NULL,
   `expiry_date` datetime DEFAULT NULL,
-  `deleted_at` timestamp NULL DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `deleted_at` datetime DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT NULL ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `customer_reward_points`
 --
 
-INSERT INTO `customer_reward_points` (`id`, `customer_id`, `reward_type`, `reward_points_earned`, `reward_points_claimed`, `expiry_date`, `deleted_at`, `created_at`, `updated_at`) VALUES
-(1, 5, 'firstsignup', 100, NULL, '2023-09-27 15:45:09', NULL, '2023-09-20 08:23:36', '2023-09-29 08:23:36'),
-(2, 2, 'firstreview', 98, NULL, '2023-10-11 13:53:36', NULL, '2023-09-29 08:23:36', '2023-09-29 08:23:36'),
-(3, 3, 'firstsignup', 35, NULL, '2023-10-11 13:53:36', NULL, '2023-09-29 08:23:36', '2023-09-29 08:23:36'),
-(4, 5, 'firstreview', 250, NULL, '2023-09-29 13:53:36', NULL, '2023-09-21 10:15:55', '2023-09-29 08:23:36'),
-(5, 5, NULL, NULL, 50, NULL, NULL, '2023-09-20 08:23:36', '2023-09-29 08:23:36'),
-(6, 7, 'firstsignup', 57, NULL, '2023-10-11 13:53:36', NULL, '2023-09-29 08:23:36', '2023-09-29 08:23:36'),
-(7, 7, 'firstreview', 53, NULL, '2023-10-11 13:53:36', NULL, '2023-09-29 08:23:36', '2023-09-29 08:23:36'),
-(8, 3, 'firstsignup', 19, NULL, '2023-10-11 13:53:36', NULL, '2023-09-29 08:23:36', '2023-09-29 08:23:36'),
-(9, 6, 'firstorder', 89, NULL, '2023-10-11 13:53:36', NULL, '2023-09-29 08:23:36', '2023-09-29 08:23:36'),
-(10, 3, NULL, NULL, 18, NULL, NULL, '2023-09-29 08:23:36', '2023-09-29 08:23:36'),
-(11, 5, NULL, NULL, 100, NULL, NULL, '2023-09-29 05:43:36', '2023-09-29 08:23:36'),
-(12, 5, 'manualoffer', 200, NULL, '2023-10-04 17:33:03', NULL, '2023-09-29 08:23:36', '2023-09-29 08:23:36'),
-(13, 2, 'manualoffer', 110, NULL, '2023-10-12 13:05:24', NULL, '2023-09-30 07:35:24', '2023-09-30 08:04:56'),
-(14, 5, 'birthday', 150, NULL, '2023-10-03 14:02:59', NULL, '2023-09-23 08:23:36', '2023-09-23 08:23:36'),
-(15, 5, NULL, NULL, 150, NULL, NULL, '2023-10-01 08:43:36', '2023-10-01 08:23:36'),
-(16, 5, 'manualoffer', 200, NULL, '2023-10-13 17:33:03', NULL, '2023-09-29 10:20:36', '2023-09-29 10:20:36');
+INSERT INTO `customer_reward_points` (`id`, `customer_id`, `reward_type`, `order_id`, `review_id`, `reward_points_earned`, `reward_points_claimed`, `expiry_date`, `deleted_at`, `created_at`, `updated_at`) VALUES
+(1, 5, 'manualoffer', NULL, NULL, 100, NULL, '2023-10-01 17:57:10', NULL, '2023-09-21 17:57:10', '2023-10-05 18:33:49'),
+(2, 4, 'manualoffer', NULL, NULL, 150, NULL, '2023-10-17 17:57:52', NULL, '2023-10-05 17:57:52', '2023-11-02 17:05:49'),
+(12, 4, '', NULL, NULL, NULL, 50, NULL, NULL, '2023-09-26 18:41:29', '2023-11-02 17:05:49'),
+(15, 5, '', NULL, NULL, NULL, 50, NULL, NULL, '2023-10-02 18:41:29', NULL),
+(18, 5, 'manualoffer', NULL, NULL, 200, NULL, '2023-11-01 18:41:29', NULL, '2023-09-02 18:41:30', '2023-10-31 09:27:23'),
+(20, 5, NULL, NULL, NULL, NULL, 100, NULL, NULL, '2023-10-18 18:41:29', '2023-10-31 09:28:13'),
+(21, 7, 'manualoffer', NULL, NULL, 100, NULL, '2023-10-18 19:31:17', NULL, '2023-10-06 19:31:17', '2023-10-06 19:31:17'),
+(22, 5, 'manualoffer', NULL, NULL, 140, NULL, '2023-10-29 13:42:57', NULL, '2023-10-07 13:42:57', '2023-10-31 09:28:58'),
+(23, 2, 'manualoffer', NULL, NULL, 200, NULL, '2023-10-25 14:25:11', NULL, '2023-10-13 14:25:11', '2023-10-13 14:25:38'),
+(40, 8, NULL, NULL, NULL, NULL, 200, NULL, NULL, '2023-10-28 16:41:01', '2023-10-28 16:41:01'),
+(41, 8, NULL, NULL, NULL, NULL, 0, NULL, NULL, '2023-10-28 16:43:38', '2023-10-28 16:43:38'),
+(43, 22, 'signup', NULL, NULL, 50, NULL, '2023-11-11 20:08:17', NULL, '2023-10-30 17:38:17', NULL),
+(44, 4, NULL, NULL, NULL, NULL, 70, NULL, NULL, '2023-10-30 21:05:01', '2023-10-31 16:15:38'),
+(45, 4, NULL, NULL, NULL, NULL, 100, NULL, NULL, '2023-10-30 21:08:33', '2023-10-30 21:08:33'),
+(46, 4, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2023-10-31 14:38:12', '2023-10-31 14:38:12'),
+(47, 4, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2023-10-31 14:39:25', '2023-10-31 14:39:25'),
+(48, 4, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2023-10-31 15:28:27', '2023-10-31 15:28:27'),
+(49, 4, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2023-10-31 15:30:37', '2023-10-31 15:30:37'),
+(50, 4, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2023-10-31 15:31:26', '2023-10-31 15:31:26'),
+(51, 4, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2023-10-31 15:42:15', '2023-10-31 15:42:15'),
+(52, 4, 'firstorder', NULL, NULL, 100, NULL, '2023-11-12 15:42:17', NULL, '2023-10-31 13:12:17', NULL),
+(53, 4, 'firstorder', NULL, NULL, 100, NULL, '2023-11-12 15:42:27', NULL, '2023-10-31 13:12:27', NULL),
+(54, 4, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2023-10-31 17:07:10', '2023-10-31 17:07:10'),
+(55, 4, NULL, NULL, NULL, NULL, 25, NULL, NULL, '2023-10-31 18:49:24', '2023-10-31 18:49:24'),
+(60, 4, NULL, NULL, NULL, NULL, 5, NULL, NULL, '2023-11-11 13:31:28', '2023-11-11 13:31:28'),
+(61, 23, 'signup', NULL, NULL, 50, NULL, '2023-11-29 17:24:21', NULL, '2023-11-17 14:54:21', NULL),
+(62, 23, NULL, NULL, NULL, NULL, 20, NULL, NULL, '2023-11-17 17:50:57', '2023-11-17 17:50:57');
 
 -- --------------------------------------------------------
 
@@ -660,7 +936,43 @@ INSERT INTO `default_addresses` (`id`, `customer_id`, `address_id`) VALUES
 (1, 1, 6),
 (2, 5, 4),
 (3, 4, 5),
-(4, 6, 7);
+(4, 6, 7),
+(5, 7, 9),
+(6, 8, 10),
+(7, 23, 12);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `emails`
+--
+
+CREATE TABLE `emails` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `subscribers` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`subscribers`)),
+  `subject` varchar(191) NOT NULL,
+  `template` varchar(191) NOT NULL,
+  `date` datetime DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `emails`
+--
+
+INSERT INTO `emails` (`id`, `subscribers`, `subject`, `template`, `date`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, '[\"prabakaranpbk@gmail.com\",\"prabakaran@santhila.co\"]', 'Greetings', 'Welcome Mail', NULL, 0, '2023-11-01 14:05:21', '2023-11-01 14:05:21'),
+(2, '[\"prabakaranpbk@gmail.com\",\"prabakaran@santhila.co\"]', 'TEst', 'Welcome Mail', NULL, 0, '2023-11-01 14:18:45', '2023-11-01 14:18:45'),
+(3, '[\"prabakaranpbk@gmail.com\",\"prabakaran@santhila.co\"]', 'TEst', 'Welcome Mail', NULL, 0, '2023-11-01 14:19:26', '2023-11-01 14:19:26'),
+(4, '[\"prabakaranpbk@gmail.com\",\"prabakaran@santhila.co\"]', 'TEst', 'Welcome Mail', NULL, 0, '2023-11-01 14:19:40', '2023-11-01 14:19:40'),
+(5, '[\"prabakaranpbk@gmail.com\",\"prabakaran@santhila.co\"]', 'TEst', 'Welcome Mail', NULL, 0, '2023-11-01 14:19:52', '2023-11-01 14:19:52'),
+(6, '[\"prabakaranpbk@gmail.com\",\"prabakaran@santhila.co\"]', 'TEst', 'Welcome Mail', NULL, 0, '2023-11-01 14:20:05', '2023-11-01 14:20:05'),
+(7, '[\"prabakaranpbk@gmail.com\",\"prabakaran@santhila.co\"]', 'TEst', 'Welcome Mail', NULL, 0, '2023-11-01 14:21:02', '2023-11-01 14:21:02'),
+(8, '[\"prabakaran@santhila.co\"]', 'Test', 'Welcome Mail', NULL, 0, '2023-11-01 14:22:40', '2023-11-01 14:22:40'),
+(9, '[\"prabakaranpbk@gmail.com\",\"prabakaran@santhila.co\"]', 'test', 'Welcome Mail', NULL, 0, '2023-11-02 09:09:36', '2023-11-02 09:09:36'),
+(10, '[\"prabakaranpbk@gmail.com\",\"prabakaran@santhila.co\"]', 'test', 'Welcome Mail', NULL, 0, '2023-11-02 09:09:44', '2023-11-02 09:09:44');
 
 -- --------------------------------------------------------
 
@@ -713,11 +1025,6 @@ INSERT INTO `entity_files` (`id`, `file_id`, `entity_type`, `entity_id`, `zone`,
 (254, 187, 'Modules\\Product\\Entities\\Product', 17, 'additional_images', '2023-08-14 12:06:21', '2023-08-14 12:06:21'),
 (255, 186, 'Modules\\Product\\Entities\\Product', 17, 'additional_images', '2023-08-14 12:06:21', '2023-08-14 12:06:21'),
 (256, 185, 'Modules\\Product\\Entities\\Product', 17, 'additional_images', '2023-08-14 12:06:21', '2023-08-14 12:06:21'),
-(271, 167, 'Modules\\Product\\Entities\\Product', 14, 'base_image', '2023-08-14 12:17:35', '2023-08-14 12:17:35'),
-(272, 167, 'Modules\\Product\\Entities\\Product', 14, 'additional_images', '2023-08-14 12:17:35', '2023-08-14 12:17:35'),
-(273, 165, 'Modules\\Product\\Entities\\Product', 14, 'additional_images', '2023-08-14 12:17:35', '2023-08-14 12:17:35'),
-(274, 166, 'Modules\\Product\\Entities\\Product', 14, 'additional_images', '2023-08-14 12:17:35', '2023-08-14 12:17:35'),
-(275, 164, 'Modules\\Product\\Entities\\Product', 14, 'additional_images', '2023-08-14 12:17:35', '2023-08-14 12:17:35'),
 (276, 198, 'Modules\\Product\\Entities\\Product', 13, 'base_image', '2023-08-14 12:19:42', '2023-08-14 12:19:42'),
 (277, 198, 'Modules\\Product\\Entities\\Product', 13, 'additional_images', '2023-08-14 12:19:42', '2023-08-14 12:19:42'),
 (278, 156, 'Modules\\Product\\Entities\\Product', 13, 'additional_images', '2023-08-14 12:19:42', '2023-08-14 12:19:42'),
@@ -753,8 +1060,6 @@ INSERT INTO `entity_files` (`id`, `file_id`, `entity_type`, `entity_id`, `zone`,
 (408, 116, 'Modules\\Product\\Entities\\Product', 3, 'base_image', '2023-08-25 06:55:49', '2023-08-25 06:55:49'),
 (409, 116, 'Modules\\Product\\Entities\\Product', 3, 'additional_images', '2023-08-25 06:55:49', '2023-08-25 06:55:49'),
 (410, 33, 'Modules\\Product\\Entities\\Product', 3, 'additional_images', '2023-08-25 06:55:49', '2023-08-25 06:55:49'),
-(411, 34, 'Modules\\Product\\Entities\\Product', 2, 'base_image', '2023-08-25 06:56:14', '2023-08-25 06:56:14'),
-(412, 34, 'Modules\\Product\\Entities\\Product', 2, 'additional_images', '2023-08-25 06:56:14', '2023-08-25 06:56:14'),
 (422, 132, 'Modules\\Product\\Entities\\Product', 8, 'base_image', '2023-08-25 06:58:49', '2023-08-25 06:58:49'),
 (423, 134, 'Modules\\Product\\Entities\\Product', 8, 'additional_images', '2023-08-25 06:58:49', '2023-08-25 06:58:49'),
 (424, 133, 'Modules\\Product\\Entities\\Product', 8, 'additional_images', '2023-08-25 06:58:49', '2023-08-25 06:58:49'),
@@ -787,7 +1092,20 @@ INSERT INTO `entity_files` (`id`, `file_id`, `entity_type`, `entity_id`, `zone`,
 (566, 219, 'Modules\\Product\\Entities\\Product', 24, 'additional_images', '2023-09-01 15:30:44', '2023-09-01 15:30:44'),
 (567, 218, 'Modules\\Product\\Entities\\Product', 24, 'additional_images', '2023-09-01 15:30:44', '2023-09-01 15:30:44'),
 (568, 217, 'Modules\\Product\\Entities\\Product', 24, 'additional_images', '2023-09-01 15:30:44', '2023-09-01 15:30:44'),
-(569, 216, 'Modules\\Product\\Entities\\Product', 24, 'additional_images', '2023-09-01 15:30:44', '2023-09-01 15:30:44');
+(569, 216, 'Modules\\Product\\Entities\\Product', 24, 'additional_images', '2023-09-01 15:30:44', '2023-09-01 15:30:44'),
+(570, 221, 'Modules\\Product\\Entities\\Product', 25, 'base_image', '2023-10-06 14:04:57', '2023-10-06 14:04:57'),
+(583, 167, 'Modules\\Product\\Entities\\Product', 14, 'base_image', '2023-11-03 10:12:19', '2023-11-03 10:12:19'),
+(584, 167, 'Modules\\Product\\Entities\\Product', 14, 'additional_images', '2023-11-03 10:12:19', '2023-11-03 10:12:19'),
+(585, 165, 'Modules\\Product\\Entities\\Product', 14, 'additional_images', '2023-11-03 10:12:19', '2023-11-03 10:12:19'),
+(586, 166, 'Modules\\Product\\Entities\\Product', 14, 'additional_images', '2023-11-03 10:12:19', '2023-11-03 10:12:19'),
+(587, 164, 'Modules\\Product\\Entities\\Product', 14, 'additional_images', '2023-11-03 10:12:19', '2023-11-03 10:12:19'),
+(588, 34, 'Modules\\Product\\Entities\\Product', 2, 'base_image', '2023-11-03 10:14:11', '2023-11-03 10:14:11'),
+(589, 34, 'Modules\\Product\\Entities\\Product', 2, 'additional_images', '2023-11-03 10:14:11', '2023-11-03 10:14:11'),
+(590, 185, 'Modules\\Product\\Entities\\Product', 26, 'base_image', '2023-11-17 10:37:40', '2023-11-17 10:37:40'),
+(591, 189, 'Modules\\Product\\Entities\\Product', 26, 'additional_images', '2023-11-17 10:37:40', '2023-11-17 10:37:40'),
+(592, 188, 'Modules\\Product\\Entities\\Product', 26, 'additional_images', '2023-11-17 10:37:40', '2023-11-17 10:37:40'),
+(593, 226, 'Modules\\Product\\Entities\\Product', 27, 'base_image', '2023-11-17 10:52:57', '2023-11-17 10:52:57'),
+(594, 226, 'Modules\\Product\\Entities\\Product', 27, 'additional_images', '2023-11-17 10:52:57', '2023-11-17 10:52:57');
 
 -- --------------------------------------------------------
 
@@ -992,7 +1310,13 @@ INSERT INTO `files` (`id`, `user_id`, `filename`, `disk`, `path`, `extension`, `
 (217, 1, 'arali.jpg', 'public_storage', 'media/dR5jWgW2H3A3UTrBEzSndDzfQy38z1nG2TYacsee.jpg', 'jpg', 'image/jpeg', '14813', '2023-08-28 09:32:04', '2023-08-28 09:32:04'),
 (218, 1, 'Flower garland with pink oleander.jpg', 'public_storage', 'media/wG4Tz4yMF6nowQRM7YmRC7NG7jAiOq5cMuOVFTLj.jpg', 'jpg', 'image/jpeg', '13434', '2023-08-28 09:32:05', '2023-08-28 09:32:05'),
 (219, 1, 'Flower garland with pink oleander-1.jpg', 'public_storage', 'media/sxENymSNMxnjUX5nFipqnFB1qOAxog5Mb8rPXozc.jpg', 'jpg', 'image/jpeg', '11505', '2023-08-28 09:32:06', '2023-08-28 09:32:06'),
-(220, 1, 'images (24).jpg', 'public_storage', 'media/AfZcsfc5RZJC5xVI041xj0GiVatVVqm6G1nmTR5s.jpg', 'jpg', 'image/jpeg', '10591', '2023-08-28 09:32:07', '2023-08-28 09:32:07');
+(220, 1, 'images (24).jpg', 'public_storage', 'media/AfZcsfc5RZJC5xVI041xj0GiVatVVqm6G1nmTR5s.jpg', 'jpg', 'image/jpeg', '10591', '2023-08-28 09:32:07', '2023-08-28 09:32:07'),
+(221, 1, 'aps flora logo.jpg', 'public_storage', 'media/cZt36CcWiiQ1NWAKLHcLm4JwgjhAkjRZrkfBO2L0.jpg', 'jpg', 'image/jpeg', '85144', '2023-10-06 07:57:18', '2023-10-06 07:57:18'),
+(222, 6, 'bouquet-flowers_1339-5490.jpg', 'public_storage', 'media/2XEDwhCIFh5DhYTZvFT9NVbZX4TRRPcJpO8eBNYq.jpg', 'jpg', 'image/jpeg', '96823', '2023-10-17 14:07:41', '2023-10-17 14:07:41'),
+(223, 6, 'beautiful-bouquet-flowers.jpg', 'public_storage', 'media/0PEdgq0q0BMrxXrf7kljOIZEJxZxYSZpb9ZnM8Kp.jpg', 'jpg', 'image/jpeg', '6454035', '2023-10-17 14:07:43', '2023-10-17 14:07:43'),
+(224, 6, 'bouquet-stands-table.jpg', 'public_storage', 'media/P5ncFshOaXXkuVVsZGgRFTJVBw41cqVOJJ6Bvcvw.jpg', 'jpg', 'image/jpeg', '4321415', '2023-10-17 14:07:45', '2023-10-17 14:07:45'),
+(225, 1, 'APS-Logo.png', 'public_storage', 'media/gtetad03z6bbNcFtgvibdjWnHiMImU3O1YOwroYi.png', 'png', 'image/png', '164725', '2023-10-17 14:15:01', '2023-10-17 14:15:01'),
+(226, 6, 'violet_bouquet.jpg', 'public_storage', 'media/CgcvQJ6ajO3RtR3wUOSWFt9yF3c8jX8SMkWtORyu.jpg', 'jpg', 'image/jpeg', '9472', '2023-11-17 10:52:38', '2023-11-17 10:52:38');
 
 -- --------------------------------------------------------
 
@@ -1037,7 +1361,8 @@ CREATE TABLE `flash_sales` (
 --
 
 INSERT INTO `flash_sales` (`id`, `created_at`, `updated_at`) VALUES
-(3, '2023-08-10 09:22:57', '2023-08-10 09:22:57');
+(3, '2023-08-10 09:22:57', '2023-08-10 09:22:57'),
+(4, '2023-10-17 08:11:27', '2023-10-17 08:11:27');
 
 -- --------------------------------------------------------
 
@@ -1062,7 +1387,9 @@ CREATE TABLE `flash_sale_products` (
 INSERT INTO `flash_sale_products` (`id`, `flash_sale_id`, `product_id`, `end_date`, `price`, `qty`, `position`) VALUES
 (1, 3, 1, '2023-08-28', '20.0000', 5, 1),
 (2, 3, 2, '2023-08-28', '25.0000', 5, 0),
-(3, 3, 14, '2023-08-29', '18.0000', 12, 2);
+(3, 3, 14, '2023-08-29', '18.0000', 12, 2),
+(4, 4, 1, '2023-10-31', '56.0000', 2000, 0),
+(5, 4, 3, '2023-10-31', '98.0000', 2500, 1);
 
 -- --------------------------------------------------------
 
@@ -1105,7 +1432,8 @@ CREATE TABLE `flash_sale_translations` (
 --
 
 INSERT INTO `flash_sale_translations` (`id`, `flash_sale_id`, `locale`, `campaign_name`) VALUES
-(3, 3, 'en', 'aadi sale');
+(3, 3, 'en', 'aadi sale'),
+(4, 4, 'en', 'APS Launching Offer');
 
 -- --------------------------------------------------------
 
@@ -1138,6 +1466,108 @@ INSERT INTO `galleries` (`id`, `user_id`, `videoID`, `videoFullURL`, `videoTitle
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `lmscompany`
+--
+
+CREATE TABLE `lmscompany` (
+  `cpId` int(100) NOT NULL,
+  `cpUUID` char(36) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL,
+  `cpCompanyName` varchar(255) NOT NULL,
+  `cpAdminName` varchar(255) NOT NULL,
+  `cpAdminMail` varchar(255) NOT NULL,
+  `cpIndustry` varchar(255) NOT NULL,
+  `cpCountry` varchar(255) NOT NULL,
+  `cpCreatedUserId` int(11) NOT NULL,
+  `cpEditedUserId` int(11) DEFAULT NULL,
+  `cpCreatedDate` datetime NOT NULL,
+  `cpEditedDate` datetime NOT NULL,
+  `cpStatus` tinyint(1) DEFAULT NULL,
+  `cpDeleteStatus` tinyint(1) DEFAULT NULL,
+  `cpIpAddress` varchar(255) NOT NULL,
+  `cpDeviceType` varchar(255) NOT NULL,
+  `cpUserAgent` varchar(255) NOT NULL,
+  `cpTimeStamp` datetime DEFAULT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `lmscompany`
+--
+
+INSERT INTO `lmscompany` (`cpId`, `cpUUID`, `cpCompanyName`, `cpAdminName`, `cpAdminMail`, `cpIndustry`, `cpCountry`, `cpCreatedUserId`, `cpEditedUserId`, `cpCreatedDate`, `cpEditedDate`, `cpStatus`, `cpDeleteStatus`, `cpIpAddress`, `cpDeviceType`, `cpUserAgent`, `cpTimeStamp`, `createdAt`, `updatedAt`) VALUES
+(1, '27c66275-e9da-45c8-9c72-142ab11b168e', 'advance learning', 'amirkhan', 'amir@al.in', 'textails', '1', 1, 0, '2023-11-08 05:52:09', '2023-11-08 05:52:09', 0, 0, '', '', '', '2023-11-08 04:54:58', '0000-00-00 00:00:00', '0000-00-00 00:00:00');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lmscreators`
+--
+
+CREATE TABLE `lmscreators` (
+  `ctId` int(100) NOT NULL,
+  `ctUUID` char(36) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL,
+  `ctName` varchar(255) NOT NULL,
+  `ctMail` varchar(255) NOT NULL,
+  `ctDesignation` varchar(255) NOT NULL,
+  `ctAge` int(100) NOT NULL,
+  `ctGender` enum('Male','Female','Others') NOT NULL DEFAULT 'Male',
+  `ctStatus` enum('Active','Inactive') NOT NULL DEFAULT 'Active',
+  `ctCreatedDate` datetime NOT NULL,
+  `ctEditedDate` datetime DEFAULT NULL,
+  `ctCreateAdminDate` datetime DEFAULT NULL,
+  `ctEditAdminDate` datetime DEFAULT NULL,
+  `ctDeleteStatus` enum('NO','YES') NOT NULL DEFAULT 'NO',
+  `ctIpAdderss` varchar(100) DEFAULT NULL,
+  `ctDeviceType` varchar(100) DEFAULT NULL,
+  `ctUserAgent` varchar(100) NOT NULL,
+  `ctTimeStamp` datetime DEFAULT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL,
+  `companyId` int(100) DEFAULT NULL,
+  `countryId` int(100) DEFAULT NULL,
+  `ctCreatedUserId` char(36) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL,
+  `ctEditedUserId` char(36) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL,
+  `ctCreateAdminUserId` char(36) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL,
+  `ctEditAdminUserId` char(36) CHARACTER SET latin1 COLLATE latin1_bin DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `lmscreators`
+--
+
+INSERT INTO `lmscreators` (`ctId`, `ctUUID`, `ctName`, `ctMail`, `ctDesignation`, `ctAge`, `ctGender`, `ctStatus`, `ctCreatedDate`, `ctEditedDate`, `ctCreateAdminDate`, `ctEditAdminDate`, `ctDeleteStatus`, `ctIpAdderss`, `ctDeviceType`, `ctUserAgent`, `ctTimeStamp`, `createdAt`, `updatedAt`, `companyId`, `countryId`, `ctCreatedUserId`, `ctEditedUserId`, `ctCreateAdminUserId`, `ctEditAdminUserId`) VALUES
+(1, 'd386ee03-ac11-42f8-999c-ba4484bfb28f', 'GIRIRAGHAVA', 'giriraghava1970@santhila.co', 'Tech Manager', 52, 'Male', 'Active', '2023-11-10 13:22:46', NULL, NULL, NULL, '', NULL, NULL, 'PostmanRuntime/7.35.0', '2023-11-10 13:22:46', '2023-11-10 13:22:46', '2023-11-10 13:22:46', 1, 1, NULL, NULL, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lmsplan`
+--
+
+CREATE TABLE `lmsplan` (
+  `plId` int(11) NOT NULL,
+  `plPlan` varchar(100) NOT NULL,
+  `plPlanType` enum('Days','Month','Year') NOT NULL,
+  `plValidityDays` bigint(20) NOT NULL,
+  `plPrice` int(100) NOT NULL,
+  `plCreatedUserId` bigint(20) NOT NULL,
+  `plEidtedUserId` bigint(20) DEFAULT NULL,
+  `plCreatedDate` datetime NOT NULL,
+  `plEidtedDate` datetime DEFAULT NULL,
+  `plStatus` enum('Active','Inactive') NOT NULL DEFAULT 'Active',
+  `plDeleteStatus` enum('NO','YES') NOT NULL DEFAULT 'NO',
+  `plIpAdderss` varchar(100) NOT NULL,
+  `plDeviceType` varchar(100) NOT NULL,
+  `plUserAgent` varchar(100) NOT NULL,
+  `plTimeStamp` datetime DEFAULT NULL,
+  `createdAt` datetime NOT NULL,
+  `updatedAt` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `menus`
 --
 
@@ -1159,7 +1589,9 @@ INSERT INTO `menus` (`id`, `is_active`, `created_at`, `updated_at`) VALUES
 (4, 1, '2023-08-11 05:44:06', '2023-08-11 05:44:06'),
 (5, 1, '2023-08-11 05:46:52', '2023-08-11 05:46:52'),
 (6, 1, '2023-08-11 07:15:27', '2023-08-11 07:15:27'),
-(7, 1, '2023-08-17 04:45:18', '2023-08-17 04:45:18');
+(7, 1, '2023-08-17 04:45:18', '2023-08-17 04:45:18'),
+(8, 1, '2023-10-17 14:22:17', '2023-10-17 14:22:17'),
+(9, 1, '2023-10-17 14:26:14', '2023-10-17 14:26:14');
 
 -- --------------------------------------------------------
 
@@ -1199,10 +1631,7 @@ INSERT INTO `menu_items` (`id`, `menu_id`, `parent_id`, `category_id`, `page_id`
 (9, 4, 8, NULL, 4, 'page', NULL, NULL, '_self', NULL, 0, 0, 1, '2023-08-11 05:44:25', '2023-08-11 05:44:25'),
 (10, 5, NULL, NULL, NULL, 'URL', NULL, NULL, '_self', 0, 1, 0, 1, '2023-08-11 05:46:52', '2023-08-11 05:46:52'),
 (11, 5, 10, NULL, 5, 'page', NULL, NULL, '_self', 1, 0, 0, 1, '2023-08-11 05:47:11', '2023-08-11 06:04:30'),
-(12, 5, 10, NULL, 3, 'page', NULL, NULL, '_self', 3, 0, 0, 1, '2023-08-11 05:55:52', '2023-08-11 06:04:32'),
-(13, 5, 10, NULL, 2, 'page', NULL, NULL, '_self', 2, 0, 0, 1, '2023-08-11 05:58:04', '2023-08-11 06:04:32'),
 (14, 5, 10, NULL, NULL, 'url', 'products', NULL, '_self', 0, 0, 0, 1, '2023-08-11 06:04:23', '2023-09-06 08:08:03'),
-(15, 5, 10, NULL, 4, 'page', NULL, NULL, '_self', 4, 0, 0, 1, '2023-08-11 06:07:20', '2023-08-17 05:10:47'),
 (16, 1, 1, 3, NULL, 'category', NULL, NULL, '_self', 0, 0, 0, 1, '2023-08-11 06:28:28', '2023-08-14 07:00:16'),
 (17, 1, 1, 1, NULL, 'category', NULL, NULL, '_self', 1, 0, 0, 1, '2023-08-11 06:28:49', '2023-08-14 07:00:55'),
 (18, 1, 1, 20, NULL, 'category', NULL, NULL, '_self', 2, 0, 0, 1, '2023-08-11 06:29:19', '2023-08-14 07:01:10'),
@@ -1229,9 +1658,24 @@ INSERT INTO `menu_items` (`id`, `menu_id`, `parent_id`, `category_id`, `page_id`
 (39, 7, NULL, NULL, NULL, 'URL', NULL, NULL, '_self', 0, 1, 0, 1, '2023-08-17 04:45:18', '2023-08-17 04:45:18'),
 (40, 7, 39, 1, NULL, 'category', NULL, NULL, '_self', 0, 0, 0, 1, '2023-08-17 04:45:36', '2023-08-28 09:21:19'),
 (41, 2, 4, NULL, 7, 'page', NULL, NULL, '_self', NULL, 0, 0, 1, '2023-08-17 05:07:47', '2023-08-17 05:07:47'),
-(42, 5, 10, NULL, 7, 'page', NULL, NULL, '_self', 5, 0, 0, 1, '2023-08-17 05:10:32', '2023-08-17 05:10:47'),
-(44, 5, 10, NULL, NULL, 'url', 'create_testimonials', NULL, '_self', 6, 0, 0, 1, '2023-09-06 07:04:24', '2023-09-29 09:12:11'),
-(45, 5, 10, NULL, NULL, 'url', 'http://192.168.1.20:3000/', NULL, '_self', 7, 0, 0, 1, '2023-09-19 10:25:15', '2023-09-29 09:12:37');
+(42, 5, 10, NULL, NULL, 'url', '#', NULL, '_self', 6, 0, 0, 1, '2023-08-17 05:10:32', '2023-10-17 14:04:13'),
+(44, 5, 10, NULL, NULL, 'url', 'create_testimonials', NULL, '_self', 5, 0, 0, 1, '2023-09-06 07:04:24', '2023-10-17 14:03:08'),
+(45, 5, 10, NULL, NULL, 'url', '/CustomizeProduct', NULL, '_blank', 7, 0, 0, 1, '2023-09-19 10:25:15', '2023-10-17 14:34:28'),
+(46, 8, NULL, NULL, NULL, 'URL', NULL, NULL, '_self', 0, 1, 0, 1, '2023-10-17 14:22:17', '2023-10-17 14:22:17'),
+(47, 8, 46, NULL, NULL, 'url', '#', NULL, '_self', 0, 0, 0, 1, '2023-10-17 14:22:50', '2023-10-17 14:24:21'),
+(48, 8, 46, NULL, NULL, 'url', '#', NULL, '_self', 1, 0, 0, 1, '2023-10-17 14:23:09', '2023-10-17 14:24:21'),
+(49, 8, 46, NULL, NULL, 'url', '#', NULL, '_self', 2, 0, 0, 1, '2023-10-17 14:23:24', '2023-10-17 14:24:21'),
+(50, 8, 46, NULL, NULL, 'url', '#', NULL, '_self', 3, 0, 0, 1, '2023-10-17 14:23:51', '2023-10-17 14:24:21'),
+(51, 8, 46, NULL, 2, 'page', '#', NULL, '_self', NULL, 0, 0, 1, '2023-10-17 14:24:17', '2023-10-17 14:24:25'),
+(52, 8, 46, NULL, 8, 'page', NULL, NULL, '_self', NULL, 0, 0, 1, '2023-10-17 14:24:48', '2023-10-17 14:24:48'),
+(53, 9, NULL, NULL, NULL, 'URL', NULL, NULL, '_self', 0, 1, 0, 1, '2023-10-17 14:26:14', '2023-10-17 14:26:14'),
+(54, 9, 53, NULL, 2, 'page', NULL, NULL, '_self', NULL, 0, 0, 1, '2023-10-17 14:26:36', '2023-10-17 14:26:36'),
+(55, 9, 53, NULL, 3, 'page', NULL, NULL, '_self', NULL, 0, 0, 1, '2023-10-17 14:26:52', '2023-10-17 14:26:52'),
+(56, 9, 53, NULL, 4, 'page', NULL, NULL, '_self', NULL, 0, 0, 1, '2023-10-17 14:27:05', '2023-10-17 14:27:05'),
+(57, 9, 53, NULL, 7, 'page', NULL, NULL, '_self', NULL, 0, 0, 1, '2023-10-17 14:27:31', '2023-10-17 14:27:31'),
+(58, 9, 53, NULL, NULL, 'url', '#', NULL, '_self', NULL, 0, 0, 1, '2023-10-17 14:27:54', '2023-10-17 14:27:54'),
+(59, 9, 53, NULL, NULL, 'url', 'create_testimonials', NULL, '_self', NULL, 0, 0, 1, '2023-10-17 14:28:11', '2023-10-17 14:28:11'),
+(60, 5, 10, NULL, NULL, 'url', 'account/blogs', NULL, '_blank', NULL, 0, 0, 1, '2023-10-30 13:48:16', '2023-10-30 14:34:14');
 
 -- --------------------------------------------------------
 
@@ -1260,10 +1704,7 @@ INSERT INTO `menu_item_translations` (`id`, `menu_item_id`, `locale`, `name`) VA
 (9, 9, 'en', 'FAQ'),
 (10, 10, 'en', 'root'),
 (11, 11, 'en', 'Brands'),
-(12, 12, 'en', 'Privacy Policy'),
-(13, 13, 'en', 'About Us'),
 (14, 14, 'en', 'Shop'),
-(15, 15, 'en', 'FAQ'),
 (16, 16, 'en', 'Wedding Garlands'),
 (17, 17, 'en', 'Saram Flowers'),
 (18, 18, 'en', 'Pre-Order'),
@@ -1290,9 +1731,24 @@ INSERT INTO `menu_item_translations` (`id`, `menu_item_id`, `locale`, `name`) VA
 (39, 39, 'en', 'root'),
 (40, 40, 'en', 'Saram flowers'),
 (41, 41, 'en', 'Mission & Vission'),
-(42, 42, 'en', 'Mission & Vission'),
+(42, 42, 'en', 'Newsletter'),
 (44, 44, 'en', 'Testimonial'),
-(45, 45, 'en', 'Product Customization');
+(45, 45, 'en', 'Customize Products'),
+(46, 46, 'en', 'root'),
+(47, 47, 'en', 'Our Stores'),
+(48, 48, 'en', 'How to Order'),
+(49, 49, 'en', 'Delivery Info'),
+(50, 50, 'en', 'Contact Us'),
+(51, 51, 'en', 'About Us'),
+(52, 52, 'en', 'Terms & Conditions'),
+(53, 53, 'en', 'root'),
+(54, 54, 'en', 'About Us'),
+(55, 55, 'en', 'Privacy Policy'),
+(56, 56, 'en', 'FAQ'),
+(57, 57, 'en', 'Mission & Vission'),
+(58, 58, 'en', 'Blog'),
+(59, 59, 'en', 'Testimonial'),
+(60, 60, 'en', 'Blog');
 
 -- --------------------------------------------------------
 
@@ -1318,7 +1774,9 @@ INSERT INTO `menu_translations` (`id`, `menu_id`, `locale`, `name`) VALUES
 (4, 4, 'en', 'FAQ'),
 (5, 5, 'en', 'Shop'),
 (6, 6, 'en', 'Flash sale'),
-(7, 7, 'en', 'Garlands1');
+(7, 7, 'en', 'Garlands1'),
+(8, 8, 'en', 'Help'),
+(9, 9, 'en', 'Info');
 
 -- --------------------------------------------------------
 
@@ -1373,7 +1831,101 @@ INSERT INTO `meta_data` (`id`, `entity_type`, `entity_id`, `created_at`, `update
 (32, 'Modules\\Page\\Entities\\Page', 8, '2023-08-25 12:23:22', '2023-08-25 12:23:22'),
 (33, 'Modules\\Product\\Entities\\Product', 23, '2023-08-26 08:00:56', '2023-08-26 08:00:56'),
 (34, 'Modules\\Page\\Entities\\Page', 9, '2023-08-28 09:25:49', '2023-08-28 09:25:49'),
-(35, 'Modules\\Product\\Entities\\Product', 24, '2023-08-28 09:34:20', '2023-08-28 09:34:20');
+(35, 'Modules\\Product\\Entities\\Product', 24, '2023-08-28 09:34:20', '2023-08-28 09:34:20'),
+(36, 'Modules\\Product\\Entities\\Product', 25, '2023-10-06 14:04:57', '2023-10-06 14:04:57'),
+(37, 'Modules\\Blogcategory\\Entities\\Blogcategory', 1, '2023-10-21 11:01:38', '2023-10-21 11:01:38'),
+(38, 'Modules\\Product\\Entities\\Product', 26, '2023-10-26 07:10:58', '2023-10-26 07:10:58'),
+(39, 'Modules\\Blogtag\\Entities\\Blogtag', 1, '2023-10-30 13:09:02', '2023-10-30 13:09:02'),
+(40, 'Modules\\Blogpost\\Entities\\Blogpost', 1, '2023-10-30 13:09:55', '2023-10-30 13:09:55'),
+(41, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 1, '2023-10-30 14:09:14', '2023-10-30 14:09:14'),
+(42, 'Modules\\Blogpost\\Entities\\Blogpost', 2, '2023-10-30 14:10:19', '2023-10-30 14:10:19'),
+(43, 'Modules\\Blogpost\\Entities\\Blogpostcomments', 1, '2023-10-30 14:11:17', '2023-10-30 14:11:17'),
+(44, 'Modules\\Blogpost\\Entities\\Blogpost', 3, '2023-10-30 14:12:45', '2023-10-30 14:12:45'),
+(45, 'Modules\\Blogpost\\Entities\\Blogpost', 4, '2023-10-30 14:12:45', '2023-10-30 14:12:45'),
+(46, 'Modules\\Blogpost\\Entities\\Blogpost', 5, '2023-10-30 14:12:45', '2023-10-30 14:12:45'),
+(47, 'Modules\\Blogpost\\Entities\\Blogpost', 6, '2023-10-30 14:12:45', '2023-10-30 14:12:45'),
+(48, 'Modules\\Blogpost\\Entities\\Blogpost', 7, '2023-10-30 14:12:45', '2023-10-30 14:12:45'),
+(49, 'Modules\\Blogpost\\Entities\\Blogpost', 8, '2023-10-30 14:12:45', '2023-10-30 14:12:45'),
+(50, 'Modules\\Blogpost\\Entities\\Blogpost', 9, '2023-10-30 14:12:45', '2023-10-30 14:12:45'),
+(51, 'Modules\\Blogpost\\Entities\\Blogpost', 10, '2023-10-30 14:12:45', '2023-10-30 14:12:45'),
+(52, 'Modules\\Blogpost\\Entities\\Blogpost', 11, '2023-10-30 14:12:45', '2023-10-30 14:12:45'),
+(53, 'Modules\\Blogpost\\Entities\\Blogpost', 12, '2023-10-30 14:12:45', '2023-10-30 14:12:45'),
+(54, 'Modules\\Blogcategory\\Entities\\Blogcategory', 2, '2023-10-30 14:14:33', '2023-10-30 14:14:33'),
+(55, 'Modules\\Blogcategory\\Entities\\Blogcategory', 3, '2023-10-30 14:14:33', '2023-10-30 14:14:33'),
+(56, 'Modules\\Blogcategory\\Entities\\Blogcategory', 4, '2023-10-30 14:14:33', '2023-10-30 14:14:33'),
+(57, 'Modules\\Blogcategory\\Entities\\Blogcategory', 5, '2023-10-30 14:14:33', '2023-10-30 14:14:33'),
+(58, 'Modules\\Blogcategory\\Entities\\Blogcategory', 6, '2023-10-30 14:14:33', '2023-10-30 14:14:33'),
+(59, 'Modules\\Blogcategory\\Entities\\Blogcategory', 7, '2023-10-30 14:14:33', '2023-10-30 14:14:33'),
+(60, 'Modules\\Blogcategory\\Entities\\Blogcategory', 8, '2023-10-30 14:14:33', '2023-10-30 14:14:33'),
+(61, 'Modules\\Blogcategory\\Entities\\Blogcategory', 9, '2023-10-30 14:14:33', '2023-10-30 14:14:33'),
+(62, 'Modules\\Blogcategory\\Entities\\Blogcategory', 10, '2023-10-30 14:14:33', '2023-10-30 14:14:33'),
+(63, 'Modules\\Blogcategory\\Entities\\Blogcategory', 11, '2023-10-30 14:14:33', '2023-10-30 14:14:33'),
+(64, 'Modules\\Blogtag\\Entities\\Blogtag', 3, '2023-10-30 14:15:03', '2023-10-30 14:15:03'),
+(65, 'Modules\\Blogtag\\Entities\\Blogtag', 4, '2023-10-30 14:15:03', '2023-10-30 14:15:03'),
+(66, 'Modules\\Blogtag\\Entities\\Blogtag', 5, '2023-10-30 14:15:03', '2023-10-30 14:15:03'),
+(67, 'Modules\\Blogtag\\Entities\\Blogtag', 6, '2023-10-30 14:15:03', '2023-10-30 14:15:03'),
+(68, 'Modules\\Blogtag\\Entities\\Blogtag', 7, '2023-10-30 14:15:03', '2023-10-30 14:15:03'),
+(69, 'Modules\\Blogtag\\Entities\\Blogtag', 8, '2023-10-30 14:15:03', '2023-10-30 14:15:03'),
+(70, 'Modules\\Blogtag\\Entities\\Blogtag', 9, '2023-10-30 14:15:03', '2023-10-30 14:15:03'),
+(71, 'Modules\\Blogtag\\Entities\\Blogtag', 10, '2023-10-30 14:15:03', '2023-10-30 14:15:03'),
+(72, 'Modules\\Blogtag\\Entities\\Blogtag', 11, '2023-10-30 14:15:03', '2023-10-30 14:15:03'),
+(73, 'Modules\\Blogtag\\Entities\\Blogtag', 12, '2023-10-30 14:15:03', '2023-10-30 14:15:03'),
+(74, 'Modules\\Blogpost\\Entities\\Blogpost', 13, '2023-10-30 14:15:37', '2023-10-30 14:15:37'),
+(75, 'Modules\\Blogpost\\Entities\\Blogpost', 14, '2023-10-30 14:15:37', '2023-10-30 14:15:37'),
+(76, 'Modules\\Blogpost\\Entities\\Blogpost', 15, '2023-10-30 14:15:37', '2023-10-30 14:15:37'),
+(77, 'Modules\\Blogpost\\Entities\\Blogpost', 16, '2023-10-30 14:15:37', '2023-10-30 14:15:37'),
+(78, 'Modules\\Blogpost\\Entities\\Blogpost', 17, '2023-10-30 14:15:37', '2023-10-30 14:15:37'),
+(79, 'Modules\\Blogpost\\Entities\\Blogpost', 18, '2023-10-30 14:15:37', '2023-10-30 14:15:37'),
+(80, 'Modules\\Blogpost\\Entities\\Blogpost', 19, '2023-10-30 14:15:37', '2023-10-30 14:15:37'),
+(81, 'Modules\\Blogpost\\Entities\\Blogpost', 20, '2023-10-30 14:15:37', '2023-10-30 14:15:37'),
+(82, 'Modules\\Blogpost\\Entities\\Blogpost', 21, '2023-10-30 14:15:37', '2023-10-30 14:15:37'),
+(83, 'Modules\\Blogpost\\Entities\\Blogpost', 22, '2023-10-30 14:15:37', '2023-10-30 14:15:37'),
+(84, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 2, '2023-10-30 14:17:04', '2023-10-30 14:17:04'),
+(85, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 3, '2023-10-30 14:17:11', '2023-10-30 14:17:11'),
+(86, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 4, '2023-10-30 14:17:14', '2023-10-30 14:17:14'),
+(87, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 5, '2023-10-30 14:17:20', '2023-10-30 14:17:20'),
+(88, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 6, '2023-10-30 14:17:23', '2023-10-30 14:17:23'),
+(89, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 7, '2023-10-30 14:17:27', '2023-10-30 14:17:27'),
+(90, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 8, '2023-10-30 14:17:29', '2023-10-30 14:17:29'),
+(91, 'Modules\\Blogpost\\Entities\\Blogpost', 23, '2023-10-30 14:28:55', '2023-10-30 14:28:55'),
+(92, 'Modules\\Blogpost\\Entities\\Blogpostcomments', 2, '2023-10-31 07:43:18', '2023-10-31 07:43:18'),
+(93, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 9, '2023-10-31 07:43:48', '2023-10-31 07:43:48'),
+(94, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 10, '2023-10-31 07:43:51', '2023-10-31 07:43:51'),
+(95, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 11, '2023-10-31 07:43:53', '2023-10-31 07:43:53'),
+(96, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 12, '2023-10-31 07:43:55', '2023-10-31 07:43:55'),
+(97, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 13, '2023-10-31 07:43:58', '2023-10-31 07:43:58'),
+(98, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 14, '2023-10-31 07:44:00', '2023-10-31 07:44:00'),
+(99, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 15, '2023-10-31 07:44:03', '2023-10-31 07:44:03'),
+(100, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 16, '2023-10-31 07:46:20', '2023-10-31 07:46:20'),
+(101, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 17, '2023-10-31 07:46:24', '2023-10-31 07:46:24'),
+(102, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 18, '2023-10-31 07:46:28', '2023-10-31 07:46:28'),
+(103, 'Modules\\Blogpost\\Entities\\Blogpostcomments', 3, '2023-10-31 07:46:55', '2023-10-31 07:46:55'),
+(104, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 19, '2023-10-31 07:47:02', '2023-10-31 07:47:02'),
+(105, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 20, '2023-10-31 07:47:51', '2023-10-31 07:47:51'),
+(106, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 21, '2023-10-31 13:22:42', '2023-10-31 13:22:42'),
+(107, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 22, '2023-10-31 13:22:44', '2023-10-31 13:22:44'),
+(108, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 23, '2023-10-31 13:22:46', '2023-10-31 13:22:46'),
+(109, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 24, '2023-10-31 13:37:20', '2023-10-31 13:37:20'),
+(110, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 25, '2023-10-31 13:37:25', '2023-10-31 13:37:25'),
+(111, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 26, '2023-10-31 13:37:31', '2023-10-31 13:37:31'),
+(112, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 27, '2023-10-31 13:43:47', '2023-10-31 13:43:47'),
+(113, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 28, '2023-10-31 13:43:50', '2023-10-31 13:43:50'),
+(114, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 29, '2023-10-31 13:43:52', '2023-10-31 13:43:52'),
+(115, 'Modules\\Blogpost\\Entities\\Blogpostlikesdislikes', 30, '2023-10-31 13:43:56', '2023-10-31 13:43:56'),
+(116, 'Modules\\Subscriber\\Entities\\Subscriber', 1, '2023-11-01 14:03:15', '2023-11-01 14:03:15'),
+(117, 'Modules\\Template\\Entities\\Template', 1, '2023-11-01 14:04:04', '2023-11-01 14:04:04'),
+(118, 'Modules\\Subscriber\\Entities\\Subscriber', 2, '2023-11-01 14:04:53', '2023-11-01 14:04:53'),
+(119, 'Modules\\Email\\Entities\\Email', 1, '2023-11-01 14:05:21', '2023-11-01 14:05:21'),
+(120, 'Modules\\Email\\Entities\\Email', 2, '2023-11-01 14:18:45', '2023-11-01 14:18:45'),
+(121, 'Modules\\Email\\Entities\\Email', 3, '2023-11-01 14:19:27', '2023-11-01 14:19:27'),
+(122, 'Modules\\Email\\Entities\\Email', 4, '2023-11-01 14:19:40', '2023-11-01 14:19:40'),
+(123, 'Modules\\Email\\Entities\\Email', 5, '2023-11-01 14:19:52', '2023-11-01 14:19:52'),
+(124, 'Modules\\Email\\Entities\\Email', 6, '2023-11-01 14:20:05', '2023-11-01 14:20:05'),
+(125, 'Modules\\Email\\Entities\\Email', 7, '2023-11-01 14:21:02', '2023-11-01 14:21:02'),
+(126, 'Modules\\Email\\Entities\\Email', 8, '2023-11-01 14:22:40', '2023-11-01 14:22:40'),
+(127, 'Modules\\Email\\Entities\\Email', 10, '2023-11-02 09:09:44', '2023-11-02 09:09:44'),
+(128, 'Modules\\Subscriber\\Entities\\Subscriber', 3, '2023-11-03 08:16:36', '2023-11-03 08:16:36'),
+(129, 'Modules\\Product\\Entities\\Product', 27, '2023-11-17 10:52:57', '2023-11-17 10:52:57');
 
 -- --------------------------------------------------------
 
@@ -1428,7 +1980,11 @@ INSERT INTO `meta_data_translations` (`id`, `meta_data_id`, `locale`, `meta_titl
 (32, 32, 'en', NULL, NULL),
 (33, 33, 'en', NULL, NULL),
 (34, 34, 'en', NULL, NULL),
-(35, 35, 'en', NULL, NULL);
+(35, 35, 'en', NULL, NULL),
+(36, 36, 'en', NULL, NULL),
+(37, 38, 'en', NULL, NULL),
+(38, 117, 'en', NULL, NULL),
+(39, 129, 'en', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1540,7 +2096,6 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (91, '2023_08_25_131155_add_column_to_order_products_table', 4),
 (92, '2023_08_10_150917488267_create_reward_points_table', 5),
 (93, '2023_08_22_151429_create-customer_reward_points-table', 5),
-(95, '2023_08_29_204009_create-reward_points_gifted-table', 6),
 (97, '2018_02_04_150917488267_create_testimonials_table', 7),
 (98, '2023_09_07_122259_create_customer_reward_points_table', 8),
 (99, '2023_09_01_161415_new_two_columns', 9),
@@ -1550,9 +2105,30 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (105, '2023_09_19_155956_create_recurring_orders_table', 15),
 (106, '2023_09_19_194606_create_recurring_sub_orders_table', 16),
 (107, '2023_09_21_121305_add_customer_reward_point_id-field', 17),
-(109, '2023_08_31_121553_create_pickupstore_table', 18),
 (112, '2023_08_24_124310_createabandonedlisttable', 19),
-(113, '2023_09_14_164525_create_galleries_table', 20);
+(113, '2023_09_14_164525_create_galleries_table', 20),
+(114, '2023_09_26_141438_add_delivery_date_orders_table', 21),
+(115, '2023_09_16_141332910964_create_blogtags_migrate_table', 22),
+(116, '2023_09_16_141332910964_create_blogcategorys_migrate_table', 23),
+(117, '2023_10_25_203958_add-field-orders-table', 24),
+(118, '2023_08_31_121553_create_pickupstore_table', 25),
+(119, '2023_10_11_125618_create_blogfeedback_table', 26),
+(120, '2023_10_14_125618_create_blogcommenttable', 27),
+(121, '2023_10_30_205153_create_custom_stored_procedure_get_customers_active_reward_points', 28),
+(122, '2023_10_31_130749_create_custom_stored_procedure_get_allcustomers_active_reward_points', 29),
+(127, '2023_10_31_164142_add_customer_reward_order-id_review-id_fields', 30),
+(128, '2023_08_29_204009_create-reward_points_gifted-table', 31),
+(130, '2023_10_05_182626_create_emails_table', 33),
+(131, '2023_09_27_171909_create_subscribers_table', 34),
+(132, '2023_09_30_154851_create_templates_table', 35),
+(133, '2023_09_30_154953_create_template_translations_table', 36),
+(134, '2023_09_12_125559_add_user_type', 37),
+(135, '2023_09_29_165155_add_user_type', 38),
+(136, '2023_10_04_120942_add_user_type_to_address', 39),
+(137, '2023_10_27_144639_create_recurrings_table', 40),
+(138, '2023_10_27_144918_create_recurring_sub_orders_table', 41),
+(139, '2023_10_31_120500_add_column_order_status_to_recurring_sub_orders', 42),
+(140, '2023_10_30_195722_add_column_isRecurring_to_orders_table', 43);
 
 -- --------------------------------------------------------
 
@@ -1583,7 +2159,8 @@ INSERT INTO `options` (`id`, `type`, `is_required`, `is_global`, `position`, `de
 (5, 'checkbox', 0, 0, 0, NULL, '2023-08-11 11:18:20', '2023-08-11 11:18:20'),
 (6, 'checkbox', 1, 0, 0, NULL, '2023-08-14 10:19:42', '2023-08-25 06:59:02'),
 (7, 'checkbox', 0, 0, 0, NULL, '2023-08-14 10:23:31', '2023-08-14 10:23:31'),
-(8, 'dropdown', 0, 0, 0, NULL, '2023-08-14 10:27:46', '2023-08-25 06:58:21');
+(8, 'dropdown', 0, 0, 0, NULL, '2023-08-14 10:27:46', '2023-08-25 06:58:21'),
+(9, 'checkbox', 0, 0, 0, NULL, '2023-10-26 07:10:58', '2023-10-26 07:10:58');
 
 -- --------------------------------------------------------
 
@@ -1610,7 +2187,8 @@ INSERT INTO `option_translations` (`id`, `option_id`, `locale`, `name`) VALUES
 (5, 5, 'en', 'Garland'),
 (6, 6, 'en', 'Today Only'),
 (7, 7, 'en', 'Same day delivery'),
-(8, 8, 'en', 'Special Offer');
+(8, 8, 'en', 'Special Offer'),
+(9, 9, 'en', 'With ice box packing');
 
 -- --------------------------------------------------------
 
@@ -1642,7 +2220,8 @@ INSERT INTO `option_values` (`id`, `option_id`, `price`, `price_type`, `position
 (8, 6, '280.0000', 'fixed', 1, '2023-08-14 10:19:42', '2023-08-14 10:19:42'),
 (9, 7, '10.0000', 'fixed', 0, '2023-08-14 10:23:31', '2023-08-14 10:23:31'),
 (10, 8, '250.0000', 'fixed', 0, '2023-08-14 10:27:46', '2023-08-25 06:53:15'),
-(11, 8, '400.0000', 'fixed', 1, '2023-08-25 06:53:15', '2023-08-25 06:53:15');
+(11, 8, '400.0000', 'fixed', 1, '2023-08-25 06:53:15', '2023-08-25 06:53:15'),
+(12, 9, '2.0000', 'percent', 0, '2023-10-26 07:10:58', '2023-10-26 07:31:05');
 
 -- --------------------------------------------------------
 
@@ -1670,7 +2249,8 @@ INSERT INTO `option_value_translations` (`id`, `option_value_id`, `locale`, `lab
 (6, 8, 'en', '3Kg'),
 (7, 9, 'en', 'Same day delivery'),
 (8, 10, 'en', 'Buy one, get one free'),
-(9, 11, 'en', 'Buy One , get Two free');
+(9, 11, 'en', 'Buy One , get Two free'),
+(10, 12, 'en', 'With ice box packing');
 
 -- --------------------------------------------------------
 
@@ -1694,7 +2274,7 @@ CREATE TABLE `orders` (
   `billing_zip` varchar(191) NOT NULL,
   `billing_country` varchar(191) NOT NULL,
   `shipping_first_name` varchar(191) NOT NULL,
-  `shipping_last_name` varchar(191) NOT NULL,
+  `shipping_last_name` varchar(191) DEFAULT NULL,
   `shipping_address_1` varchar(191) NOT NULL,
   `shipping_address_2` varchar(191) DEFAULT NULL,
   `shipping_city` varchar(191) NOT NULL,
@@ -1712,69 +2292,111 @@ CREATE TABLE `orders` (
   `currency_rate` decimal(18,4) NOT NULL,
   `locale` varchar(191) NOT NULL,
   `status` varchar(191) NOT NULL,
+  `user_type` varchar(191) DEFAULT NULL,
   `note` text DEFAULT NULL,
+  `isRecurring` tinyint(1) NOT NULL DEFAULT 0,
   `deleted_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `delivery_date` date DEFAULT NULL,
+  `pickupstore_address_id` int(11) DEFAULT NULL,
+  `rewardpoints_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `redemption_amount` decimal(10,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `orders`
 --
 
-INSERT INTO `orders` (`id`, `customer_id`, `customer_email`, `customer_phone`, `customer_first_name`, `customer_last_name`, `billing_first_name`, `billing_last_name`, `billing_address_1`, `billing_address_2`, `billing_city`, `billing_state`, `billing_zip`, `billing_country`, `shipping_first_name`, `shipping_last_name`, `shipping_address_1`, `shipping_address_2`, `shipping_city`, `shipping_state`, `shipping_zip`, `shipping_country`, `sub_total`, `shipping_method`, `shipping_cost`, `coupon_id`, `discount`, `total`, `payment_method`, `currency`, `currency_rate`, `locale`, `status`, `note`, `deleted_at`, `created_at`, `updated_at`) VALUES
-(1, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '300.0000', NULL, '0.0000', 1, '0.0000', '300.0000', 'cod', 'USD', '1.0000', 'en', 'pending', NULL, NULL, '2023-07-31 12:13:44', '2023-08-10 12:13:44'),
-(2, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '5.0000', 'local_pickup', '2.0000', NULL, '0.0000', '7.0000', 'cod', 'MYR', '1.0000', 'en', 'completed', NULL, NULL, '2023-08-11 09:11:54', '2023-08-11 09:12:49'),
-(3, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '56.0000', NULL, '0.0000', NULL, '0.0000', '56.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-11 09:14:18', '2023-08-11 09:14:19'),
-(4, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '56.0000', NULL, '0.0000', NULL, '0.0000', '56.0000', 'cod', 'MYR', '1.0000', 'en', 'completed', NULL, NULL, '2023-08-11 09:14:38', '2023-08-11 09:23:35'),
-(5, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '5.0000', 'local_pickup', '2.0000', NULL, '0.0000', '7.0000', 'cod', 'MYR', '1.0000', 'en', 'completed', NULL, NULL, '2023-08-11 09:15:48', '2023-08-11 09:23:18'),
-(6, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '140.0000', 'free_shipping', '0.0000', NULL, '0.0000', '140.0000', 'cod', 'MYR', '1.0000', 'en', 'completed', NULL, NULL, '2023-08-11 10:27:44', '2023-08-11 11:25:14'),
-(7, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '5.0000', 'local_pickup', '2.0000', NULL, '0.0000', '7.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-12 04:40:06', '2023-08-16 11:11:35'),
-(8, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '18.0000', NULL, '0.0000', NULL, '0.0000', '18.0000', 'cod', 'MYR', '1.0000', 'en', 'completed', NULL, NULL, '2023-08-23 05:44:15', '2023-08-24 06:03:37'),
-(9, 3, 'mahi@santhila.co', '9994520822', 'Navin', 'Elangovan', 'Navin', 'Elangovan', '121-Kovil Street', NULL, 'Erode', 'TN', '638004', 'IN', 'Navin', 'Elangovan', '121-Kovil Street', NULL, 'Erode', 'TN', '638004', 'IN', '269.0000', 'free_shipping', '0.0000', 1, '10.0000', '259.0000', 'cod', 'MYR', '1.0000', 'en', 'completed', 'Gift', NULL, '2023-08-22 11:08:50', '2023-08-22 11:11:12'),
-(10, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '158.0000', 'free_shipping', '0.0000', NULL, '0.0000', '158.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-22 05:56:04', '2023-08-24 05:56:06'),
-(11, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '144090000.0000', 'local_pickup', '2.0000', NULL, '0.0000', '144090002.0000', 'cod', 'MYR', '1.0000', 'en', 'canceled', NULL, NULL, '2023-08-24 05:57:23', '2023-08-24 05:58:03'),
-(12, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '2.0000', 'local_pickup', '2.0000', NULL, '0.0000', '4.0000', 'cod', 'MYR', '1.0000', 'en', 'refunded', NULL, NULL, '2023-08-24 05:59:09', '2023-08-24 06:01:39'),
-(13, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '2147.0000', 'free_shipping', '0.0000', NULL, '0.0000', '2147.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-24 06:37:58', '2023-08-24 06:38:00'),
-(14, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '29970.0000', 'free_shipping', '0.0000', NULL, '0.0000', '29970.0000', 'cod', 'MYR', '1.0000', 'en', 'canceled', NULL, NULL, '2023-08-24 06:38:40', '2023-08-24 07:11:19'),
-(15, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '90.0000', 'local_pickup', '2.0000', 2, '9.0000', '83.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-24 13:12:01', '2023-08-24 13:12:02'),
-(16, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '4.0000', 'local_pickup', '2.0000', NULL, '0.0000', '6.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-24 13:12:23', '2023-08-24 13:12:23'),
-(17, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '14.0000', 'local_pickup', '2.0000', 2, '9.0000', '7.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-23 13:12:54', '2023-08-24 13:12:55'),
-(18, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '24.0000', 'local_pickup', '2.0000', NULL, '0.0000', '26.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-24 13:13:34', '2023-08-24 13:13:35'),
-(19, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '18.0000', NULL, '0.0000', 2, '9.0000', '9.0000', 'cod', 'MYR', '1.0000', 'en', 'refunded', NULL, NULL, '2023-07-05 13:14:00', '2023-08-24 13:16:48'),
-(20, 5, 'prabakaran13@santhila.co', '9578009264', 'Prabakaran', 'V', 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', 'Prabakara', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', '29.0000', 'local_pickup', '2.0000', NULL, '0.0000', '31.0000', 'cod', 'MYR', '1.0000', 'en', 'processing', 'Trial Enrty', NULL, '2023-07-13 13:22:14', '2023-08-24 13:26:37'),
-(21, 4, 'prabakaran@santhila.co', '9578009264', 'Prabakaran', 'V', 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', '179.0000', 'flat_rate', '200.0000', 3, '200.0000', '179.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', 'Gift for Birthday wishes', NULL, '2023-08-24 13:27:43', '2023-08-24 13:27:44'),
-(22, 5, 'prabakaran13@santhila.co', '9578009264', 'Prabakara', 'V', 'Prabakara', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', 'Prabakara', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', '431.0000', 'free_shipping', '0.0000', 4, '150.8500', '280.1500', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-24 13:34:28', '2023-08-24 13:34:29'),
-(23, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '9.0000', 'local_pickup', '2.0000', NULL, '0.0000', '11.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-24 13:38:49', '2023-08-24 13:38:50'),
-(24, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '14.0000', 'local_pickup', '2.0000', NULL, '0.0000', '16.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-24 13:40:22', '2023-08-24 13:40:23'),
-(25, 6, 'msangeethaece2001@gmail.com', '9788894897', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'SGR', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'SGR', '6380000', 'MY', '9.0000', 'local_pickup', '2.0000', NULL, '0.0000', '11.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', 'First Time visit your website - Order Note', NULL, '2023-08-24 13:49:41', '2023-08-24 13:49:42'),
-(26, 6, 'msangeethaece2001@gmail.com', '9788894897', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'SGR', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'SGR', '6380000', 'MY', '187.0000', 'free_shipping', '0.0000', NULL, '0.0000', '187.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-24 13:56:59', '2023-08-24 13:56:59'),
-(27, 6, 'msangeethaece2001@gmail.com', '9788894897', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'SGR', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'SGR', '6380000', 'MY', '999.0000', 'free_shipping', '0.0000', NULL, '0.0000', '999.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-24 14:02:23', '2023-08-24 14:02:23'),
-(28, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '46.0000', 'local_pickup', '2.0000', NULL, '0.0000', '48.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-24 15:27:11', '2023-08-24 15:27:12'),
-(29, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '9.0000', 'local_pickup', '2.0000', NULL, '0.0000', '11.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-25 08:05:17', '2023-08-25 08:05:18'),
-(30, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '999.0000', 'free_shipping', '0.0000', NULL, '0.0000', '999.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-25 08:20:02', '2023-08-25 08:20:02'),
-(31, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '2.0000', 'local_pickup', '2.0000', NULL, '0.0000', '4.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-25 09:04:59', '2023-08-25 09:05:00'),
-(32, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '250.0000', 'local_pickup', '2.0000', 1, '10.0000', '242.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-25 09:28:55', '2023-08-25 09:28:56'),
-(33, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '199.0000', 'free_shipping', '0.0000', 5, '0.0000', '199.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-25 09:34:48', '2023-08-25 09:34:49'),
-(34, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '999.0000', 'free_shipping', '0.0000', 5, '100.0000', '899.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-25 09:41:36', '2023-08-25 09:41:36'),
-(35, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '200.0000', 'free_shipping', '0.0000', 5, '200.0000', '0.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-25 09:50:36', '2023-08-25 09:50:36'),
-(36, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '20.0000', 'flat_rate', '200.0000', NULL, '0.0000', '220.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-25 12:16:36', '2023-08-25 12:16:37'),
-(37, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '19.0000', 'local_pickup', '2.0000', NULL, '0.0000', '21.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-25 12:52:03', '2023-08-25 12:52:04'),
-(38, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '9.0000', 'free_shipping', '0.0000', NULL, '0.0000', '9.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-25 13:26:24', '2023-08-25 13:26:26'),
-(39, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '160.0000', 'local_pickup', '2.0000', 4, '2.0000', '160.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-25 14:22:07', '2023-08-25 14:22:09'),
-(40, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '709.0000', 'free_shipping', '0.0000', NULL, '0.0000', '709.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-25 14:50:54', '2023-08-25 14:50:57'),
-(41, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '66.0000', 'local_pickup', '2.0000', NULL, '0.0000', '68.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-26 09:21:16', '2023-08-26 09:21:18'),
-(42, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '20.0000', 'local_pickup', '2.0000', NULL, '0.0000', '22.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-28 08:01:00', '2023-08-28 08:01:02'),
-(43, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '9.0000', 'local_pickup', '2.0000', NULL, '0.0000', '11.0000', 'cod', 'MYR', '1.0000', 'en', 'processing', NULL, NULL, '2023-08-28 09:41:33', '2023-08-28 09:44:48'),
-(44, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '30.0000', 'local_pickup', '2.0000', NULL, '0.0000', '32.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-08-28 10:47:40', '2023-08-28 10:47:42'),
-(45, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '199.0000', 'free_shipping', '0.0000', NULL, '0.0000', '199.0000', 'cod', 'MYR', '1.0000', 'en', 'processing', NULL, NULL, '2023-08-28 12:41:24', '2023-08-31 14:26:30'),
-(46, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '90.0000', 'local_pickup', '2.0000', NULL, '0.0000', '92.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-09-06 08:09:18', '2023-09-06 08:09:21'),
-(47, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '20.0000', 'local_pickup', '2.0000', NULL, '0.0000', '22.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-09-09 09:14:47', '2023-09-09 09:14:49'),
-(48, 3, 'mahi@santhila.co', '9994520822', 'Navin', 'Elangovan', 'Navin', 'Elangovan', '121-Kovil Street', NULL, 'Erode', 'TN', '638004', 'IN', 'Navin', 'Elangovan', '121-Kovil Street', NULL, 'Erode', 'TN', '638004', 'IN', '560.0000', 'free_shipping', '0.0000', 1, '100.0000', '460.0000', 'cod', 'MYR', '1.0000', 'en', 'completed', 'Gift', NULL, '2023-08-22 11:08:50', '2023-08-22 11:11:12'),
-(49, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '467.0000', 'free_shipping', '0.0000', NULL, '0.0000', '467.0000', 'razerpay', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-09-25 07:33:44', '2023-09-25 07:40:29'),
-(50, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '33.0000', 'free_shipping', '0.0000', NULL, '0.0000', '33.0000', 'razerpay', 'MYR', '1.0000', 'en', 'pending_payment', NULL, NULL, '2023-09-25 09:18:54', '2023-09-25 09:18:54'),
-(51, 1, 'giri@santhila.co', '91404040404', 'santhila', 'S', 'santhila', 'S', 'kulalumpur', NULL, 'kulalumpur', 'KUL', '59003', 'MY', 'santhila', 'S', 'kulalumpur', NULL, 'kulalumpur', 'KUL', '59003', 'MY', '158.0000', 'flat_rate', '22.0000', NULL, '0.0000', '180.0000', 'razerpay', 'MYR', '1.0000', 'en', 'pending_payment', NULL, NULL, '2023-09-28 11:40:46', '2023-09-28 11:40:46'),
-(52, 1, 'giri@santhila.co', '91404040404', 'santhila', 'S', 'santhila', 'S', 'kulalumpur', NULL, 'kulalumpur', 'KUL', '59003', 'MY', 'santhila', 'S', 'kulalumpur', NULL, 'kulalumpur', 'KUL', '59003', 'MY', '158.0000', 'flat_rate', '22.0000', NULL, '0.0000', '180.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, '2023-09-28 11:42:43', '2023-09-28 11:42:44');
+INSERT INTO `orders` (`id`, `customer_id`, `customer_email`, `customer_phone`, `customer_first_name`, `customer_last_name`, `billing_first_name`, `billing_last_name`, `billing_address_1`, `billing_address_2`, `billing_city`, `billing_state`, `billing_zip`, `billing_country`, `shipping_first_name`, `shipping_last_name`, `shipping_address_1`, `shipping_address_2`, `shipping_city`, `shipping_state`, `shipping_zip`, `shipping_country`, `sub_total`, `shipping_method`, `shipping_cost`, `coupon_id`, `discount`, `total`, `payment_method`, `currency`, `currency_rate`, `locale`, `status`, `user_type`, `note`, `isRecurring`, `deleted_at`, `created_at`, `updated_at`, `delivery_date`, `pickupstore_address_id`, `rewardpoints_id`, `redemption_amount`) VALUES
+(1, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '300.0000', NULL, '0.0000', 1, '0.0000', '300.0000', 'cod', 'USD', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-07-31 12:13:44', '2023-08-10 12:13:44', NULL, NULL, NULL, NULL),
+(2, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '5.0000', 'local_pickup', '2.0000', NULL, '0.0000', '7.0000', 'cod', 'MYR', '1.0000', 'en', 'completed', NULL, NULL, 0, NULL, '2023-08-11 09:11:54', '2023-08-11 09:12:49', NULL, NULL, NULL, NULL),
+(3, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '56.0000', NULL, '0.0000', NULL, '0.0000', '56.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-11 09:14:18', '2023-08-11 09:14:19', NULL, NULL, NULL, NULL),
+(4, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '56.0000', NULL, '0.0000', NULL, '0.0000', '56.0000', 'cod', 'MYR', '1.0000', 'en', 'completed', NULL, NULL, 0, NULL, '2023-08-11 09:14:38', '2023-08-11 09:23:35', NULL, NULL, NULL, NULL),
+(5, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '5.0000', 'local_pickup', '2.0000', NULL, '0.0000', '7.0000', 'cod', 'MYR', '1.0000', 'en', 'completed', NULL, NULL, 0, NULL, '2023-08-11 09:15:48', '2023-08-11 09:23:18', NULL, NULL, NULL, NULL),
+(6, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '140.0000', 'free_shipping', '0.0000', NULL, '0.0000', '140.0000', 'cod', 'MYR', '1.0000', 'en', 'completed', NULL, NULL, 0, NULL, '2023-08-11 10:27:44', '2023-08-11 11:25:14', NULL, NULL, NULL, NULL),
+(7, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '5.0000', 'local_pickup', '2.0000', NULL, '0.0000', '7.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-12 04:40:06', '2023-08-16 11:11:35', NULL, NULL, NULL, NULL),
+(8, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '18.0000', NULL, '0.0000', NULL, '0.0000', '18.0000', 'cod', 'MYR', '1.0000', 'en', 'completed', NULL, NULL, 0, NULL, '2023-08-23 05:44:15', '2023-08-24 06:03:37', NULL, NULL, NULL, NULL),
+(9, 3, 'mahi@santhila.co', '9994520822', 'Navin', 'Elangovan', 'Navin', 'Elangovan', '121-Kovil Street', NULL, 'Erode', 'TN', '638004', 'IN', 'Navin', 'Elangovan', '121-Kovil Street', NULL, 'Erode', 'TN', '638004', 'IN', '269.0000', 'free_shipping', '0.0000', 1, '10.0000', '259.0000', 'cod', 'MYR', '1.0000', 'en', 'completed', NULL, 'Gift', 0, NULL, '2023-08-22 11:08:50', '2023-08-22 11:11:12', NULL, NULL, NULL, NULL),
+(10, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '158.0000', 'free_shipping', '0.0000', NULL, '0.0000', '158.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-22 05:56:04', '2023-08-24 05:56:06', NULL, NULL, NULL, NULL),
+(11, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '144090000.0000', 'local_pickup', '2.0000', NULL, '0.0000', '144090002.0000', 'cod', 'MYR', '1.0000', 'en', 'canceled', NULL, NULL, 0, NULL, '2023-08-24 05:57:23', '2023-08-24 05:58:03', NULL, NULL, NULL, NULL),
+(12, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '2.0000', 'local_pickup', '2.0000', NULL, '0.0000', '4.0000', 'cod', 'MYR', '1.0000', 'en', 'refunded', NULL, NULL, 0, NULL, '2023-08-24 05:59:09', '2023-08-24 06:01:39', NULL, NULL, NULL, NULL),
+(13, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '2147.0000', 'free_shipping', '0.0000', NULL, '0.0000', '2147.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-24 06:37:58', '2023-08-24 06:38:00', NULL, NULL, NULL, NULL),
+(14, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '29970.0000', 'free_shipping', '0.0000', NULL, '0.0000', '29970.0000', 'cod', 'MYR', '1.0000', 'en', 'canceled', NULL, NULL, 0, NULL, '2023-08-24 06:38:40', '2023-08-24 07:11:19', NULL, NULL, NULL, NULL),
+(15, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '90.0000', 'local_pickup', '2.0000', 2, '9.0000', '83.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-24 13:12:01', '2023-08-24 13:12:02', NULL, NULL, NULL, NULL),
+(16, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '4.0000', 'local_pickup', '2.0000', NULL, '0.0000', '6.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-24 13:12:23', '2023-08-24 13:12:23', NULL, NULL, NULL, NULL),
+(17, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '14.0000', 'local_pickup', '2.0000', 2, '9.0000', '7.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-23 13:12:54', '2023-08-24 13:12:55', NULL, NULL, NULL, NULL),
+(18, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '24.0000', 'local_pickup', '2.0000', NULL, '0.0000', '26.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-24 13:13:34', '2023-08-24 13:13:35', NULL, NULL, NULL, NULL),
+(19, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '18.0000', NULL, '0.0000', 2, '9.0000', '9.0000', 'cod', 'MYR', '1.0000', 'en', 'refunded', NULL, NULL, 0, NULL, '2023-07-05 13:14:00', '2023-08-24 13:16:48', NULL, NULL, NULL, NULL),
+(20, 5, 'prabakaran13@santhila.co', '9578009264', 'Prabakaran', 'V', 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', 'Prabakara', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', '29.0000', 'local_pickup', '2.0000', NULL, '0.0000', '31.0000', 'cod', 'MYR', '1.0000', 'en', 'processing', NULL, 'Trial Enrty', 0, NULL, '2023-07-13 13:22:14', '2023-08-24 13:26:37', NULL, NULL, NULL, NULL),
+(22, 5, 'prabakaran13@santhila.co', '9578009264', 'Prabakara', 'V', 'Prabakara', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', 'Prabakara', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', '431.0000', 'free_shipping', '0.0000', 4, '150.8500', '280.1500', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-24 13:34:28', '2023-08-24 13:34:29', NULL, NULL, NULL, NULL),
+(23, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '9.0000', 'local_pickup', '2.0000', NULL, '0.0000', '11.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-24 13:38:49', '2023-08-24 13:38:50', NULL, NULL, NULL, NULL),
+(24, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '14.0000', 'local_pickup', '2.0000', NULL, '0.0000', '16.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-24 13:40:22', '2023-08-24 13:40:23', NULL, NULL, NULL, NULL),
+(25, 6, 'msangeethaece2001@gmail.com', '9788894897', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'SGR', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'SGR', '6380000', 'MY', '9.0000', 'local_pickup', '2.0000', NULL, '0.0000', '11.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, 'First Time visit your website - Order Note', 0, NULL, '2023-08-24 13:49:41', '2023-08-24 13:49:42', NULL, NULL, NULL, NULL),
+(26, 6, 'msangeethaece2001@gmail.com', '9788894897', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'SGR', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'SGR', '6380000', 'MY', '187.0000', 'free_shipping', '0.0000', NULL, '0.0000', '187.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-24 13:56:59', '2023-08-24 13:56:59', NULL, NULL, NULL, NULL),
+(27, 6, 'msangeethaece2001@gmail.com', '9788894897', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'SGR', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'SGR', '6380000', 'MY', '999.0000', 'free_shipping', '0.0000', NULL, '0.0000', '999.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-24 14:02:23', '2023-08-24 14:02:23', NULL, NULL, NULL, NULL),
+(28, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '46.0000', 'local_pickup', '2.0000', NULL, '0.0000', '48.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-24 15:27:11', '2023-08-24 15:27:12', NULL, NULL, NULL, NULL),
+(29, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '9.0000', 'local_pickup', '2.0000', NULL, '0.0000', '11.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-25 08:05:17', '2023-08-25 08:05:18', NULL, NULL, NULL, NULL),
+(30, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '999.0000', 'free_shipping', '0.0000', NULL, '0.0000', '999.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-25 08:20:02', '2023-08-25 08:20:02', NULL, NULL, NULL, NULL),
+(31, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '2.0000', 'local_pickup', '2.0000', NULL, '0.0000', '4.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-25 09:04:59', '2023-08-25 09:05:00', NULL, NULL, NULL, NULL),
+(32, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '250.0000', 'local_pickup', '2.0000', 1, '10.0000', '242.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-25 09:28:55', '2023-08-25 09:28:56', NULL, NULL, NULL, NULL),
+(33, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '199.0000', 'free_shipping', '0.0000', 5, '0.0000', '199.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-25 09:34:48', '2023-08-25 09:34:49', NULL, NULL, NULL, NULL),
+(34, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '999.0000', 'free_shipping', '0.0000', 5, '100.0000', '899.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-25 09:41:36', '2023-08-25 09:41:36', NULL, NULL, NULL, NULL),
+(35, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '200.0000', 'free_shipping', '0.0000', 5, '200.0000', '0.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-25 09:50:36', '2023-08-25 09:50:36', NULL, NULL, NULL, NULL),
+(36, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '20.0000', 'flat_rate', '200.0000', NULL, '0.0000', '220.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-25 12:16:36', '2023-08-25 12:16:37', NULL, NULL, NULL, NULL),
+(37, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '19.0000', 'local_pickup', '2.0000', NULL, '0.0000', '21.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-25 12:52:03', '2023-08-25 12:52:04', NULL, NULL, NULL, NULL),
+(38, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '9.0000', 'free_shipping', '0.0000', NULL, '0.0000', '9.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-25 13:26:24', '2023-08-25 13:26:26', NULL, NULL, NULL, NULL),
+(39, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '160.0000', 'local_pickup', '2.0000', 4, '2.0000', '160.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-25 14:22:07', '2023-08-25 14:22:09', NULL, NULL, NULL, NULL),
+(40, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '709.0000', 'free_shipping', '0.0000', NULL, '0.0000', '709.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-25 14:50:54', '2023-08-25 14:50:57', NULL, NULL, NULL, NULL),
+(41, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '66.0000', 'local_pickup', '2.0000', NULL, '0.0000', '68.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-26 09:21:16', '2023-08-26 09:21:18', NULL, NULL, NULL, NULL),
+(42, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '20.0000', 'local_pickup', '2.0000', NULL, '0.0000', '22.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-28 08:01:00', '2023-08-28 08:01:02', NULL, NULL, NULL, NULL),
+(43, 1, 'giri@santhila.co', '91404040404', 'Indu', 'mathi', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'Indu', 'mathi', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', '9.0000', 'local_pickup', '2.0000', NULL, '0.0000', '11.0000', 'cod', 'MYR', '1.0000', 'en', 'processing', NULL, NULL, 0, NULL, '2023-08-28 09:41:33', '2023-08-28 09:44:48', NULL, NULL, NULL, NULL),
+(44, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '30.0000', 'local_pickup', '2.0000', NULL, '0.0000', '32.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-08-28 10:47:40', '2023-08-28 10:47:42', NULL, NULL, NULL, NULL),
+(45, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '199.0000', 'free_shipping', '0.0000', NULL, '0.0000', '199.0000', 'cod', 'MYR', '1.0000', 'en', 'processing', NULL, NULL, 0, NULL, '2023-08-28 12:41:24', '2023-08-31 14:26:30', NULL, NULL, NULL, NULL),
+(46, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '90.0000', 'local_pickup', '2.0000', NULL, '0.0000', '92.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-09-06 08:09:18', '2023-09-06 08:09:21', NULL, NULL, NULL, NULL),
+(47, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '20.0000', 'local_pickup', '2.0000', NULL, '0.0000', '22.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-09-09 09:14:47', '2023-09-09 09:14:49', NULL, NULL, NULL, NULL),
+(48, 3, 'mahi@santhila.co', '9994520822', 'Navin', 'Elangovan', 'Navin', 'Elangovan', '121-Kovil Street', NULL, 'Erode', 'TN', '638004', 'IN', 'Navin', 'Elangovan', '121-Kovil Street', NULL, 'Erode', 'TN', '638004', 'IN', '560.0000', 'free_shipping', '0.0000', 1, '100.0000', '460.0000', 'cod', 'MYR', '1.0000', 'en', 'completed', NULL, 'Gift', 0, NULL, '2023-08-22 11:08:50', '2023-08-22 11:11:12', NULL, NULL, NULL, NULL),
+(49, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '467.0000', 'free_shipping', '0.0000', NULL, '0.0000', '467.0000', 'razerpay', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-09-25 07:33:44', '2023-09-25 07:40:29', NULL, NULL, NULL, NULL),
+(50, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '33.0000', 'free_shipping', '0.0000', NULL, '0.0000', '33.0000', 'razerpay', 'MYR', '1.0000', 'en', 'pending_payment', NULL, NULL, 0, NULL, '2023-09-25 09:18:54', '2023-09-25 09:18:54', NULL, NULL, NULL, NULL),
+(51, 1, 'giri@santhila.co', '91404040404', 'santhila', 'S', 'santhila', 'S', 'kulalumpur', NULL, 'kulalumpur', 'KUL', '59003', 'MY', 'santhila', 'S', 'kulalumpur', NULL, 'kulalumpur', 'KUL', '59003', 'MY', '158.0000', 'flat_rate', '22.0000', NULL, '0.0000', '180.0000', 'razerpay', 'MYR', '1.0000', 'en', 'pending_payment', NULL, NULL, 0, NULL, '2023-09-28 11:40:46', '2023-09-28 11:40:46', NULL, NULL, NULL, NULL),
+(52, 1, 'giri@santhila.co', '91404040404', 'santhila', 'S', 'santhila', 'S', 'kulalumpur', NULL, 'kulalumpur', 'KUL', '59003', 'MY', 'santhila', 'S', 'kulalumpur', NULL, 'kulalumpur', 'KUL', '59003', 'MY', '158.0000', 'flat_rate', '22.0000', NULL, '0.0000', '180.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-09-28 11:42:43', '2023-09-28 11:42:44', NULL, NULL, NULL, NULL),
+(54, 5, 'prabakaran13@santhila.co', '9578009264', 'Prabakaran', 'V', 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', '1023.0000', 'free_shipping', '0.0000', NULL, '0.0000', '1023.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-10-06 07:36:09', '2023-10-06 07:36:11', NULL, NULL, NULL, NULL),
+(55, 5, 'prabakaran13@santhila.co', '9578009264', 'Prabakaran', 'V', 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', '29.0000', 'local_pickup', '2.0000', NULL, '0.0000', '31.0000', 'razerpay', 'MYR', '1.0000', 'en', 'pending_payment', NULL, 'Order Note Test Entry. Birthday wishes', 0, NULL, '2023-10-06 07:44:11', '2023-10-06 07:44:11', '2023-10-11', NULL, NULL, NULL),
+(56, 5, 'prabakaran13@santhila.co', '9578009264', 'Prabakaran', 'V', 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', '29.0000', 'local_pickup', '2.0000', NULL, '0.0000', '31.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-10-06 07:48:18', '2023-10-06 07:48:20', '2023-10-12', NULL, NULL, NULL),
+(57, 5, 'prabakaran13@santhila.co', '9578009264', 'Prabakaran', 'V', 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', '11.0000', 'local_pickup', '2.0000', NULL, '0.0000', '13.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-10-06 08:04:46', '2023-10-06 08:04:49', NULL, NULL, NULL, NULL),
+(58, 5, 'prabakaran13@santhila.co', '9578009264', 'Prabakaran', 'V', 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', '328.0000', 'free_shipping', '0.0000', NULL, '0.0000', '328.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-10-06 08:24:55', '2023-10-06 08:24:57', '2023-10-11', NULL, NULL, NULL),
+(59, 5, 'prabakaran13@santhila.co', '9578009264', 'Prabakaran', 'V', 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', '300.0000', 'free_shipping', '0.0000', NULL, '0.0000', '300.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-10-06 08:48:38', '2023-10-06 08:48:40', '2023-10-06', NULL, NULL, NULL),
+(62, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '9.0000', 'local_pickup', '2.0000', NULL, '0.0000', '11.0000', 'razerpay', 'MYR', '1.0000', 'en', 'pending_payment', NULL, NULL, 0, NULL, '2023-10-25 10:52:46', '2023-10-25 10:52:46', '2023-10-26', NULL, NULL, NULL),
+(63, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '9.0000', 'local_pickup', '2.0000', NULL, '0.0000', '11.0000', 'razerpay', 'MYR', '1.0000', 'en', 'pending_payment', NULL, NULL, 0, NULL, '2023-10-25 10:53:04', '2023-10-25 10:53:04', '2023-10-26', NULL, NULL, NULL),
+(64, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '9.0000', 'local_pickup', '2.0000', NULL, '0.0000', '11.0000', 'cod', 'MYR', '1.0000', 'en', 'pending_payment', NULL, NULL, 0, NULL, '2023-10-25 10:53:16', '2023-10-25 10:53:16', '2023-10-26', NULL, NULL, NULL),
+(65, 1, 'giri@santhila.co', '91404040404', 'santhila', 'S', 'santhila', 'S', 'kulalumpur', NULL, 'kulalumpur', 'KUL', '59003', 'MY', 'santhila', 'S', 'kulalumpur', NULL, 'kulalumpur', 'KUL', '59003', 'MY', '199.0000', 'local_pickup', '2.0000', NULL, '0.0000', '201.0000', 'razerpay', 'MYR', '1.0000', 'en', 'pending_payment', NULL, NULL, 0, NULL, '2023-10-25 11:01:38', '2023-10-25 11:01:38', '2023-10-26', NULL, NULL, NULL),
+(66, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '199.0000', 'local_pickup', '2.0000', NULL, '0.0000', '201.0000', 'razerpay', 'MYR', '1.0000', 'en', 'pending_payment', NULL, NULL, 0, NULL, '2023-10-25 12:53:45', '2023-10-25 12:53:45', '2023-10-26', NULL, NULL, NULL),
+(67, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '199.0000', 'local_pickup', '2.0000', NULL, '0.0000', '201.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-10-25 12:54:18', '2023-10-25 12:54:21', '2023-10-26', NULL, NULL, NULL),
+(68, 1, 'giri@santhila.co', '91404040404', 'santhila', 'S', 'santhila', 'S', 'kulalumpur', NULL, 'kulalumpur', 'KUL', '59003', 'MY', 'santhila', 'S', 'kulalumpur', NULL, 'kulalumpur', 'KUL', '59003', 'MY', '11.0000', 'flat_rate', '22.0000', NULL, '0.0000', '33.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-10-25 15:12:04', '2023-10-25 15:12:07', NULL, 8, NULL, NULL),
+(70, 7, 'indhumathi@santhila.co', '9995511447', 'Indumathi', 'E', 'Indumathi', 'E', 'kulalumpur', NULL, 'kulalumpur', 'TRG', '59000', 'MY', 'APS Main', NULL, 'Kuala Lumpur', 'Kuala Lumpur', 'Kuala Lumpur', 'KUL', '59000', 'MY', '9.0000', 'local_pickup', '2.0000', NULL, '0.0000', '11.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-10-26 06:55:30', '2023-10-26 06:55:32', NULL, 1, NULL, NULL),
+(71, 7, 'indhumathi@santhila.co', '9995511447', 'Indumathi', 'E', 'Indumathi', 'E', 'kulalumpur', NULL, 'kulalumpur', 'TRG', '59000', 'MY', 'APS Selangor', NULL, 'Selangorr', 'Selangor', 'Selangor', 'SGR', '59001', 'MY', '158.0000', 'local_pickup', '2.0000', NULL, '0.0000', '160.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-10-26 07:02:19', '2023-10-26 07:02:20', NULL, 2, NULL, NULL),
+(72, 7, 'indhumathi@santhila.co', '9995511447', 'Indumathi', 'E', 'Indumathi', 'E', 'kulalumpur', NULL, 'kulalumpur', 'TRG', '59000', 'MY', 'APS Main', NULL, 'Kuala Lumpur', 'Kuala Lumpur', 'Kuala Lumpur', 'KUL', '59000', 'MY', '2.0000', 'local_pickup', '2.0000', NULL, '0.0000', '4.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-10-26 07:03:49', '2023-10-26 07:03:51', NULL, 1, NULL, NULL),
+(73, 7, 'indhumathi@santhila.co', '9995511447', 'Indumathi', 'E', 'Indumathi', 'E', 'kulalumpur', NULL, 'kulalumpur', 'TRG', '59000', 'MY', 'APS Selangor', NULL, 'Selangorr', 'Selangor', 'Selangor', 'SGR', '59001', 'MY', '9.0000', 'local_pickup', '2.0000', NULL, '0.0000', '11.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-10-26 07:04:47', '2023-10-26 07:04:49', NULL, 2, NULL, NULL),
+(74, 7, 'indhumathi@santhila.co', '9995511447', 'Indumathi', 'E', 'Indumathi', 'E', 'kulalumpur', NULL, 'kulalumpur', 'TRG', '59000', 'MY', 'APS Main', NULL, 'Kuala Lumpur', 'Kuala Lumpur', 'Kuala Lumpur', 'KUL', '59000', 'MY', '8.2800', 'local_pickup', '2.0000', NULL, '0.0000', '10.2800', 'razerpay', 'MYR', '1.0000', 'en', 'pending_payment', NULL, NULL, 0, NULL, '2023-10-26 08:36:52', '2023-10-26 08:36:52', NULL, 1, NULL, NULL),
+(85, 8, 'prabakaran@santhila.co1', '9578009226', 'Prabakaran1', 'V', 'Prabakaran1', 'V', 'Address 1', 'Address 2', 'Kualalumpur', 'KUL', '59000', 'MY', 'Prabakaran1', 'V', 'Address 1', 'Address 2', 'Kualalumpur', 'KUL', '59000', 'MY', '163.0000', 'free_shipping', '0.0000', 6, '50.0000', '93.0000', 'razerpay', 'MYR', '1.0000', 'en', 'pending_payment', NULL, 'Test Order Note', 0, NULL, '2023-10-28 11:11:01', '2023-10-28 11:11:01', NULL, NULL, 40, '20.00'),
+(86, 8, 'prabakaran@santhila.co1', '9578009226', 'Prabakaran1', 'V', 'Prabakaran1', 'V', 'Address 1', 'Address 2', 'Kualalumpur', 'KUL', '59000', 'MY', 'Prabakaran1', 'V', 'Address 1', 'Address 2', 'Kualalumpur', 'KUL', '59000', 'MY', '163.0000', 'free_shipping', '0.0000', 6, '50.0000', '93.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, 'Special Note for delivery', 0, NULL, '2023-10-28 11:13:38', '2023-10-28 11:13:42', NULL, NULL, 41, '15.00'),
+(96, 4, 'prabakaran@santhila.co', '9578009264', 'Prabakaran', 'V', 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', '269.0000', 'free_shipping', '0.0000', NULL, '0.0000', '269.0000', 'razerpay', 'MYR', '1.0000', 'en', 'pending_payment', NULL, NULL, 0, NULL, '2023-10-31 13:19:24', '2023-10-31 13:19:24', NULL, NULL, 55, '25.00'),
+(97, 1, 'giri@santhila.co', '91404040404', 'GIRISH', 'SHANKAR', 'GIRISH', 'SHANKAR', 'kulalumpur', NULL, 'kulalumpur', 'KUL', '59003', 'MY', 'GIRISH', 'SHANKAR', 'kulalumpur', NULL, 'kulalumpur', 'KUL', '59003', 'MY', '300.0000', 'flat_rate', '22.0000', NULL, '0.0000', '322.0000', 'cod', 'MYR', '1.0000', 'en', 'pending_payment', 'Login', NULL, 0, NULL, '2023-11-01 15:41:22', '2023-11-01 15:41:22', NULL, NULL, NULL, NULL),
+(98, 3, 'mahi@santhila.co', '9994520822', 'Mahendran', 'Sadhasivam', 'Mahendran', 'Sadhasivam', '338/1A LVR colony', NULL, 'Erode', '', '638004', 'MY', 'Mahendran', 'Sadhasivam', 'Mahendran Sadhasivam', '338/1A LVR colony', 'Erode', '', '638004', 'MY', '800.0000', 'local_pickup', '2.0000', NULL, '0.0000', '802.0000', 'cod', 'MYR', '1.0000', 'en', 'pending_payment', 'Login', NULL, 0, NULL, '2023-11-01 15:45:45', '2023-11-01 15:45:45', '2023-11-11', NULL, NULL, NULL),
+(99, 3, 'mahi@santhila.co', '9994520822', 'Mahendran', 'Sadhasivam', 'Mahendran', 'Sadhasivam', '121-Kovil Street', NULL, 'Erode', '', '638004', 'MY', 'Mahendran', 'Sadhasivam', '121-Kovil Street', NULL, 'Erode', '', '638004', 'MY', '250.0000', 'free_shipping', '0.0000', NULL, '0.0000', '250.0000', 'cod', 'MYR', '1.0000', 'en', 'pending_payment', 'Login', NULL, 0, NULL, '2023-11-01 15:51:56', '2023-11-01 15:51:56', NULL, NULL, NULL, NULL),
+(100, 1, 'giri@santhila.co', '91404040404', 'GIRISH', 'SHANKAR', 'GIRISH', 'SHANKAR', 'erode', NULL, 'erode', 'KUL', '638052', 'MY', 'GIRISH', 'SHANKAR', 'kulalumpur', NULL, 'kulalumpur', 'KUL', '59003', 'MY', '150.0000', 'flat_rate', '22.0000', NULL, '0.0000', '172.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', 'Login', NULL, 0, NULL, '2023-11-02 06:25:52', '2023-11-02 06:25:52', '2023-11-03', NULL, NULL, NULL),
+(101, 1, 'indhumathi123@santhila.co', '91404040404', 'GIRISH', 'SHANKAR', 'GIRISH', 'SHANKAR', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'GIRISH', 'SHANKAR', 'APS JHR', 'Johor Bahru', 'Johor Bahru', 'TRG', 'Johor Bahru', 'MY', '150.0000', 'local_pickup', '2.0000', NULL, '0.0000', '152.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', 'Login', NULL, 0, NULL, '2023-11-02 06:34:24', '2023-11-02 06:34:24', '2023-11-03', NULL, NULL, NULL),
+(102, 3, 'mahi@santhila.co', '9994520822', 'Mahendran', 'Sadhasivam', 'Mahendran', 'Sadhasivam', '121-Kovil Street', NULL, 'Erode', '', '638004', 'MY', 'Mahendran', 'Sadhasivam', '338/1A LVR colony', NULL, 'Erode', '', '638004', 'MY', '150.0000', 'free_shipping', '0.0000', NULL, '0.0000', '150.0000', 'cod', 'MYR', '1.0000', 'en', 'completed', 'Login', NULL, 0, NULL, '2023-11-02 14:21:45', '2023-11-02 14:21:45', NULL, NULL, NULL, NULL),
+(103, 5, 'prabakaran13@santhila.co', '9578009264', 'Prabakaran', 'V', 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', '280.0000', 'local_pickup', '2.0000', NULL, '0.0000', '282.0000', 'razerpay', 'MYR', '1.0000', 'en', 'completed', NULL, NULL, 1, NULL, '2023-11-10 12:10:40', '2023-11-10 12:10:40', NULL, NULL, NULL, NULL),
+(105, 4, 'prabakaran@santhila.co', '9578009264', 'Prabakaran', 'V', 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', 'Prabakaran', 'V', '#45667, Jalan Gopeng, Off Jalan Pasar,', NULL, 'Klang', 'SGR', '41400', 'MY', '161.0000', 'local_pickup', '2.0000', NULL, '0.0000', '163.0000', 'razerpay', 'MYR', '1.0000', 'en', 'pending_payment', NULL, NULL, 0, NULL, '2023-11-11 08:01:28', '2023-11-11 08:01:28', NULL, NULL, 60, '5.00'),
+(106, 1, 'giri@santhila.co', '91404040404', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'TRG', '6380000', 'MY', '63.0000', 'local_pickup', '2.0000', NULL, '0.0000', '65.0000', 'razerpay', 'MYR', '1.0000', 'en', 'pending_payment', NULL, NULL, 1, NULL, '2023-11-17 10:29:17', '2023-11-17 10:29:17', NULL, NULL, NULL, NULL),
+(107, 6, 'sangeetha@gmail.com', '9788894897', 'Sangeetha', 'M', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'SGR', '6380000', 'MY', 'Sangeetha', 'M', 'SOLAR', 'ERODE', 'ERODE', 'SGR', '6380000', 'MY', '16.7256', 'local_pickup', '2.0000', NULL, '0.0000', '18.7256', 'razerpay', 'MYR', '1.0000', 'en', 'pending_payment', NULL, NULL, 0, NULL, '2023-11-17 10:39:06', '2023-11-17 10:39:06', NULL, NULL, NULL, NULL),
+(108, 6, 'sangeetha@gmail.com', '9788894897', 'Sangeetha', 'M', 'Sangeetha', 'M', 'erode', NULL, 'erode', '', '59000', 'MY', 'Sangeetha', 'M', 'APS Main', 'Kuala Lumpur', 'Kuala Lumpur', '', 'Kuala Lumpur', 'MY', '140.0000', 'local_pickup', '2.0000', 9, '15.4000', '126.6000', 'cod', 'MYR', '1.0000', 'en', 'completed', 'Login', NULL, 0, NULL, '2023-11-17 10:56:54', '2023-11-17 10:56:54', NULL, NULL, NULL, NULL),
+(109, 6, 'sangeetha@gmail.com', '9788894897', 'Sangeetha', 'M', 'Sangeetha', 'M', 'erode', NULL, 'erode', '', '59000', 'MY', 'Sangeetha', 'M', 'APS Main', 'Kuala Lumpur', 'Kuala Lumpur', '', 'Kuala Lumpur', 'MY', '140.0000', 'local_pickup', '2.0000', 9, '15.4000', '126.6000', 'cod', 'MYR', '1.0000', 'en', 'completed', 'Login', NULL, 0, NULL, '2023-11-17 10:56:56', '2023-11-17 10:56:56', NULL, NULL, NULL, NULL),
+(110, 23, 'udhaya@gmail.com', '546465', 'udhya', 's', 'udhya', 's', 'Malaysia', 'Malaysia', 'Malaysia', 'SGR', '59000', 'MY', 'udhya', 's', 'Malaysia', 'Malaysia', 'Malaysia', 'SGR', '59000', 'MY', '99.0000', 'local_pickup', '2.0000', NULL, '0.0000', '101.0000', 'razerpay', 'MYR', '1.0000', 'en', 'pending_payment', NULL, NULL, 0, NULL, '2023-11-17 11:59:46', '2023-11-17 11:59:46', NULL, NULL, NULL, NULL),
+(111, 23, 'udhaya@gmail.com', '546465', 'udhya', 's', 'udhya', 's', 'Malaysia', 'Malaysia', 'Malaysia', 'SGR', '59000', 'MY', 'udhya', 's', 'Malaysia', 'Malaysia', 'Malaysia', 'SGR', '59000', 'MY', '99.0000', 'local_pickup', '2.0000', NULL, '0.0000', '101.0000', 'razerpay', 'MYR', '1.0000', 'en', 'pending_payment', NULL, NULL, 0, NULL, '2023-11-17 12:07:17', '2023-11-17 12:07:17', NULL, NULL, NULL, NULL),
+(112, 23, 'udhaya@gmail.com', '546465', 'udhya', 's', 'udhya', 's', 'Malaysia', 'Malaysia', 'Malaysia', 'SGR', '59000', 'MY', 'udhya', 's', 'Malaysia', 'Malaysia', 'Malaysia', 'SGR', '59000', 'MY', '99.0000', 'local_pickup', '2.0000', NULL, '0.0000', '101.0000', 'cod', 'MYR', '1.0000', 'en', 'pending', NULL, NULL, 0, NULL, '2023-11-17 12:15:07', '2023-11-17 12:15:09', NULL, NULL, NULL, NULL),
+(113, 23, 'udhaya@gmail.com', '546465', 'udhya', 's', 'udhya', 's', 'Malaysia', 'Malaysia', 'Malaysia', 'SGR', '59000', 'MY', 'udhya', 's', 'Malaysia', 'Malaysia', 'Malaysia', 'SGR', '59000', 'MY', '396.0000', 'free_shipping', '0.0000', NULL, '0.0000', '396.0000', 'razerpay', 'MYR', '1.0000', 'en', 'pending_payment', NULL, NULL, 0, NULL, '2023-11-17 12:20:57', '2023-11-17 12:20:57', NULL, NULL, 62, '20.00');
 
 -- --------------------------------------------------------
 
@@ -1845,9 +2467,6 @@ INSERT INTO `order_products` (`id`, `order_id`, `product_id`, `unit_price`, `qty
 (22, 19, 11, '18.0000', 1, '18.0000', NULL),
 (23, 20, 18, '9.0000', 1, '9.0000', NULL),
 (24, 20, 5, '20.0000', 1, '20.0000', NULL),
-(25, 21, 8, '145.0000', 1, '145.0000', NULL),
-(26, 21, 5, '20.0000', 1, '20.0000', NULL),
-(27, 21, 16, '14.0000', 1, '14.0000', NULL),
 (28, 22, 10, '19.0000', 5, '95.0000', NULL),
 (29, 22, 7, '158.0000', 2, '316.0000', NULL),
 (30, 22, 5, '20.0000', 1, '20.0000', NULL),
@@ -1891,7 +2510,60 @@ INSERT INTO `order_products` (`id`, `order_id`, `product_id`, `unit_price`, `qty
 (68, 50, 24, '9.0000', 1, '9.0000', NULL),
 (69, 50, 15, '24.0000', 1, '24.0000', NULL),
 (70, 51, 7, '158.0000', 1, '158.0000', NULL),
-(71, 52, 7, '158.0000', 1, '158.0000', NULL);
+(71, 52, 7, '158.0000', 1, '158.0000', NULL),
+(73, 54, 15, '24.0000', 1, '24.0000', NULL),
+(74, 54, 6, '999.0000', 1, '999.0000', NULL),
+(75, 55, 24, '9.0000', 1, '9.0000', NULL),
+(76, 55, 5, '20.0000', 1, '20.0000', NULL),
+(77, 56, 24, '9.0000', 1, '9.0000', NULL),
+(78, 56, 5, '20.0000', 1, '20.0000', NULL),
+(79, 57, 24, '9.0000', 1, '9.0000', NULL),
+(80, 57, 17, '2.0000', 1, '2.0000', NULL),
+(81, 58, 9, '150.0000', 1, '150.0000', NULL),
+(82, 58, 5, '20.0000', 1, '20.0000', NULL),
+(83, 58, 7, '158.0000', 1, '158.0000', NULL),
+(84, 59, 9, '150.0000', 2, '300.0000', NULL),
+(89, 62, 24, '9.0000', 1, '9.0000', NULL),
+(90, 63, 24, '9.0000', 1, '9.0000', NULL),
+(91, 64, 24, '9.0000', 1, '9.0000', NULL),
+(92, 65, 2, '199.0000', 1, '199.0000', NULL),
+(93, 66, 2, '199.0000', 1, '199.0000', NULL),
+(94, 67, 2, '199.0000', 1, '199.0000', NULL),
+(95, 68, 24, '9.0000', 1, '9.0000', NULL),
+(96, 68, 17, '2.0000', 1, '2.0000', NULL),
+(100, 70, 24, '9.0000', 1, '9.0000', NULL),
+(101, 71, 7, '158.0000', 1, '158.0000', NULL),
+(102, 72, 17, '2.0000', 1, '2.0000', NULL),
+(103, 73, 24, '9.0000', 1, '9.0000', NULL),
+(104, 74, 26, '8.2800', 1, '8.2800', NULL),
+(132, 85, 17, '2.0000', 1, '2.0000', NULL),
+(133, 85, 13, '147.0000', 1, '147.0000', NULL),
+(134, 85, 16, '14.0000', 1, '14.0000', NULL),
+(135, 86, 17, '2.0000', 1, '2.0000', NULL),
+(136, 86, 13, '147.0000', 1, '147.0000', NULL),
+(137, 86, 16, '14.0000', 1, '14.0000', NULL),
+(158, 96, 14, '250.0000', 1, '250.0000', NULL),
+(159, 96, 10, '19.0000', 1, '19.0000', NULL),
+(160, 97, 4, '100.0000', 3, '300.0000', NULL),
+(161, 98, 2, '200.0000', 3, '600.0000', '2023-11-11'),
+(162, 98, 10, '20.0000', 10, '200.0000', '2023-11-11'),
+(163, 99, 5, '25.0000', 10, '250.0000', NULL),
+(164, 100, 3, '50.0000', 3, '150.0000', '2023-11-03'),
+(165, 101, 13, '150.0000', 1, '150.0000', '2023-11-03'),
+(166, 102, 3, '50.0000', 3, '150.0000', NULL),
+(167, 103, 12, '50.0000', 1, '50.0000', NULL),
+(168, 103, 5, '20.0000', 1, '20.0000', NULL),
+(171, 105, 16, '14.0000', 1, '14.0000', NULL),
+(172, 105, 13, '147.0000', 1, '147.0000', NULL),
+(173, 106, 24, '9.0000', 1, '9.0000', NULL),
+(174, 107, 26, '8.4456', 1, '8.4456', NULL),
+(175, 107, 26, '8.2800', 1, '8.2800', NULL),
+(176, 108, 16, '14.0000', 10, '140.0000', NULL),
+(177, 109, 16, '14.0000', 10, '140.0000', NULL),
+(178, 110, 27, '99.0000', 1, '99.0000', NULL),
+(179, 111, 27, '99.0000', 1, '99.0000', NULL),
+(180, 112, 27, '99.0000', 1, '99.0000', NULL),
+(181, 113, 27, '99.0000', 4, '396.0000', NULL);
 
 -- --------------------------------------------------------
 
@@ -1912,7 +2584,8 @@ CREATE TABLE `order_product_options` (
 
 INSERT INTO `order_product_options` (`id`, `order_product_id`, `option_id`, `value`) VALUES
 (1, 6, 4, NULL),
-(2, 10, 4, NULL);
+(2, 10, 4, NULL),
+(5, 174, 9, NULL);
 
 -- --------------------------------------------------------
 
@@ -1932,7 +2605,8 @@ CREATE TABLE `order_product_option_values` (
 
 INSERT INTO `order_product_option_values` (`order_product_option_id`, `option_value_id`, `price`) VALUES
 (1, 4, '50.0000'),
-(2, 4, '50.0000');
+(2, 4, '50.0000'),
+(5, 12, '0.1656');
 
 -- --------------------------------------------------------
 
@@ -1993,7 +2667,7 @@ CREATE TABLE `page_translations` (
 
 INSERT INTO `page_translations` (`id`, `page_id`, `locale`, `name`, `body`) VALUES
 (1, 1, 'en', 'Garlands', '<p>test</p>'),
-(2, 2, 'en', 'About Us', '<div id=\"pg-181-0\" class=\"panel-grid panel-no-style\">\r\n<div id=\"pgc-181-0-0\" class=\"panel-grid-cell\">\r\n<div id=\"panel-181-0-0-0\" class=\"so-panel widget widget_black-studio-tinymce widget_black_studio_tinymce panel-first-child panel-last-child\" data-index=\"0\">\r\n<div id=\"pgc-181-0-0\" class=\"panel-grid-cell\">\r\n<div id=\"panel-181-0-0-0\" class=\"so-panel widget widget_black-studio-tinymce widget_black_studio_tinymce panel-first-child panel-last-child\" data-index=\"0\">\r\n<div id=\"pg-181-0\" class=\"panel-grid panel-no-style\">\r\n<div id=\"pgc-181-0-0\" class=\"panel-grid-cell\">\r\n<div id=\"panel-181-0-0-0\" class=\"so-panel widget widget_black-studio-tinymce widget_black_studio_tinymce panel-first-child panel-last-child\" data-index=\"0\">\r\n<h3 class=\"widget-title\"><span class=\"light\">Who</span>&nbsp;We Are</h3>\r\n<div class=\"textwidget\">\r\n<p><strong>Nature Max Flourish Sdn Bhd</strong>&nbsp;(formally known as Nature Flow Enterprise) was established in the year 2016 to fill and support the ever growing needs of fresh flowers mainly for prayers, weddings, decorations, festivals and events.</p>\r\n</div>\r\n</div>\r\n</div>\r\n<div id=\"pgc-181-0-1\" class=\"panel-grid-cell\">\r\n<div id=\"panel-181-0-1-0\" class=\"so-panel widget widget_black-studio-tinymce widget_black_studio_tinymce panel-first-child panel-last-child\" data-index=\"1\">\r\n<div class=\"textwidget\"><img class=\"alignnone size-full wp-image-7379\" style=\"margin: 40px 210px 40px 210px;\" src=\"/storage/media/GGW8S0G1zME9cJ1BJreTtadaEVIum8pMyjPdLtc7.jpg\" alt=\"\" width=\"1024\" height=\"550\" /></div>\r\n</div>\r\n</div>\r\n</div>\r\n<div id=\"pg-181-1\" class=\"panel-grid panel-no-style\">\r\n<div id=\"pgc-181-1-0\" class=\"panel-grid-cell\">\r\n<div id=\"panel-181-1-0-0\" class=\"so-panel widget widget_text panel-first-child panel-last-child\" data-index=\"2\">\r\n<div class=\"textwidget\">\r\n<div class=\"dropcap-wrap\">\r\n<div class=\"dropcap-pull\"><span class=\"dropcap style1\">1985</span></div>\r\n<strong>Started the Company</strong></div>\r\nThe business concept was inspired by Late Mr. Sellahdoray s/o Ramasamy and Madam Rasammal in 1985 whereby they started by selling jasmine flower and roses from their own small farm in Batu Arang to support the family.</div>\r\n<div class=\"textwidget\">&nbsp;</div>\r\n<div class=\"textwidget\">&nbsp;</div>\r\n</div>\r\n</div>\r\n<div id=\"pgc-181-1-1\" class=\"panel-grid-cell\">\r\n<div id=\"panel-181-1-1-0\" class=\"so-panel widget widget_text panel-first-child panel-last-child\" data-index=\"3\">\r\n<div class=\"textwidget\">\r\n<div class=\"dropcap-wrap\">\r\n<div class=\"dropcap-pull\"><span class=\"dropcap style1\">1998</span></div>\r\n<strong class=\"dropcap-title\">Second Location</strong></div>\r\nIn 1998 they expand the farm to 10 acres to cover the demand of the flowers. As every business has downfall, in 2006 worker shortage and weather become an issue,his eldest son Mr. Palaniappan started to explore other alternative to sustain the business. As their grow, Mr. Ganesh the second son join together to build the empire.<br />\r\n<p>&nbsp;</p>\r\n</div>\r\n</div>\r\n</div>\r\n<div id=\"pgc-181-1-2\" class=\"panel-grid-cell\">\r\n<div id=\"panel-181-1-2-0\" class=\"so-panel widget widget_text panel-first-child panel-last-child\" data-index=\"4\">\r\n<div class=\"textwidget\">\r\n<div class=\"dropcap-wrap\">\r\n<div class=\"dropcap-pull\"><span class=\"dropcap style1\">2008</span></div>\r\n<strong class=\"dropcap-title\">Biggest Indian Flower Importer</strong></div>\r\nBy 2008 they started to import other flowers as well like Thailand roses, orchid and introduce the variety of flower into the market. In end of 2008 they decided to open an outlet in Brickfields for storage as well as a shop for retail market.\r\n<p>&nbsp;</p>\r\n</div>\r\n</div>\r\n</div>\r\n</div>\r\n<div id=\"pg-181-2\" class=\"panel-grid panel-no-style\">\r\n<div id=\"pgc-181-2-0\" class=\"panel-grid-cell\">\r\n<div id=\"panel-181-2-0-0\" class=\"so-panel widget widget_black-studio-tinymce widget_black_studio_tinymce panel-first-child\" data-index=\"5\">\r\n<h3 class=\"widget-title\"><span class=\"light\">Nation</span>&nbsp;Wide Distributor</h3>\r\n</div>\r\n<div id=\"panel-181-2-0-1\" class=\"so-panel widget widget_text panel-last-child\" data-index=\"6\">\r\n<div class=\"textwidget\">\r\n<p>After 10 years, now&nbsp;<strong>Nature Max Flourish Sdn Bhd</strong>&nbsp;is one of the largest wholesale flower distributors in Malaysia, supplying retail florists with high quality cut flowers, greens, fillers, and protea. We take pride of bringing in quality flower products by sources from both local and foreign farms mainly from Indonesia and India. The products are sourced from a carefully chosen partner farms to guarantee the best quality at the best and competitive price.</p>\r\n<p>By taking advantage of technology, innovative operations approach, strong partnerships built over a long time&nbsp;in this industry, and good old fashioned hard work,&nbsp;<strong>Nature Max Flourish Sdn</strong>&nbsp;<strong>Bhd</strong>&nbsp;is striving to be a cut above many of its competitors.&nbsp;<strong>Nature Max Flourish Sdn Bhd</strong>&nbsp;belief that we will do whatever is necessary and what our competitors are not willing to do to establish a long lasting relationship with the customer.</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n</div>\r\n</div>\r\n</div>\r\n</div>\r\n<div id=\"pg-181-3\" class=\"panel-grid panel-has-style\">\r\n<div class=\"panel-row-style panel-row-style-for-181-3\">\r\n<div id=\"pgc-181-3-0\" class=\"panel-grid-cell\">\r\n<div id=\"panel-181-3-0-0\" class=\"so-panel widget widget_media_image panel-first-child panel-last-child\" data-index=\"7\"><img class=\"image wp-image-7457  attachment-large size-large about_img\" src=\"/storage/media/RVaFqlz4tw8V99qOwlKExMzjMZlw5CEg9CUxJqTj.jpg\" sizes=\"(max-width: 1024px) 100vw, 1024px\" srcset=\"https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-1-1024x576.jpg 1024w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-1-300x169.jpg 300w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-1-768x432.jpg 768w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-1-850x479.jpg 850w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-1-360x203.jpg 360w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-1.jpg 1365w\" alt=\"\" width=\"400\" height=\"224\" loading=\"lazy\" /><img class=\"image wp-image-7483  attachment-large size-large about_img\" style=\"border-width: 1px;\" src=\"/storage/media/JvA6ZeZPCYd73cgVVDve9WD0UiBIk2cm3GX77wDZ.jpg\" sizes=\"(max-width: 1024px) 100vw, 1024px\" srcset=\"https://www.naturemaxflorist.com.my/wp-content/uploads/2019/03/20160305_094336-1-1024x576.jpg 1024w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/03/20160305_094336-1-300x169.jpg 300w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/03/20160305_094336-1-768x432.jpg 768w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/03/20160305_094336-1-850x479.jpg 850w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/03/20160305_094336-1-360x203.jpg 360w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/03/20160305_094336-1.jpg 1920w\" alt=\"\" width=\"400\" height=\"226\" loading=\"lazy\" /><img class=\"image wp-image-7459  attachment-large size-large about_img\" src=\"/storage/media/blijTqVbkCuA4B6NyVOs6Io7fJ597WQWbjHRTOKr.jpg\" sizes=\"(max-width: 1024px) 100vw, 1024px\" srcset=\"https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-2-1024x576.jpg 1024w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-2-300x169.jpg 300w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-2-768x432.jpg 768w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-2-850x479.jpg 850w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-2-360x203.jpg 360w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-2.jpg 1366w\" alt=\"\" width=\"400\" height=\"225\" loading=\"lazy\" /></div>\r\n</div>\r\n</div>\r\n</div>\r\n</div>\r\n</div>\r\n</div>\r\n</div>\r\n</div>\r\n<div>&nbsp;</div>'),
+(2, 2, 'en', 'About Us', '<div id=\"pg-181-0\" class=\"panel-grid panel-no-style\">\r\n<div id=\"pgc-181-0-0\" class=\"panel-grid-cell\">\r\n<div id=\"panel-181-0-0-0\" class=\"so-panel widget widget_black-studio-tinymce widget_black_studio_tinymce panel-first-child panel-last-child\" data-index=\"0\">\r\n<div id=\"pgc-181-0-0\" class=\"panel-grid-cell\">\r\n<div id=\"panel-181-0-0-0\" class=\"so-panel widget widget_black-studio-tinymce widget_black_studio_tinymce panel-first-child panel-last-child\" data-index=\"0\">\r\n<div id=\"pg-181-0\" class=\"panel-grid panel-no-style\">\r\n<div id=\"pgc-181-0-0\" class=\"panel-grid-cell\">\r\n<div id=\"panel-181-0-0-0\" class=\"so-panel widget widget_black-studio-tinymce widget_black_studio_tinymce panel-first-child panel-last-child\" data-index=\"0\">\r\n<div id=\"pg-181-0\" class=\"panel-grid panel-no-style\">\r\n<div id=\"pgc-181-0-0\" class=\"panel-grid-cell\">\r\n<div id=\"panel-181-0-0-0\" class=\"so-panel widget widget_black-studio-tinymce widget_black_studio_tinymce panel-first-child panel-last-child\" data-index=\"0\">\r\n<h3 class=\"widget-title\"><span class=\"light\">Who</span>&nbsp;We Are</h3>\r\n<div class=\"textwidget\">\r\n<p><strong>Nature Max Flourish Sdn Bhd</strong>&nbsp;(formally known as Nature Flow Enterprise) was established in the year 2016 to fill and support the ever growing needs of fresh flowers mainly for prayers, weddings, decorations, festivals and events.</p>\r\n<p>&nbsp;</p>\r\n</div>\r\n</div>\r\n</div>\r\n<div id=\"pgc-181-0-1\" class=\"panel-grid-cell\">\r\n<div id=\"panel-181-0-1-0\" class=\"so-panel widget widget_black-studio-tinymce widget_black_studio_tinymce panel-first-child panel-last-child\" data-index=\"1\">\r\n<div class=\"textwidget\">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <img src=\"/storage/media/GGW8S0G1zME9cJ1BJreTtadaEVIum8pMyjPdLtc7.jpg\" alt=\"\" width=\"901\" height=\"484\" /></div>\r\n</div>\r\n</div>\r\n</div>\r\n<div id=\"pg-181-1\" class=\"panel-grid panel-no-style\">\r\n<div id=\"pgc-181-1-0\" class=\"panel-grid-cell\">\r\n<div id=\"panel-181-1-0-0\" class=\"so-panel widget widget_text panel-first-child panel-last-child\" data-index=\"2\">\r\n<div class=\"textwidget\">\r\n<div class=\"dropcap-wrap\">\r\n<div class=\"dropcap-pull\"><span class=\"dropcap style1\">1985</span></div>\r\n<strong>Started the Company</strong></div>\r\nThe business concept was inspired by Late Mr. Sellahdoray s/o Ramasamy and Madam Rasammal in 1985 whereby they started by selling jasmine flower and roses from their own small farm in Batu Arang to support the family.</div>\r\n</div>\r\n</div>\r\n</div>\r\n</div>\r\n</div>\r\n</div>\r\n<div id=\"pg-181-1\" class=\"panel-grid panel-no-style\">\r\n<div id=\"pgc-181-1-0\" class=\"panel-grid-cell\">\r\n<div id=\"panel-181-1-0-0\" class=\"so-panel widget widget_text panel-first-child panel-last-child\" data-index=\"2\">\r\n<div class=\"textwidget\">&nbsp;</div>\r\n<div class=\"textwidget\">&nbsp;</div>\r\n</div>\r\n</div>\r\n<div id=\"pgc-181-1-1\" class=\"panel-grid-cell\">\r\n<div id=\"panel-181-1-1-0\" class=\"so-panel widget widget_text panel-first-child panel-last-child\" data-index=\"3\">\r\n<div class=\"textwidget\">\r\n<div class=\"dropcap-wrap\">\r\n<div class=\"dropcap-pull\"><span class=\"dropcap style1\">1998</span></div>\r\n<strong class=\"dropcap-title\">Second Location</strong></div>\r\nIn 1998 they expand the farm to 10 acres to cover the demand of the flowers. As every business has downfall, in 2006 worker shortage and weather become an issue,his eldest son Mr. Palaniappan started to explore other alternative to sustain the business. As their grow, Mr. Ganesh the second son join together to build the empire.<br />\r\n<p>&nbsp;</p>\r\n</div>\r\n</div>\r\n</div>\r\n<div id=\"pgc-181-1-2\" class=\"panel-grid-cell\">\r\n<div id=\"panel-181-1-2-0\" class=\"so-panel widget widget_text panel-first-child panel-last-child\" data-index=\"4\">\r\n<div class=\"textwidget\">\r\n<div class=\"dropcap-wrap\">\r\n<div class=\"dropcap-pull\"><span class=\"dropcap style1\">2008</span></div>\r\n<strong class=\"dropcap-title\">Biggest Indian Flower Importer</strong></div>\r\nBy 2008 they started to import other flowers as well like Thailand roses, orchid and introduce the variety of flower into the market. In end of 2008 they decided to open an outlet in Brickfields for storage as well as a shop for retail market.\r\n<p>&nbsp;</p>\r\n</div>\r\n</div>\r\n</div>\r\n</div>\r\n<div id=\"pg-181-2\" class=\"panel-grid panel-no-style\">\r\n<div id=\"pgc-181-2-0\" class=\"panel-grid-cell\">\r\n<div id=\"panel-181-2-0-0\" class=\"so-panel widget widget_black-studio-tinymce widget_black_studio_tinymce panel-first-child\" data-index=\"5\">\r\n<h3 class=\"widget-title\"><span class=\"light\">Nation</span>&nbsp;Wide Distributor</h3>\r\n</div>\r\n<div id=\"panel-181-2-0-1\" class=\"so-panel widget widget_text panel-last-child\" data-index=\"6\">\r\n<div class=\"textwidget\">\r\n<p>After 10 years, now&nbsp;<strong>Nature Max Flourish Sdn Bhd</strong>&nbsp;is one of the largest wholesale flower distributors in Malaysia, supplying retail florists with high quality cut flowers, greens, fillers, and protea. We take pride of bringing in quality flower products by sources from both local and foreign farms mainly from Indonesia and India. The products are sourced from a carefully chosen partner farms to guarantee the best quality at the best and competitive price.</p>\r\n<p>By taking advantage of technology, innovative operations approach, strong partnerships built over a long time&nbsp;in this industry, and good old fashioned hard work,&nbsp;<strong>Nature Max Flourish Sdn</strong>&nbsp;<strong>Bhd</strong>&nbsp;is striving to be a cut above many of its competitors.&nbsp;<strong>Nature Max Flourish Sdn Bhd</strong>&nbsp;belief that we will do whatever is necessary and what our competitors are not willing to do to establish a long lasting relationship with the customer.</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n</div>\r\n</div>\r\n</div>\r\n</div>\r\n<div id=\"pg-181-3\" class=\"panel-grid panel-has-style\">\r\n<div class=\"panel-row-style panel-row-style-for-181-3\">\r\n<div id=\"pgc-181-3-0\" class=\"panel-grid-cell\">\r\n<div id=\"panel-181-3-0-0\" class=\"so-panel widget widget_media_image panel-first-child panel-last-child\" data-index=\"7\"><img class=\"image wp-image-7457  attachment-large size-large about_img\" src=\"/storage/media/RVaFqlz4tw8V99qOwlKExMzjMZlw5CEg9CUxJqTj.jpg\" sizes=\"(max-width: 1024px) 100vw, 1024px\" srcset=\"https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-1-1024x576.jpg 1024w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-1-300x169.jpg 300w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-1-768x432.jpg 768w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-1-850x479.jpg 850w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-1-360x203.jpg 360w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-1.jpg 1365w\" alt=\"\" width=\"400\" height=\"224\" loading=\"lazy\" /><img class=\"image wp-image-7483  attachment-large size-large about_img\" style=\"border-width: 1px;\" src=\"/storage/media/JvA6ZeZPCYd73cgVVDve9WD0UiBIk2cm3GX77wDZ.jpg\" sizes=\"(max-width: 1024px) 100vw, 1024px\" srcset=\"https://www.naturemaxflorist.com.my/wp-content/uploads/2019/03/20160305_094336-1-1024x576.jpg 1024w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/03/20160305_094336-1-300x169.jpg 300w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/03/20160305_094336-1-768x432.jpg 768w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/03/20160305_094336-1-850x479.jpg 850w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/03/20160305_094336-1-360x203.jpg 360w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/03/20160305_094336-1.jpg 1920w\" alt=\"\" width=\"400\" height=\"226\" loading=\"lazy\" /><img class=\"image wp-image-7459  attachment-large size-large about_img\" src=\"/storage/media/blijTqVbkCuA4B6NyVOs6Io7fJ597WQWbjHRTOKr.jpg\" sizes=\"(max-width: 1024px) 100vw, 1024px\" srcset=\"https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-2-1024x576.jpg 1024w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-2-300x169.jpg 300w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-2-768x432.jpg 768w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-2-850x479.jpg 850w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-2-360x203.jpg 360w, https://www.naturemaxflorist.com.my/wp-content/uploads/2019/02/About-us-2.jpg 1366w\" alt=\"\" width=\"400\" height=\"225\" loading=\"lazy\" /></div>\r\n</div>\r\n</div>\r\n</div>\r\n</div>\r\n</div>\r\n</div>\r\n</div>\r\n</div>\r\n<div>&nbsp;</div>'),
 (3, 3, 'en', 'Privacy Policy', '<p>Your privacy is as important to us as it is to you. We know you hate SPAM and so do we. That is why we will never sell or share your information with anyone without your express permission. We respect your rights and will do everything in our power to protect your personal information. In the interest of full disclosure, we provide this notice explaining our online information collection practices. This privacy notice discloses the privacy practices for&nbsp;<a href=\"https://envaysoft.com/\">EnvaySoft</a>&nbsp;(herein known as we, us and our company) and applies solely to information collected by this web site.</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<h4>Information Collection, Use, and Sharing</h4>\r\n<p>We are the sole owners of the information collected on this site. We only have access to information that you voluntarily give us via email or other direct contact from you. We will not sell or rent this information to anyone. We will use your information to respond to you, regarding the reason you contacted us. We will not share your information with any third party outside of our organization, other than as necessary to fulfill your request, e.g. to ship an order.</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<h4>Disclosure</h4>\r\n<p>This site uses Google web analytics service. Google may record mouse clicks, mouse movements, scrolling activity as well as text you type in this website. This site does not use Google to collect any personally identifiable information entered in this website. Google does track your browsing habits across web sites which do not use Google services.</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<h4>Security</h4>\r\n<p>We take precautions to protect your information. When you submit sensitive information via the website, your information is protected both online and offline.</p>\r\n<p>Wherever we collect sensitive information (such as credit card data), that information is encrypted and transmitted to us in a secure way. You can verify this by looking for a closed lock icon at the bottom of your web browser, or looking for &ldquo;https&rdquo; at the beginning of the address of the web page.</p>\r\n<p>While we use encryption to protect sensitive information transmitted online, we also protect your information offline. Only employees who need the information to perform a specific job (for example, billing or customer service) are granted access to personally identifiable information. The computers/servers in which we store personally identifiable information are kept in a secure environment.</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<h4>Email Policy</h4>\r\n<p>The following are situations in which you may provide Your Information to us:</p>\r\n<p>&nbsp;</p>\r\n<ul>\r\n<li>\r\n<p>When you fill out forms or fields through our Services.</p>\r\n</li>\r\n<li>\r\n<p>When you register for an account with our Service.</p>\r\n</li>\r\n<li>\r\n<p>When you create a subscription for our newsletter or Services.</p>\r\n</li>\r\n<li>\r\n<p>When you provide responses to a survey.</p>\r\n</li>\r\n<li>\r\n<p>When you answer questions on a quiz.</p>\r\n</li>\r\n<li>\r\n<p>When you join or enroll in an event through our Services.</p>\r\n</li>\r\n<li>\r\n<p>When you order services or products from, or through our Service.</p>\r\n</li>\r\n<li>\r\n<p>When you provide information to us through a third-party application, service or Website.</p>\r\n</li>\r\n</ul>'),
 (4, 4, 'en', 'Help & FAQ', '<h1>Help &amp; FAQ</h1>\r\n<p>&nbsp;</p>\r\n<p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<h4>What does LOREM mean?</h4>\r\n<p>&lsquo;Lorem ipsum dolor sit amet, consectetur adipisici elit&hellip;&rsquo; (complete text) is dummy text that is not meant to mean anything. It is used as a placeholder in magazine layouts, for example, in order to give an impression of the finished document. The text is intentionally unintelligible so that the viewer is not distracted by the content. The language is not real Latin and even the first word &lsquo;Lorem&rsquo; does not exist. It is said that the lorem ipsum text has been common among typesetters since the 16th century.</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<h4>Why do we use it?</h4>\r\n<p>It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using \'Content here, content here\', making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for \'lorem ipsum\' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<h4>Where does it come from?</h4>\r\n<p>Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source.</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<h4>Where can I get some?</h4>\r\n<p>There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don\'t look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn\'t anything embarrassing hidden in the middle of text. All the Lorem Ipsum generators on the Internet tend to repeat predefined chunks as necessary, making this the first true generator on the Internet. It uses a dictionary of over 200 Latin words, combined with a handful of model sentence structures, to generate Lorem Ipsum which looks reasonable. The generated Lorem Ipsum is therefore always free from repetition, injected humour, or non-characteristic words etc.</p>\r\n<p>&nbsp;</p>\r\n<p>&nbsp;</p>\r\n<h4>Why do we use Lorem Ipsum?</h4>\r\n<p>Many times, readers will get distracted by readable text when looking at the layout of a page. Instead of using filler text that says &ldquo;Insert content here,&rdquo; Lorem Ipsum uses a normal distribution of letters, making it resemble standard English. This makes it easier for designers to focus on visual elements, as opposed to what the text on a page actually says. Lorem Ipsum is absolutely necessary in most design cases, too. Web design projects like landing pages, website redesigns and so on only look as intended when they\'re fully-fleshed out with content.</p>'),
 (5, 5, 'en', 'Brands', '<div class=\"col-lg-3 col-md-6 col-9\"><a class=\"brand-image\" href=\"https://fleetcart.envaysoft.com/en/brands/apple/products\"><img src=\"https://fleetcart.envaysoft.com/storage/media/jZG1juhijMhWSrn8B4jgsX5x4Vb8dOTdZTtGNACo.png\" alt=\"brand image\" /></a></div>\r\n<div class=\"col-lg-3 col-md-6 col-9\"><a class=\"brand-image\" href=\"https://fleetcart.envaysoft.com/en/brands/samsung/products\"><img src=\"https://fleetcart.envaysoft.com/storage/media/nshpkDL124reDq8apPXBcpVrnV8ABDzC88R5gg3K.png\" alt=\"brand image\" /></a></div>\r\n<div class=\"col-lg-3 col-md-6 col-9\"><a class=\"brand-image\" href=\"https://fleetcart.envaysoft.com/en/brands/huawei/products\"><img src=\"https://fleetcart.envaysoft.com/storage/media/SbgS1CCecSpvvnBeBmG6xP49q2NymXQzJpiHbMAi.png\" alt=\"brand image\" /></a></div>\r\n<div class=\"col-lg-3 col-md-6 col-9\"><a class=\"brand-image\" href=\"https://fleetcart.envaysoft.com/en/brands/oneplus/products\"><img src=\"https://fleetcart.envaysoft.com/storage/media/JwT1Wydv8ADuSHBh7ZtCaWLkuO2Jy9WYZRovQW1W.png\" alt=\"brand image\" /></a></div>\r\n<div class=\"col-lg-3 col-md-6 col-9\"><a class=\"brand-image\" href=\"https://fleetcart.envaysoft.com/en/brands/hp/products\"><img src=\"https://fleetcart.envaysoft.com/storage/media/j2WP3lfi8JTanXQsxrNDclJAb2RHKxBOtlQwlK2g.png\" alt=\"brand image\" /></a></div>\r\n<div class=\"col-lg-3 col-md-6 col-9\"><a class=\"brand-image\" href=\"https://fleetcart.envaysoft.com/en/brands/dell/products\"><img src=\"https://fleetcart.envaysoft.com/storage/media/8bmlnpJluQBwAAJolyS708652aY6Kj8dEmYQ7woo.png\" alt=\"brand image\" /></a></div>\r\n<div class=\"col-lg-3 col-md-6 col-9\"><a class=\"brand-image\" href=\"https://fleetcart.envaysoft.com/en/brands/acer/products\"><img src=\"https://fleetcart.envaysoft.com/storage/media/rCfwklCfNTBKz4JGeloPqqI7BTS8PdYibzEkB8mS.png\" alt=\"brand image\" /></a></div>\r\n<div class=\"col-lg-3 col-md-6 col-9\"><a class=\"brand-image\" href=\"https://fleetcart.envaysoft.com/en/brands/asus/products\"><img src=\"https://fleetcart.envaysoft.com/storage/media/JnH5uK3QY3mOamQ8NsHCbtqj0xULHsjOTHtHTbeO.png\" alt=\"brand image\" /></a></div>\r\n<div class=\"col-lg-3 col-md-6 col-9\"><a class=\"brand-image\" href=\"https://fleetcart.envaysoft.com/en/brands/microsoft/products\"><img src=\"https://fleetcart.envaysoft.com/storage/media/HSvr36xBFke3Jh6mbDaeAG8jJZ4RH78ousrLr1i2.png\" alt=\"brand image\" /></a></div>\r\n<div class=\"col-lg-3 col-md-6 col-9\"><a class=\"brand-image\" href=\"https://fleetcart.envaysoft.com/en/brands/xiaomi/products\"><img src=\"https://fleetcart.envaysoft.com/storage/media/vW30vojYODrqYBs9x3ToIpBHm1zyrKU7ZhmD9SQG.png\" alt=\"brand image\" /></a></div>\r\n<div class=\"col-lg-3 col-md-6 col-9\"><a class=\"brand-image\" href=\"https://fleetcart.envaysoft.com/en/brands/google/products\"><img src=\"https://fleetcart.envaysoft.com/storage/media/RlQnH51zyXArkeBhIT0BCaJiyqAIcdCHCNjnsiZW.png\" alt=\"brand image\" /></a></div>\r\n<div class=\"col-lg-3 col-md-6 col-9\"><a class=\"brand-image\" href=\"https://fleetcart.envaysoft.com/en/brands/msi/products\"><img src=\"https://fleetcart.envaysoft.com/storage/media/8DfT3LNUhYbei3YrhJ1FscMVKiPPQi43LdCY29Am.png\" alt=\"brand image\" /></a></div>\r\n<div class=\"col-lg-3 col-md-6 col-9\"><a class=\"brand-image\" href=\"https://fleetcart.envaysoft.com/en/brands/lg/products\"><img src=\"https://fleetcart.envaysoft.com/storage/media/P9UF8sprnzBNqEnbAd2j82UA4b0fzk85uIZp4H4s.png\" alt=\"brand image\" /></a></div>\r\n<div class=\"col-lg-3 col-md-6 col-9\"><a class=\"brand-image\" href=\"https://fleetcart.envaysoft.com/en/brands/beats/products\"><img src=\"https://fleetcart.envaysoft.com/storage/media/3IcUp71JfyiH3wkWU0omhlcs0xqgdWzmY3Z4imMO.png\" alt=\"brand image\" /></a></div>\r\n<div class=\"col-lg-3 col-md-6 col-9\"><a class=\"brand-image\" href=\"https://fleetcart.envaysoft.com/en/brands/adidas/products\"><img src=\"https://fleetcart.envaysoft.com/storage/media/H0BnQ6XoB6vBb1YAkRg22mncLS76Yv0zGz4T4M04.png\" alt=\"brand image\" /></a></div>\r\n<div class=\"col-lg-3 col-md-6 col-9\"><a class=\"brand-image\" href=\"https://fleetcart.envaysoft.com/en/brands/nike/products\"><img src=\"https://fleetcart.envaysoft.com/storage/media/DbwfoaPYxERzjV8qsFUSpS9UMjskuZ5yauWC3Wtn.png\" alt=\"brand image\" /></a></div>\r\n<div class=\"col-lg-3 col-md-6 col-9\"><a class=\"brand-image\" href=\"https://fleetcart.envaysoft.com/en/brands/levis/products\"><img src=\"https://fleetcart.envaysoft.com/storage/media/Quysi8IloZADWNe2ZxeK98PN4FgHpoQWBXSnhlQV.png\" alt=\"brand image\" /></a></div>\r\n<div class=\"col-lg-3 col-md-6 col-9\"><a class=\"brand-image\" href=\"https://fleetcart.envaysoft.com/en/brands/nokia/products\"><img src=\"https://fleetcart.envaysoft.com/storage/media/cpX550XTke137wP71XC4bd6vGf68l6emVynXq3HJ.png\" alt=\"brand image\" /></a></div>'),
@@ -2149,7 +2823,83 @@ INSERT INTO `persistences` (`id`, `user_id`, `code`, `created_at`, `updated_at`)
 (150, 1, 'Vcxw0e8GDaViQ0fUkK9ILWx4fScrsQjI', '2023-10-03 06:21:54', '2023-10-03 06:21:54'),
 (152, 1, 'eekrDJtFqSWaHpjIkCxrvkQpfj5BYQZo', '2023-10-03 08:03:09', '2023-10-03 08:03:09'),
 (154, 5, '77pI9DJNatkSNgGoZiyPvBelMRLomBNl', '2023-10-03 10:54:59', '2023-10-03 10:54:59'),
-(155, 5, 'TTPJgLmfV6w2x5iC886AfPi5BKZZd2ZE', '2023-10-04 06:05:27', '2023-10-04 06:05:27');
+(155, 5, 'TTPJgLmfV6w2x5iC886AfPi5BKZZd2ZE', '2023-10-04 06:05:27', '2023-10-04 06:05:27'),
+(157, 4, 'zMyTHQ4eVo2gdmPfOdfMAURch3BiNmyV', '2023-10-04 15:14:29', '2023-10-04 15:14:29'),
+(158, 4, '5spXyExRB7xm3k3Qy6POzxTJdQTG8Ql0', '2023-10-05 07:08:25', '2023-10-05 07:08:25'),
+(159, 1, 'VURYUe9QprAmqG6tumN8JvrwI4oh95Hl', '2023-10-05 12:23:28', '2023-10-05 12:23:28'),
+(160, 5, 'ya0ZP9SkxCJ2IDE3Tq5sAq09WVLIt5eN', '2023-10-06 07:04:30', '2023-10-06 07:04:30'),
+(161, 1, 'hHVC2VEW6tfycGnAWR2Xs0NAdQOaahM4', '2023-10-06 07:55:49', '2023-10-06 07:55:49'),
+(162, 5, '5lxO8gQcSWq2P1MTngy6vF84gmI5Xcc6', '2023-10-06 08:23:05', '2023-10-06 08:23:05'),
+(163, 4, 'x1dRziCkkySw7FZHPLuqoh7XRWFKxfJa', '2023-10-06 14:00:21', '2023-10-06 14:00:21'),
+(164, 4, 'ErqiiEv9pYjCTrNIhNTkcWw0f5CtZ2KN', '2023-10-07 07:39:01', '2023-10-07 07:39:01'),
+(165, 4, 'BeXBVcc7Y5PLUpim0XAjU29IJuRElx5l', '2023-10-07 08:12:05', '2023-10-07 08:12:05'),
+(166, 4, '5927f6ipsKcyyp8sVCbHqBX6hthuHfIg', '2023-10-07 09:07:53', '2023-10-07 09:07:53'),
+(167, 4, '3e44d87E3eyqMpsThv1LXGzAm1Uvdlz7', '2023-10-09 06:32:31', '2023-10-09 06:32:31'),
+(168, 4, 'hy7OQ7aDHwWrUKEkMJEVFo7FEd4THnl6', '2023-10-09 11:49:48', '2023-10-09 11:49:48'),
+(169, 4, 'p3U4xMUniiHN2eas7Fwi2k9xyEoEX2pb', '2023-10-10 10:57:52', '2023-10-10 10:57:52'),
+(170, 4, 'g43MUlAmrE5o2He2alBQvWky0UZmHTCp', '2023-10-10 14:07:27', '2023-10-10 14:07:27'),
+(171, 5, '48R7mlnHf2y7wHn1niXPYYhH4eWRCtwR', '2023-10-11 06:24:16', '2023-10-11 06:24:16'),
+(172, 4, 'uclQoF7gTS3uMXgqAHfYHDwXzSOt2nkB', '2023-10-12 06:26:25', '2023-10-12 06:26:25'),
+(173, 4, '7g2QyhydIuwk0MvJsAyrRQlYoYM7kCZX', '2023-10-12 14:00:59', '2023-10-12 14:00:59'),
+(174, 4, 'U0LaRtFYZLscl79Vi6G6UWNLW4KPG89b', '2023-10-13 07:47:13', '2023-10-13 07:47:13'),
+(175, 4, '6087igvcRRZD8cXSZeDvSqNGZMysDmSF', '2023-10-13 08:54:33', '2023-10-13 08:54:33'),
+(176, 4, 'KSAArN5HMQedKRiDmLtJfb3aO9HY46kK', '2023-10-16 06:20:08', '2023-10-16 06:20:08'),
+(180, 7, 'TyXOQqfZBm40roAUaCRzLorlairB1oA7', '2023-10-17 08:04:17', '2023-10-17 08:04:17'),
+(181, 4, 'JyCbQKsplQUYYxgEFHW4f3G6JKTykXHJ', '2023-10-17 08:05:01', '2023-10-17 08:05:01'),
+(182, 6, 'mwt7doRPgTr2YRF1NF7O3AcjkTjlLMdt', '2023-10-17 14:01:35', '2023-10-17 14:01:35'),
+(183, 1, 'y4FRXLyLJf3Li7oQ1KJvvUf0l6vfr9x7', '2023-10-17 14:14:11', '2023-10-17 14:14:11'),
+(184, 4, 'UFgjbfSQN8ga1a5R75rlVKAWDOWvvTaz', '2023-10-17 14:30:00', '2023-10-17 14:30:00'),
+(185, 4, 'QrqxwvUCw2JOHc5r8zUb8fKtW73xrxlt', '2023-10-18 12:09:37', '2023-10-18 12:09:37'),
+(186, 4, '5miOriyGdZsgigFMWaCjfZ5hEMWZwLuV', '2023-10-19 13:55:24', '2023-10-19 13:55:24'),
+(187, 4, '5xTQRslvzrxKXtbF3yStJ3xKyCltTXqf', '2023-10-20 06:37:33', '2023-10-20 06:37:33'),
+(189, 4, 'nb6UWOUdb3rPyXJqSwIRKOhnvsoOIvRh', '2023-10-20 13:23:08', '2023-10-20 13:23:08'),
+(190, 4, 'HK1lV4qnZDmHietiFylYazoc5982ebLk', '2023-10-20 14:32:08', '2023-10-20 14:32:08'),
+(192, 4, 'RFel8wUluvEzPyVJ51gSsfcZo2bbUYWH', '2023-10-21 09:45:25', '2023-10-21 09:45:25'),
+(193, 4, 'E5F6BA4XQ0gyjPzsIq1LdCs487D1sPpJ', '2023-10-21 10:59:45', '2023-10-21 10:59:45'),
+(194, 4, '7H71zycA07EjiiAXKLHn8GFVfg20cU54', '2023-10-25 07:23:35', '2023-10-25 07:23:35'),
+(195, 1, 'A7IjsmpNdhQisOlEizLNkDpheWHqQ727', '2023-10-25 10:52:09', '2023-10-25 10:52:09'),
+(196, 1, '2pTK16wXeFK0DrT5AAoOjC1hkYCTD3Ea', '2023-10-25 11:00:59', '2023-10-25 11:00:59'),
+(197, 4, 'mWB5xsu1FktMg7xE71OmVUEMV3ZAeTMp', '2023-10-26 06:22:29', '2023-10-26 06:22:29'),
+(198, 7, '5OKdozMtbLOOK2IK1zNVUjiVdgxAfTI2', '2023-10-26 06:29:32', '2023-10-26 06:29:32'),
+(199, 1, '4qV5vQ7mgGpdTn9W0NhnE3Q1JfoHzFEK', '2023-10-26 06:45:04', '2023-10-26 06:45:04'),
+(200, 4, '36MYAv9ACnZPwB8y6GWGyMFbfcam9DWp', '2023-10-26 12:50:23', '2023-10-26 12:50:23'),
+(201, 1, 'iTpPe6yRSwBdQT9RVjiIy5AgZCWYsmu4', '2023-10-26 15:43:07', '2023-10-26 15:43:07'),
+(202, 4, 'ylzWgmPXrlBjIB3R82CsOwSHXMjyFjEU', '2023-10-28 08:55:04', '2023-10-28 08:55:04'),
+(203, 4, '2RxjvDTzkN6TQnKfhrfSgnwqIfgFnuAV', '2023-10-28 10:25:41', '2023-10-28 10:25:41'),
+(204, 4, 'ejLXPUIGqN7b4jE3ZlCLpKIw9mfnd0LC', '2023-10-28 10:47:38', '2023-10-28 10:47:38'),
+(205, 8, 'ck7BYETiruRbBg95qyqMe15FKTbNTR0P', '2023-10-28 11:11:01', '2023-10-28 11:11:01'),
+(206, 4, 'UMqCoePMngT0WVFRNBMcSaLqZLh6NRoS', '2023-10-30 07:03:59', '2023-10-30 07:03:59'),
+(211, 4, 'OkRV4sm4anC5reaHNeQRx1HhaqGgt5cf', '2023-10-30 15:16:06', '2023-10-30 15:16:06'),
+(212, 1, 'W6wgV1mZ1YouwYqhTgoSihHYY4vsxUAP', '2023-10-31 06:45:27', '2023-10-31 06:45:27'),
+(213, 1, 'p9xlhrULdhbW50pRVBoqd6PrwrB3q6Mt', '2023-10-31 06:46:06', '2023-10-31 06:46:06'),
+(214, 4, 'qK9tNdXZ9msngLm9pCDdfnSh8wiF26ip', '2023-10-31 06:55:03', '2023-10-31 06:55:03'),
+(215, 1, 'jaYIlSRqVtKaBxNCHGL67JblqjanEmqh', '2023-10-31 08:00:48', '2023-10-31 08:00:48'),
+(216, 4, 'DI7CzU2ECfyDM3aBJY7aRWwdXXRcPn89', '2023-10-31 09:29:51', '2023-10-31 09:29:51'),
+(217, 1, 'hkqlazPlO3wTNhbEAP9KDeRSLNriBgq4', '2023-10-31 09:56:54', '2023-10-31 09:56:54'),
+(218, 1, 'sYfUz9rkljRBVyCAMYXmtSKvxinHa41n', '2023-10-31 12:11:22', '2023-10-31 12:11:22'),
+(219, 1, 'tlD1FVRa3bnDJxuibJPejsOryWOE1vX9', '2023-10-31 13:13:39', '2023-10-31 13:13:39'),
+(220, 4, 'gudyT3amFdYam8GEBKlOdyaiZWMvPyvk', '2023-11-01 06:17:24', '2023-11-01 06:17:24'),
+(222, 1, 'nTQvuoDMhsAyE8fVtXEPY5mVLT0wxMac', '2023-11-01 13:55:37', '2023-11-01 13:55:37'),
+(223, 5, 'XtH1TZY5jFXuPy2nJW6zMFDnWA6uWGcs', '2023-11-01 13:59:40', '2023-11-01 13:59:40'),
+(224, 4, 'GbokfolVzyV3Ne7MwxZhBKIWX7oXMO9Y', '2023-11-01 14:48:30', '2023-11-01 14:48:30'),
+(225, 1, '4wGotjA2CRwrvlbKQb0OxWgIsfwrW2Ma', '2023-11-01 15:32:53', '2023-11-01 15:32:53'),
+(226, 1, 'jzbbTn5nMIdV58VAdoBROQQTOSfnZMZ9', '2023-11-02 06:20:21', '2023-11-02 06:20:21'),
+(227, 1, 'ekee2If1egSPyfvK64RBjq02FH3OJHyN', '2023-11-02 06:32:34', '2023-11-02 06:32:34'),
+(228, 1, 'zQdiEzcvV2Sa45WHutqW2ayZNZmgU34K', '2023-11-02 06:58:18', '2023-11-02 06:58:18'),
+(229, 1, 'erwvfIN5cedwJfuuboe2pMKedzU5fzxp', '2023-11-02 08:51:48', '2023-11-02 08:51:48'),
+(230, 4, 'jkRhBjvATwQ9HsG7LOqXafcQBqyFZHRf', '2023-11-02 11:06:15', '2023-11-02 11:06:15'),
+(231, 1, '0v1ILJFBxqMdtPPlLLS7Sxwoul3yZ4x8', '2023-11-02 12:35:40', '2023-11-02 12:35:40'),
+(232, 1, 'WbbYS6X61nBoFxwqa7OqJCxgZ15y5F8z', '2023-11-03 08:47:15', '2023-11-03 08:47:15'),
+(233, 1, '9o4HWKnM0GSawWVC7qFnDH9wZFgqJuvR', '2023-11-03 11:49:57', '2023-11-03 11:49:57'),
+(236, 1, 'fua1vFCNzc58TPPrZPrQyb5vmlNk4b7A', '2023-11-09 12:22:57', '2023-11-09 12:22:57'),
+(237, 1, 'q6aaaiPtCDzIcOA2D076PhoVotUPc54B', '2023-11-09 13:49:05', '2023-11-09 13:49:05'),
+(238, 4, 'R3zjpnZJCLsAAKNTseptqkvSnyKun2gm', '2023-11-10 06:32:53', '2023-11-10 06:32:53'),
+(239, 5, 'M0w7sd5eX9AJDyZDrvjk2rRWlrHBsOKb', '2023-11-10 06:33:45', '2023-11-10 06:33:45'),
+(240, 4, 'qhOqa6Lpg55aYwPeEi4AAOL0pZsZ2Eqs', '2023-11-10 12:15:36', '2023-11-10 12:15:36'),
+(241, 4, 'tCV1v0gYmrAa8W0gXpmM4SA3PoQp3LuY', '2023-11-11 06:58:01', '2023-11-11 06:58:01'),
+(242, 4, 'cM3CEvhRScDvQiHsfZR7V5Wgj2q2YMAl', '2023-11-11 07:13:07', '2023-11-11 07:13:07'),
+(245, 6, 'WL1SxVNxUcaXyYEtsKhyQBLbr8vXyWrm', '2023-11-17 11:52:34', '2023-11-17 11:52:34'),
+(246, 23, 'eCm6zZqTtuh4MuREdx1oRLiDqYYQn5EQ', '2023-11-17 11:54:37', '2023-11-17 11:54:37');
 
 -- --------------------------------------------------------
 
@@ -2159,15 +2909,15 @@ INSERT INTO `persistences` (`id`, `user_id`, `code`, `created_at`, `updated_at`)
 
 CREATE TABLE `pickupstores` (
   `id` int(10) UNSIGNED NOT NULL,
-  `name` varchar(191) NOT NULL,
+  `first_name` varchar(191) NOT NULL,
   `tagline` varchar(191) DEFAULT NULL,
   `email` varchar(191) NOT NULL,
   `phone` varchar(191) NOT NULL,
   `address_1` varchar(191) NOT NULL,
   `address_2` varchar(191) NOT NULL,
   `city` varchar(191) NOT NULL,
-  `store_state` varchar(191) NOT NULL,
-  `store_country` varchar(191) NOT NULL,
+  `state` varchar(191) NOT NULL,
+  `country` varchar(191) NOT NULL,
   `zip` varchar(191) NOT NULL,
   `is_active` tinyint(1) NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -2178,12 +2928,11 @@ CREATE TABLE `pickupstores` (
 -- Dumping data for table `pickupstores`
 --
 
-INSERT INTO `pickupstores` (`id`, `name`, `tagline`, `email`, `phone`, `address_1`, `address_2`, `city`, `store_state`, `store_country`, `zip`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'Zara', 'Open-source 4thgeneration pricingstructure', 'Ahmad@gmail.com', '60-16-2174374', '53129 Botsford Skyway', 'Suite 128', 'Kuala Lumpur', 'PNG', 'MY', '59008', 1, '2023-09-22 15:28:38', '2023-09-22 15:28:38'),
-(2, 'Zara', 'Optimized empowering approach', 'Aishah@gmail.com', '60-16-5800851', '432 Sherwood Oval', 'Suite 043', 'Penang', 'KUL', 'MY', '59002', 0, '2023-09-22 15:28:38', '2023-09-22 15:28:38'),
-(3, 'Zara', 'Optional foreground internetsolution', 'Ahmad@gmail.com', '60-16-770227', '707 Nienow Rest Apt. 880', 'Suite 336', 'Kuala Lumpur', 'TRG', 'MY', '59004', 0, '2023-09-22 15:28:38', '2023-09-22 15:28:38'),
-(4, 'Aishah', 'Customizable transitional conglomeration', 'Zara@gmail.com', '60-16-496283', '43923 Jaycee Mission', 'Apt. 237', 'Penang', 'KUL', 'MY', '59000', 0, '2023-09-22 15:28:38', '2023-09-22 15:28:38'),
-(5, 'Rayyan', 'Multi-channelled cohesive support', 'Rayyan@gmail.com', '60-16-5773205', '9101 Thompson Crescent', 'Apt. 603', ' Selangor', 'JHR', 'MY', '59006', 1, '2023-09-22 15:28:38', '2023-09-22 15:28:38');
+INSERT INTO `pickupstores` (`id`, `first_name`, `tagline`, `email`, `phone`, `address_1`, `address_2`, `city`, `state`, `country`, `zip`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'APS Main', 'Grab Your Orders Here!', 'Aishah@gmail.com', '6090302050', 'Kuala Lumpur', 'Kuala Lumpur', 'Kuala Lumpur', 'KUL', 'MY', '59000', 1, '2023-10-26 06:45:48', NULL),
+(2, 'APS Selangor', 'Grab Your Orders Here!', 'Ahmad@gmail.com', '6090302051', 'Selangorr', 'Selangor', 'Selangor', 'SGR', 'MY', '59001', 1, '2023-10-26 06:45:48', NULL),
+(3, 'APS JHR', 'Grab Your Orders Here!', 'Zara@gmail.com', '6090302055', 'Johor Bahru', 'Johor Bahru', 'Johor Bahru', 'JHR', 'MY', '59002', 1, '2023-10-26 06:45:48', NULL),
+(4, 'APS Penang', 'Grab Your Orders Here!', 'Rayyan@gmail.com', '6090302061', 'Penang', 'Penang', 'Penang', 'PNG', 'MY', '59006', 1, '2023-10-26 06:45:48', NULL);
 
 -- --------------------------------------------------------
 
@@ -2225,21 +2974,21 @@ CREATE TABLE `products` (
 
 INSERT INTO `products` (`id`, `brand_id`, `tax_class_id`, `slug`, `price`, `special_price`, `special_price_type`, `special_price_start`, `special_price_end`, `selling_price`, `sku`, `manage_stock`, `qty`, `in_stock`, `viewed`, `is_active`, `new_from`, `new_to`, `prepare_days`, `deleted_at`, `created_at`, `updated_at`, `is_virtual`, `pre_short_description`, `is_preorder_status`) VALUES
 (1, NULL, NULL, 'wedding-garland', '200.0000', '150.0000', 'fixed', '2023-08-09', '2023-08-17', '200.0000', '25', 0, NULL, 0, 16, 1, '2023-08-09 00:00:00', '2023-08-19 00:00:00', 0, NULL, '2023-08-09 12:42:13', '2023-08-25 13:19:06', 0, NULL, 0),
-(2, 1, NULL, 'lotus', '200.0000', '199.0000', 'fixed', NULL, NULL, '199.0000', NULL, 0, NULL, 1, 26, 1, NULL, NULL, 0, NULL, '2023-08-09 12:57:27', '2023-08-26 06:55:34', 0, NULL, 0),
-(3, 1, NULL, 'wedding-garlands-with-white-and-green-color-mixing', '50.0000', '20.0000', 'fixed', '2023-08-11', '2023-08-26', '20.0000', '25', 0, NULL, 1, 28, 1, '2023-08-19 00:00:00', '2023-08-11 00:00:00', 0, NULL, '2023-08-11 09:50:50', '2023-08-28 12:52:28', 0, NULL, 0),
-(4, 1, 1, 'rose', '100.0000', '2.0000', 'percent', NULL, NULL, '98.0000', '1500014', 1, 1500, 1, 21, 1, NULL, NULL, 0, NULL, '2023-08-12 04:23:27', '2023-08-25 06:59:02', 0, NULL, 0),
-(5, 1, NULL, 'rose-petal-garlands', '25.0000', '20.0000', 'fixed', '2023-08-07', '2023-08-31', '20.0000', '25', 0, NULL, 1, 6, 1, '2023-08-07 00:00:00', '2023-08-31 00:00:00', 0, NULL, '2023-08-14 09:58:24', '2023-09-22 12:15:27', 0, NULL, 0),
+(2, 1, NULL, 'lotus', '200.0000', '199.0000', 'fixed', NULL, NULL, '199.0000', NULL, 1, 10, 1, 26, 1, NULL, NULL, 5, NULL, '2023-08-09 12:57:27', '2023-11-03 10:14:11', 0, NULL, 0),
+(3, 1, NULL, 'wedding-garlands-with-white-and-green-color-mixing', '50.0000', '20.0000', 'fixed', '2023-08-11', '2023-08-26', '20.0000', '25', 0, NULL, 1, 29, 1, '2023-08-19 00:00:00', '2023-08-11 00:00:00', 0, NULL, '2023-08-11 09:50:50', '2023-10-26 08:33:16', 0, NULL, 0),
+(4, 1, 1, 'rose', '100.0000', '2.0000', 'percent', NULL, NULL, '98.0000', '1500014', 1, 1498, 1, 27, 1, NULL, NULL, 0, NULL, '2023-08-12 04:23:27', '2023-11-17 10:34:50', 0, NULL, 0),
+(5, 1, NULL, 'rose-petal-garlands', '25.0000', '20.0000', 'fixed', '2023-08-07', '2023-08-31', '20.0000', '25', 0, NULL, 1, 7, 1, '2023-08-07 00:00:00', '2023-08-31 00:00:00', 0, NULL, '2023-08-14 09:58:24', '2023-11-03 12:08:25', 0, NULL, 0),
 (6, 1, 1, 'jasmine', '1000.0000', '999.0000', 'fixed', '2023-08-03', '2023-08-24', '999.0000', '25', 0, NULL, 1, 10, 1, NULL, NULL, 0, NULL, '2023-08-14 10:02:57', '2023-09-23 10:26:06', 0, NULL, 0),
 (7, 1, NULL, 'pink-rose-bouquet', '299.0000', '158.0000', 'fixed', NULL, NULL, '158.0000', '56dfg', 0, NULL, 1, 9, 1, NULL, NULL, 0, NULL, '2023-08-14 10:23:31', '2023-08-25 06:53:44', 0, NULL, 0),
-(8, 1, NULL, 'red-rose-bouquet', '259.0000', '145.0000', 'fixed', NULL, NULL, '145.0000', NULL, 0, NULL, 1, 22, 1, NULL, NULL, 0, NULL, '2023-08-14 10:27:46', '2023-09-25 07:14:01', 0, NULL, 0),
+(8, 1, NULL, 'red-rose-bouquet', '259.0000', '145.0000', 'fixed', NULL, NULL, '145.0000', NULL, 0, NULL, 1, 27, 1, NULL, NULL, 0, NULL, '2023-08-14 10:27:46', '2023-11-03 11:51:05', 0, NULL, 0),
 (9, 1, NULL, 'manoranjitham', '150.0000', NULL, 'fixed', NULL, NULL, '150.0000', NULL, 0, NULL, 1, 4, 1, NULL, NULL, 0, NULL, '2023-08-14 10:33:11', '2023-08-25 14:42:03', 0, NULL, 0),
 (10, 1, NULL, 'loose-flower-red', '20.0000', '19.0000', 'fixed', NULL, NULL, '19.0000', NULL, 0, NULL, 1, 2, 1, NULL, NULL, 0, NULL, '2023-08-14 10:38:11', '2023-08-14 12:23:09', 0, NULL, 0),
 (11, 2, NULL, 'hand-bouquet', '19.0000', '18.0000', 'fixed', NULL, NULL, '18.0000', NULL, 0, NULL, 1, 2, 1, NULL, NULL, 0, NULL, '2023-08-14 10:42:56', '2023-08-25 11:51:19', 0, NULL, 0),
 (12, 1, 1, 'orchids', '50.0000', '49.0000', 'fixed', '2023-08-02', '2023-08-23', '50.0000', NULL, 0, NULL, 1, 5, 1, NULL, NULL, 0, NULL, '2023-08-14 10:45:32', '2023-08-25 11:57:26', 0, NULL, 0),
 (13, 1, 1, 'vadamalli', '150.0000', '2.0000', 'percent', NULL, NULL, '147.0000', NULL, 0, NULL, 1, 1, 1, NULL, NULL, 0, NULL, '2023-08-14 10:51:36', '2023-08-14 12:19:42', 0, NULL, 0),
-(14, 1, 1, 'lotus-yeVHn5rz', '250.0000', NULL, 'fixed', NULL, NULL, '250.0000', NULL, 0, NULL, 1, 12, 1, NULL, NULL, 0, NULL, '2023-08-14 10:53:42', '2023-08-26 07:47:12', 0, NULL, 0),
-(15, 1, NULL, 'vettiver-malai-for-god', '25.0000', '24.0000', 'fixed', NULL, NULL, '24.0000', NULL, 0, NULL, 1, 1, 1, NULL, NULL, 0, NULL, '2023-08-14 11:05:18', '2023-08-25 07:57:53', 0, NULL, 0),
-(16, NULL, NULL, 'combo-losse-flower', '14.0000', NULL, 'fixed', NULL, NULL, '14.0000', NULL, 0, NULL, 1, 3, 1, NULL, NULL, 0, NULL, '2023-08-14 11:27:22', '2023-08-25 07:57:52', 0, NULL, 0),
+(14, 1, 1, 'lotus-yeVHn5rz', '250.0000', NULL, 'fixed', NULL, NULL, '250.0000', NULL, 1, 1, 1, 12, 1, NULL, NULL, 0, NULL, '2023-08-14 10:53:42', '2023-11-03 10:12:19', 0, NULL, 0),
+(15, 1, NULL, 'vettiver-malai-for-god', '25.0000', '24.0000', 'fixed', NULL, NULL, '24.0000', NULL, 0, NULL, 1, 7, 1, NULL, NULL, 0, NULL, '2023-08-14 11:05:18', '2023-11-03 11:59:16', 0, NULL, 0),
+(16, NULL, NULL, 'combo-losse-flower', '14.0000', NULL, 'fixed', NULL, NULL, '14.0000', NULL, 0, NULL, 1, 5, 1, NULL, NULL, 0, NULL, '2023-08-14 11:27:22', '2023-11-03 12:07:05', 0, NULL, 0),
 (17, 1, NULL, 'jasmine-saram', '5.0000', '2.0000', 'fixed', NULL, NULL, '2.0000', NULL, 0, NULL, 1, 7, 1, NULL, NULL, 0, NULL, '2023-08-14 12:06:21', '2023-08-28 12:53:07', 0, NULL, 0),
 (18, 1, NULL, 'mullai-saram', '10.0000', '9.0000', 'fixed', NULL, NULL, '9.0000', 'MS-001', 1, 0, 0, 35, 1, NULL, NULL, 2, NULL, '2023-08-14 12:25:17', '2023-08-26 06:55:06', 1, NULL, 1),
 (19, NULL, NULL, 'contact', '30.0000', NULL, 'fixed', NULL, NULL, '30.0000', NULL, 0, NULL, 1, 0, 1, NULL, NULL, NULL, '2023-08-25 09:13:19', '2023-08-25 09:12:24', '2023-08-25 09:13:19', 0, NULL, 0),
@@ -2247,7 +2996,10 @@ INSERT INTO `products` (`id`, `brand_id`, `tax_class_id`, `slug`, `price`, `spec
 (21, NULL, NULL, 'contact-JpP0Hhqy', '20.0000', NULL, 'fixed', NULL, NULL, '20.0000', NULL, 0, NULL, 1, 0, 1, NULL, NULL, NULL, '2023-08-25 10:22:37', '2023-08-25 10:20:53', '2023-08-25 10:22:37', 0, NULL, 0),
 (22, 1, 1, 'mulai-saram-2', '100.0000', NULL, 'fixed', NULL, NULL, '100.0000', NULL, 0, NULL, 1, 0, 1, NULL, NULL, NULL, '2023-08-25 12:00:53', '2023-08-25 11:59:32', '2023-08-25 12:00:53', 0, NULL, 0),
 (23, NULL, NULL, 'testing-product-1', '10.0000', NULL, 'fixed', NULL, NULL, '10.0000', NULL, 0, NULL, 1, 0, 1, NULL, NULL, NULL, '2023-08-26 09:09:47', '2023-08-26 08:00:55', '2023-08-26 09:09:47', 0, NULL, 0),
-(24, 1, NULL, 'arali-saram-flowers', '10.0000', '9.0000', 'fixed', NULL, NULL, '9.0000', 'PWS001', 0, 13900, 1, 0, 1, NULL, NULL, 1, NULL, '2023-08-28 09:34:19', '2023-08-28 09:34:19', 0, NULL, 1);
+(24, 1, NULL, 'arali-saram-flowers', '10.0000', '9.0000', 'fixed', NULL, NULL, '9.0000', 'PWS001', 0, 13900, 1, 0, 1, NULL, NULL, 1, NULL, '2023-08-28 09:34:19', '2023-08-28 09:34:19', 0, NULL, 1),
+(25, 1, NULL, 'tetsya', '250.0000', NULL, 'fixed', NULL, NULL, '250.0000', '1000021', 0, NULL, 1, 0, 1, NULL, NULL, NULL, '2023-10-06 14:05:28', '2023-10-06 14:04:57', '2023-10-06 14:05:28', 0, NULL, 0),
+(26, 1, NULL, 'malli-saram', '9.0000', '8.0000', 'percent', NULL, NULL, '8.2800', 'JASWHI001', 1, 2, 1, 9, 1, NULL, NULL, NULL, NULL, '2023-10-26 07:10:58', '2023-11-17 12:19:50', 0, NULL, 0),
+(27, 1, NULL, 'violet-bouquet', '100.0000', '99.0000', 'fixed', '2023-11-17', '2024-02-01', '99.0000', NULL, 0, NULL, 1, 1, 1, NULL, NULL, NULL, NULL, '2023-11-17 10:52:57', '2023-11-17 12:20:06', 0, NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -2273,7 +3025,8 @@ INSERT INTO `product_attributes` (`id`, `product_id`, `attribute_id`) VALUES
 (47, 4, 5),
 (49, 12, 5),
 (50, 1, 1),
-(54, 24, 5);
+(54, 24, 5),
+(59, 26, 1);
 
 -- --------------------------------------------------------
 
@@ -2298,7 +3051,8 @@ INSERT INTO `product_attribute_values` (`product_attribute_id`, `attribute_value
 (47, 6),
 (49, 6),
 (50, 1),
-(54, 6);
+(54, 6),
+(59, 1);
 
 -- --------------------------------------------------------
 
@@ -2406,7 +3160,14 @@ INSERT INTO `product_categories` (`product_id`, `category_id`) VALUES
 (24, 12),
 (24, 15),
 (24, 18),
-(24, 25);
+(24, 25),
+(25, 18),
+(25, 19),
+(25, 21),
+(26, 21),
+(27, 3),
+(27, 23),
+(27, 24);
 
 -- --------------------------------------------------------
 
@@ -2425,7 +3186,8 @@ CREATE TABLE `product_options` (
 
 INSERT INTO `product_options` (`product_id`, `option_id`) VALUES
 (4, 6),
-(8, 8);
+(8, 8),
+(26, 9);
 
 -- --------------------------------------------------------
 
@@ -2459,7 +3221,10 @@ INSERT INTO `product_tags` (`product_id`, `tag_id`) VALUES
 (18, 1),
 (18, 3),
 (24, 2),
-(24, 3);
+(24, 3),
+(25, 3),
+(26, 3),
+(27, 1);
 
 -- --------------------------------------------------------
 
@@ -2504,7 +3269,10 @@ INSERT INTO `product_translations` (`id`, `product_id`, `locale`, `name`, `descr
 (21, 21, 'en', 'contact', '<p>The product won\'t be shipped.</p>', NULL),
 (22, 22, 'en', 'Mulai Saram 2', '<p>The Jasminum auriculatum -juhi-mullai poo is&nbsp;<strong>a good houseplant with a good fragrant with many-petaled</strong>. This plant is categorized under flower, shrub &amp; ornamental plant</p>', NULL),
 (23, 23, 'en', 'testing product 1', '<p>After Disable the Download Option.</p>', NULL),
-(24, 24, 'en', 'Arali Saram', '<p><strong>A little shrub flower native to sub-tropical and temperate climates</strong>, the Arali Poo flower is also known as Nerium Oleander in English. It is cultivated for its incredible flower beauty. Although this flower is primarily found in the Mediterranean region, its actual origin is still unknown</p>', NULL);
+(24, 24, 'en', 'Arali Saram', '<p><strong>A little shrub flower native to sub-tropical and temperate climates</strong>, the Arali Poo flower is also known as Nerium Oleander in English. It is cultivated for its incredible flower beauty. Although this flower is primarily found in the Mediterranean region, its actual origin is still unknown</p>', NULL),
+(25, 25, 'en', 'TEtsya', '<p>TEsttvyuv</p>', NULL),
+(26, 26, 'en', 'Malli saram', '<p>fresh jasmine direct from garden</p>', NULL),
+(27, 27, 'en', 'Violet Bouquet', '<div class=\"kb0PBd cvP2Ce ieodic\" data-sncf=\"2\" data-snf=\"nke7rc\">\r\n<div class=\"VwiC3b yXK7lf lyLwlc yDYNvb W8l4ac\"><em>Violet Bouquet</em>&nbsp;by Afnan is a Floral fragrance for women.&nbsp;<em>Violet Bouquet</em>&nbsp;was launched in 2020. Top notes are Sweet Notes, Saffron, Woodsy Notes and Citruses;&nbsp;...</div>\r\n</div>\r\n<div class=\"kb0PBd cvP2Ce ieodic\" data-sncf=\"3\" data-snf=\"fhcVfc\">\r\n<div>Pros and cons:<span class=\"ADx4Yb\"><span class=\"s8CFQb\">&nbsp;Presentation is lovely and feminine</span><span class=\"s8CFQb\"><span aria-hidden=\"true\">&nbsp;&sdot;&nbsp;</span>Insane staying power and projection</span><span class=\"s8CFQb\"><span aria-hidden=\"true\">&nbsp;</span></span></span></div>\r\n</div>', NULL);
 
 -- --------------------------------------------------------
 
@@ -2513,9 +3281,11 @@ INSERT INTO `product_translations` (`id`, `product_id`, `locale`, `name`, `descr
 --
 
 CREATE TABLE `recurrings` (
-  `id` int(10) UNSIGNED NOT NULL COMMENT 'Recurring Order Main Id',
-  `customer_id` int(11) NOT NULL,
-  `recurring_delivery_time` time NOT NULL,
+  `id` int(10) UNSIGNED NOT NULL,
+  `order_id` int(10) UNSIGNED NOT NULL,
+  `recurring_date_count` int(11) DEFAULT NULL,
+  `max_preparing_days` int(11) DEFAULT NULL,
+  `delivery_time` time NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -2524,34 +3294,9 @@ CREATE TABLE `recurrings` (
 -- Dumping data for table `recurrings`
 --
 
-INSERT INTO `recurrings` (`id`, `customer_id`, `recurring_delivery_time`, `created_at`, `updated_at`) VALUES
-(1, 6, '10:02:28', '2023-09-21 04:32:29', NULL),
-(2, 6, '15:13:41', '2023-09-19 09:43:40', NULL);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `recurring_orders`
---
-
-CREATE TABLE `recurring_orders` (
-  `id` int(10) UNSIGNED NOT NULL,
-  `order_id` int(11) NOT NULL,
-  `recurring_order_dates` varchar(500) NOT NULL,
-  `recurring_order_date_count` int(11) NOT NULL,
-  `recurring_delivery_time` time NOT NULL,
-  `is_active` tinyint(4) NOT NULL DEFAULT 0,
-  `deleted_at` timestamp NULL DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `recurring_orders`
---
-
-INSERT INTO `recurring_orders` (`id`, `order_id`, `recurring_order_dates`, `recurring_order_date_count`, `recurring_delivery_time`, `is_active`, `deleted_at`, `created_at`, `updated_at`) VALUES
-(1, 10, '2121', 2, '13:33:52', 0, NULL, '2023-09-14 08:03:53', NULL);
+INSERT INTO `recurrings` (`id`, `order_id`, `recurring_date_count`, `max_preparing_days`, `delivery_time`, `created_at`, `updated_at`) VALUES
+(1, 103, 4, 5, '15:00:00', '2023-11-10 12:10:40', '2023-11-10 12:10:40'),
+(2, 106, 7, 5, '13:26:00', '2023-11-17 10:29:17', '2023-11-17 10:29:17');
 
 -- --------------------------------------------------------
 
@@ -2560,13 +3305,12 @@ INSERT INTO `recurring_orders` (`id`, `order_id`, `recurring_order_dates`, `recu
 --
 
 CREATE TABLE `recurring_sub_orders` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `recurring_id` int(11) NOT NULL,
-  `order_id` int(11) NOT NULL,
-  `order_date` date NOT NULL,
-  `delivery_date` date NOT NULL,
-  `created_by` int(11) NOT NULL,
-  `updated_by` int(11) NOT NULL,
+  `id` int(10) UNSIGNED NOT NULL,
+  `recurring_id` int(10) UNSIGNED NOT NULL,
+  `selected_date` date DEFAULT NULL,
+  `subscribe_status` enum('0','1') NOT NULL DEFAULT '1',
+  `order_status` varchar(191) DEFAULT NULL,
+  `updated_user_id` int(10) UNSIGNED DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -2575,9 +3319,18 @@ CREATE TABLE `recurring_sub_orders` (
 -- Dumping data for table `recurring_sub_orders`
 --
 
-INSERT INTO `recurring_sub_orders` (`id`, `recurring_id`, `order_id`, `order_date`, `delivery_date`, `created_by`, `updated_by`, `created_at`, `updated_at`) VALUES
-(1, 1, 10, '2023-09-19', '2023-09-22', 6, 6, '2023-09-19 12:04:03', '2023-09-19 12:04:03'),
-(2, 1, 11, '2023-09-20', '2023-09-23', 6, 6, '2023-09-20 12:04:03', NULL);
+INSERT INTO `recurring_sub_orders` (`id`, `recurring_id`, `selected_date`, `subscribe_status`, `order_status`, `updated_user_id`, `created_at`, `updated_at`) VALUES
+(1, 1, '2023-11-16', '1', 'pending', NULL, '2023-11-10 12:10:40', '2023-11-10 12:10:40'),
+(2, 1, '2023-11-18', '1', 'pending', NULL, '2023-11-10 12:10:40', '2023-11-10 12:10:40'),
+(3, 1, '2023-11-24', '0', 'pending', 4, '2023-11-10 12:10:40', '2023-11-10 10:41:45'),
+(4, 1, '2023-11-23', '0', 'pending', 4, '2023-11-10 12:10:40', '2023-11-10 09:56:06'),
+(5, 2, '2023-11-23', '1', 'completed', NULL, '2023-11-17 10:29:17', '2023-11-17 10:39:57'),
+(6, 2, '2023-11-24', '1', 'completed', NULL, '2023-11-17 10:29:17', '2023-11-17 10:39:59'),
+(7, 2, '2023-12-02', '1', 'completed', NULL, '2023-11-17 10:29:17', '2023-11-17 10:40:00'),
+(8, 2, '2023-12-16', '1', 'completed', NULL, '2023-11-17 10:29:17', '2023-11-17 10:42:00'),
+(9, 2, '2023-12-14', '1', 'completed', NULL, '2023-11-17 10:29:17', '2023-11-17 10:41:59'),
+(10, 2, '2023-12-06', '1', 'completed', NULL, '2023-11-17 10:29:17', '2023-11-17 10:40:25'),
+(11, 2, '2023-12-07', '1', 'completed', NULL, '2023-11-17 10:29:17', '2023-11-17 10:42:02');
 
 -- --------------------------------------------------------
 
@@ -2641,7 +3394,9 @@ INSERT INTO `related_products` (`product_id`, `related_product_id`) VALUES
 (24, 15),
 (24, 16),
 (24, 17),
-(24, 18);
+(24, 18),
+(26, 16),
+(26, 18);
 
 -- --------------------------------------------------------
 
@@ -2686,11 +3441,6 @@ INSERT INTO `reviews` (`id`, `reviewer_id`, `product_id`, `rating`, `reviewer_na
 (2, 1, 4, 5, 'indu', 'nice', 1, '2023-08-14 07:08:05', '2023-08-14 07:08:05'),
 (3, NULL, 4, 3, 'sangeetha', 'good', 1, '2023-08-17 11:45:00', '2023-08-17 11:45:00'),
 (4, 3, 18, 4, 'Mahendran Sadhasivam', 'Good one product', 1, '2023-08-22 11:17:36', '2023-08-22 11:19:21'),
-(5, 4, 14, 5, 'Giri', 'Good product', 1, '2023-08-24 10:22:45', '2023-08-24 10:22:45'),
-(6, 4, 14, 4, 'naveen', 'Timely Delivery', 1, '2023-08-24 10:23:34', '2023-08-24 10:23:34'),
-(7, 4, 14, 5, 'Prabakaran', 'Good Quality of products. Well packed.', 1, '2023-08-24 10:25:16', '2023-08-24 10:25:16'),
-(8, 4, 14, 2, 'Ananymous', 'Expecting More products', 1, '2023-08-24 10:26:01', '2023-08-24 10:26:01'),
-(9, 4, 8, 5, 'Prabakaran', 'Pleasant product', 1, '2023-08-24 12:33:22', '2023-08-24 12:33:22'),
 (10, 1, 17, 5, 'indu', 'nice product', 1, '2023-08-28 09:20:18', '2023-08-28 09:20:18');
 
 -- --------------------------------------------------------
@@ -2740,7 +3490,7 @@ CREATE TABLE `rewardpoints` (
 --
 
 INSERT INTO `rewardpoints` (`id`, `enable_bday_points`, `enable_referral_points`, `enable_show_customer_points`, `enable_show_points_with_order`, `enable_show_points_by_mail`, `enable_give_old_order_points`, `enable_apply_points_in_checkout_page`, `enable_remove_points_order_refund`, `add_days_reward_points_expiry`, `add_days_reward_points_assignment`, `use_points_per_order`, `min_order_cart_value_redemption`, `currency_value`, `point_value`, `redemption_point_value`, `redemption_currency_value`, `epoint_first_signup_value`, `epoint_ref_point_value`, `epoint_forder_point_value`, `epoint_freview_point_value`, `epoint_fpay_point_value`, `epoint_bday_point_value`, `apply_notification_message`, `enable_apply_points_rem_payment`, `apply_payment_noti_message`, `bday_noti_mail_message`, `is_active`, `start_date`, `end_date`, `deleted_at`, `created_at`, `updated_at`) VALUES
-(1, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 100, 150, 10, 1, 1, 1, 0, 0, 100, 100, 100, 100, '0', 0, '0', '1', 0, NULL, NULL, NULL, NULL, '2023-09-25 08:01:27');
+(1, 0, 0, 1, 0, 0, 0, 0, 0, 12, 0, 100, 150, 10, 1, 1, 1, 50, 0, 100, 25, 60, 40, '0', 0, '0', '1', 0, NULL, NULL, NULL, NULL, '2023-11-01 12:02:52');
 
 -- --------------------------------------------------------
 
@@ -2751,39 +3501,12 @@ INSERT INTO `rewardpoints` (`id`, `enable_bday_points`, `enable_referral_points`
 CREATE TABLE `reward_points_gifted` (
   `id` int(10) UNSIGNED NOT NULL,
   `user_id` int(11) NOT NULL,
-  `reward_point_value` int(11) DEFAULT NULL,
+  `reward_point_value` int(11) DEFAULT 0,
   `reward_point_remarks` varchar(100) DEFAULT NULL,
   `customer_reward_id` int(11) NOT NULL COMMENT 'reference to customer_reward_points table id value',
-  `created_at` timestamp NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NULL DEFAULT current_timestamp(),
-  `deleted_at` timestamp NULL DEFAULT NULL
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `reward_points_gifted`
---
-
-INSERT INTO `reward_points_gifted` (`id`, `user_id`, `reward_point_value`, `reward_point_remarks`, `customer_reward_id`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(1, 2, 100, NULL, 1, '2023-09-21 15:20:43', '2023-09-21 15:20:43', NULL),
-(2, 6, 355, 'Facilis eum aut odio molestiae in in dolorum fugiat.', 1, '2023-09-22 08:33:42', '2023-09-22 08:33:42', NULL),
-(3, 6, 145, 'Repudiandae et voluptas cupiditate ut dolores aliquid tenetur inventore.', 1, '2023-09-22 08:33:42', '2023-09-22 08:33:42', NULL),
-(4, 2, 407, 'Aut fugit rerum quidem voluptatibus fuga voluptates aut.', 1, '2023-09-22 08:33:42', '2023-09-22 08:33:42', NULL),
-(5, 5, 90, 'Et nesciunt aut officia qui voluptatem earum amet amet.', 1, '2023-09-22 08:33:42', '2023-09-22 08:33:42', NULL),
-(6, 6, 287, 'Expedita ratione autem soluta laboriosam cupiditate atque pariatur.', 1, '2023-09-22 08:33:42', '2023-09-22 08:33:42', NULL),
-(7, 2, 197, 'Eveniet vel omnis quae consectetur illo neque.', 1, '2023-09-22 08:33:42', '2023-09-22 08:33:42', NULL),
-(8, 5, 364, 'Occaecati recusandae explicabo cupiditate illum velit ut perspiciatis.', 1, '2023-09-22 09:04:56', '2023-09-22 09:04:56', NULL),
-(9, 2, 90, 'Rem voluptate ut porro tempore accusantium iusto.', 1, '2023-09-22 09:04:56', '2023-09-22 09:04:56', NULL),
-(10, 2, 50, 'Vero tenetur quae sed numquam.', 1, '2023-09-22 09:04:56', '2023-09-22 09:04:56', NULL),
-(11, 3, 25, 'Nostrum voluptates et deleniti.', 1, '2023-09-22 09:04:56', '2023-09-22 09:04:56', NULL),
-(12, 3, 421, 'Eum id sunt voluptatem at dolorum facere.', 1, '2023-09-22 09:04:56', '2023-09-22 09:04:56', NULL),
-(13, 3, 428, 'Consequatur qui laudantium sit vel iusto.', 1, '2023-09-22 09:04:56', '2023-09-22 09:04:56', NULL),
-(14, 3, 314, 'Aperiam aut autem sed ut minus.', 1, '2023-09-22 09:05:37', '2023-09-22 09:05:37', NULL),
-(15, 6, 176, 'Dolores odit nesciunt neque ut numquam corporis dicta dolorem.', 1, '2023-09-22 09:05:37', '2023-09-22 09:05:37', NULL),
-(16, 2, 391, 'Eius harum qui exercitationem et et.', 1, '2023-09-22 09:05:37', '2023-09-22 09:05:37', NULL),
-(17, 5, 363, 'Aut voluptatum perspiciatis consectetur voluptatem.', 1, '2023-09-22 09:05:37', '2023-09-22 09:05:37', NULL),
-(18, 2, 223, 'Modi quam similique cumque voluptatem et autem.', 1, '2023-09-22 09:05:37', '2023-09-22 09:05:37', NULL),
-(19, 5, 291, 'Pariatur est consequuntur impedit voluptates eius alias quis.', 1, '2023-09-22 09:05:37', '2023-09-22 09:05:37', NULL),
-(20, 2, 110, '1', 13, '2023-09-30 07:35:25', '2023-09-30 07:35:48', NULL);
 
 -- --------------------------------------------------------
 
@@ -2803,8 +3526,8 @@ CREATE TABLE `roles` (
 --
 
 INSERT INTO `roles` (`id`, `permissions`, `created_at`, `updated_at`) VALUES
-(1, '{\"admin.attributes.index\":true,\"admin.attributes.create\":true,\"admin.attributes.edit\":true,\"admin.attributes.destroy\":true,\"admin.attribute_sets.index\":true,\"admin.attribute_sets.create\":true,\"admin.attribute_sets.edit\":true,\"admin.attribute_sets.destroy\":true,\"admin.brands.index\":true,\"admin.brands.create\":true,\"admin.brands.edit\":true,\"admin.brands.destroy\":true,\"admin.categories.index\":true,\"admin.categories.create\":true,\"admin.categories.edit\":true,\"admin.categories.destroy\":true,\"admin.coupons.index\":true,\"admin.coupons.create\":true,\"admin.coupons.edit\":true,\"admin.coupons.destroy\":true,\"admin.currency_rates.index\":true,\"admin.currency_rates.edit\":true,\"admin.fixedrates.index\":true,\"admin.fixedrates.create\":true,\"admin.fixedrates.edit\":true,\"admin.fixedrates.destroy\":true,\"admin.flash_sales.index\":true,\"admin.flash_sales.create\":true,\"admin.flash_sales.edit\":true,\"admin.flash_sales.destroy\":true,\"admin.galleries.index\":true,\"admin.galleries.create\":true,\"admin.galleries.edit\":true,\"admin.galleries.destroy\":true,\"admin.importer.index\":true,\"admin.importer.create\":true,\"admin.media.index\":true,\"admin.media.create\":true,\"admin.media.destroy\":true,\"admin.menus.index\":true,\"admin.menus.create\":true,\"admin.menus.edit\":true,\"admin.menus.destroy\":true,\"admin.menu_items.index\":true,\"admin.menu_items.create\":true,\"admin.menu_items.edit\":true,\"admin.menu_items.destroy\":true,\"admin.options.index\":true,\"admin.options.create\":true,\"admin.options.edit\":true,\"admin.options.destroy\":true,\"admin.orders.index\":true,\"admin.orders.show\":true,\"admin.orders.edit\":true,\"admin.pages.index\":true,\"admin.pages.create\":true,\"admin.pages.edit\":true,\"admin.pages.destroy\":true,\"admin.pickupstores.index\":true,\"admin.pickupstores.create\":true,\"admin.pickupstores.edit\":true,\"admin.pickupstores.destroy\":true,\"admin.products.index\":true,\"admin.products.create\":true,\"admin.products.edit\":true,\"admin.products.destroy\":true,\"admin.reports.index\":true,\"admin.reviews.index\":true,\"admin.reviews.edit\":true,\"admin.reviews.destroy\":true,\"admin.rewardpoints.index\":true,\"admin.rewardpoints.create\":true,\"admin.rewardpoints.edit\":true,\"admin.rewardpoints.destroy\":true,\"admin.rewardpointsgift.index\":true,\"admin.rewardpointsgift.create\":true,\"admin.rewardpointsgift.edit\":true,\"admin.rewardpointsgift.destroy\":true,\"admin.customerrewardpoints.index\":true,\"admin.customerrewardpoints.create\":true,\"admin.customerrewardpoints.edit\":true,\"admin.customerrewardpoints.destroy\":true,\"admin.settings.edit\":true,\"admin.sliders.index\":true,\"admin.sliders.create\":true,\"admin.sliders.edit\":true,\"admin.sliders.destroy\":true,\"admin.tags.index\":true,\"admin.tags.create\":true,\"admin.tags.edit\":true,\"admin.tags.destroy\":true,\"admin.testimonials.index\":true,\"admin.testimonials.create\":true,\"admin.testimonials.edit\":true,\"admin.testimonials.destroy\":true,\"admin.transactions.index\":true,\"admin.translations.index\":true,\"admin.translations.edit\":true,\"admin.users.index\":true,\"admin.users.create\":true,\"admin.users.edit\":true,\"admin.users.destroy\":true,\"admin.roles.index\":true,\"admin.roles.create\":true,\"admin.roles.edit\":true,\"admin.roles.destroy\":true,\"admin.storefront.edit\":true}', '2023-08-09 06:24:33', '2023-09-28 11:37:01'),
-(2, '{\"admin.recurrings.index\":true,\"admin.recurrings.create\":true,\"admin.recurrings.edit\":true,\"admin.recurrings.destroy\":true}', '2023-08-09 06:24:34', '2023-09-19 14:10:05');
+(1, '{\"admin.attributes.index\":true,\"admin.attributes.create\":true,\"admin.attributes.edit\":true,\"admin.attributes.destroy\":true,\"admin.attribute_sets.index\":true,\"admin.attribute_sets.create\":true,\"admin.attribute_sets.edit\":true,\"admin.attribute_sets.destroy\":true,\"admin.brands.index\":true,\"admin.brands.create\":true,\"admin.brands.edit\":true,\"admin.brands.destroy\":true,\"admin.categories.index\":true,\"admin.categories.create\":true,\"admin.categories.edit\":true,\"admin.categories.destroy\":true,\"admin.coupons.index\":true,\"admin.coupons.create\":true,\"admin.coupons.edit\":true,\"admin.coupons.destroy\":true,\"admin.currency_rates.index\":true,\"admin.currency_rates.edit\":true,\"admin.emails.index\":true,\"admin.emails.create\":true,\"admin.emails.edit\":true,\"admin.emails.destroy\":true,\"admin.fixedrates.index\":true,\"admin.fixedrates.create\":true,\"admin.fixedrates.edit\":true,\"admin.fixedrates.destroy\":true,\"admin.flash_sales.index\":true,\"admin.flash_sales.create\":true,\"admin.flash_sales.edit\":true,\"admin.flash_sales.destroy\":true,\"admin.galleries.index\":true,\"admin.galleries.create\":true,\"admin.galleries.edit\":true,\"admin.galleries.destroy\":true,\"admin.importer.index\":true,\"admin.importer.create\":true,\"admin.media.index\":true,\"admin.media.create\":true,\"admin.media.destroy\":true,\"admin.menus.index\":true,\"admin.menus.create\":true,\"admin.menus.edit\":true,\"admin.menus.destroy\":true,\"admin.menu_items.index\":true,\"admin.menu_items.create\":true,\"admin.menu_items.edit\":true,\"admin.menu_items.destroy\":true,\"admin.options.index\":true,\"admin.options.create\":true,\"admin.options.edit\":true,\"admin.options.destroy\":true,\"admin.orders.index\":true,\"admin.orders.show\":true,\"admin.orders.create\":true,\"admin.orders.edit\":true,\"admin.pages.index\":true,\"admin.pages.create\":true,\"admin.pages.edit\":true,\"admin.pages.destroy\":true,\"admin.pickupstores.index\":true,\"admin.pickupstores.create\":true,\"admin.pickupstores.edit\":true,\"admin.pickupstores.destroy\":true,\"admin.products.index\":true,\"admin.products.create\":true,\"admin.products.edit\":true,\"admin.products.destroy\":true,\"admin.recurrings.index\":true,\"admin.recurrings.edit\":true,\"admin.reports.index\":true,\"admin.reviews.index\":true,\"admin.reviews.edit\":true,\"admin.reviews.destroy\":true,\"admin.rewardpoints.index\":true,\"admin.rewardpoints.create\":true,\"admin.rewardpoints.edit\":true,\"admin.rewardpoints.destroy\":true,\"admin.rewardpointsgift.index\":true,\"admin.rewardpointsgift.create\":true,\"admin.rewardpointsgift.edit\":true,\"admin.rewardpointsgift.destroy\":true,\"admin.customerrewardpoints.index\":true,\"admin.customerrewardpoints.create\":true,\"admin.customerrewardpoints.edit\":true,\"admin.customerrewardpoints.destroy\":true,\"admin.settings.edit\":true,\"admin.sliders.index\":true,\"admin.sliders.create\":true,\"admin.sliders.edit\":true,\"admin.sliders.destroy\":true,\"admin.subscribers.index\":true,\"admin.subscribers.create\":true,\"admin.subscribers.edit\":true,\"admin.subscribers.destroy\":true,\"admin.tags.index\":true,\"admin.tags.create\":true,\"admin.tags.edit\":true,\"admin.tags.destroy\":true,\"admin.templates.index\":true,\"admin.templates.create\":true,\"admin.templates.edit\":true,\"admin.templates.destroy\":true,\"admin.testimonials.index\":true,\"admin.testimonials.create\":true,\"admin.testimonials.edit\":true,\"admin.testimonials.destroy\":true,\"admin.transactions.index\":true,\"admin.translations.index\":true,\"admin.translations.edit\":true,\"admin.users.index\":true,\"admin.users.create\":true,\"admin.users.edit\":true,\"admin.users.destroy\":true,\"admin.roles.index\":true,\"admin.roles.create\":true,\"admin.roles.edit\":true,\"admin.roles.destroy\":true,\"admin.storefront.edit\":true}', '2023-08-09 06:24:33', '2023-11-09 11:30:37'),
+(2, '{\"admin.subscribers.index\":true,\"admin.subscribers.create\":true,\"admin.subscribers.edit\":true,\"admin.subscribers.destroy\":true}', '2023-08-09 06:24:34', '2023-11-01 13:56:26');
 
 -- --------------------------------------------------------
 
@@ -2898,7 +3621,7 @@ INSERT INTO `settings` (`id`, `key`, `is_translatable`, `plain_value`, `created_
 (17, 'supported_currencies', 0, 'a:1:{i:0;s:3:\"MYR\";}', '2023-08-09 06:24:35', '2023-08-26 06:54:31'),
 (18, 'default_currency', 0, 's:3:\"MYR\";', '2023-08-09 06:24:35', '2023-08-26 06:54:31'),
 (19, 'send_order_invoice_email', 0, 'b:0;', '2023-08-09 06:24:35', '2023-08-09 06:24:35'),
-(20, 'newsletter_enabled', 0, 's:1:\"0\";', '2023-08-09 06:24:35', '2023-08-10 12:11:34'),
+(20, 'newsletter_enabled', 0, 's:1:\"0\";', '2023-08-09 06:24:35', '2023-11-09 15:26:45'),
 (21, 'local_pickup_cost', 0, 's:1:\"2\";', '2023-08-09 06:24:36', '2023-08-11 05:41:40'),
 (22, 'flat_rate_cost', 0, 's:1:\"0\";', '2023-08-09 06:24:36', '2023-09-23 11:00:48'),
 (23, 'free_shipping_label', 1, NULL, '2023-08-09 06:24:36', '2023-08-09 06:24:36'),
@@ -2981,30 +3704,30 @@ INSERT INTO `settings` (`id`, `key`, `is_translatable`, `plain_value`, `created_
 (100, 'storefront_most_searched_keywords_enabled', 0, 's:1:\"1\";', '2023-08-10 05:00:15', '2023-09-06 09:55:23'),
 (101, 'storefront_primary_menu', 0, 's:1:\"5\";', '2023-08-10 05:00:15', '2023-08-11 05:50:55'),
 (102, 'storefront_category_menu', 0, 's:1:\"1\";', '2023-08-10 05:00:15', '2023-08-11 06:57:49'),
-(103, 'storefront_footer_menu_one', 0, 's:1:\"2\";', '2023-08-10 05:00:15', '2023-08-11 05:33:34'),
-(104, 'storefront_footer_menu_two', 0, 's:1:\"5\";', '2023-08-10 05:00:15', '2023-08-11 06:11:59'),
+(103, 'storefront_footer_menu_one', 0, 's:1:\"8\";', '2023-08-10 05:00:15', '2023-10-17 14:31:51'),
+(104, 'storefront_footer_menu_two', 0, 's:1:\"9\";', '2023-08-10 05:00:15', '2023-10-17 14:31:51'),
 (105, 'storefront_features_section_enabled', 0, 's:1:\"1\";', '2023-08-10 05:00:15', '2023-08-14 04:55:43'),
 (106, 'storefront_feature_1_icon', 0, 's:55:\"https://cdn.euroflorist.com/cmspr/Uk/calendaricon0.webp\";', '2023-08-10 05:00:15', '2023-08-14 04:56:10'),
 (107, 'storefront_feature_2_icon', 0, 's:55:\"https://cdn.euroflorist.com/cmspr/Uk/deliveryicon0.webp\";', '2023-08-10 05:00:15', '2023-08-14 05:01:30'),
 (108, 'storefront_feature_3_icon', 0, 's:54:\"https://cdn.euroflorist.com/cmspr/Uk/bouqueticon0.webp\";', '2023-08-10 05:00:15', '2023-08-14 05:01:30'),
 (109, 'storefront_feature_4_icon', 0, 's:52:\"https://cdn.euroflorist.com/cmspr/Uk/hearticon0.webp\";', '2023-08-10 05:00:15', '2023-08-14 05:01:30'),
 (110, 'storefront_feature_5_icon', 0, 's:45:\"<use xlink:href=\"/sprite.svg#delivery\"></use>\";', '2023-08-10 05:00:15', '2023-08-14 05:05:12'),
-(111, 'storefront_product_page_banner_call_to_action_url', 0, 's:35:\"http://192.168.1.67:8000/categories\";', '2023-08-10 05:00:16', '2023-08-14 13:13:39'),
+(111, 'storefront_product_page_banner_call_to_action_url', 0, 's:11:\"/categories\";', '2023-08-10 05:00:16', '2023-11-17 10:34:41'),
 (112, 'storefront_product_page_banner_open_in_new_window', 0, 's:1:\"0\";', '2023-08-10 05:00:16', '2023-08-10 05:00:16'),
 (113, 'storefront_facebook_link', 0, 'N;', '2023-08-10 05:00:16', '2023-08-10 05:00:16'),
 (114, 'storefront_twitter_link', 0, 'N;', '2023-08-10 05:00:16', '2023-08-10 05:00:16'),
 (115, 'storefront_instagram_link', 0, 'N;', '2023-08-10 05:00:16', '2023-08-10 05:00:16'),
 (116, 'storefront_youtube_link', 0, 'N;', '2023-08-10 05:00:16', '2023-08-10 05:00:16'),
-(117, 'storefront_slider_banner_1_call_to_action_url', 0, 's:54:\"http://192.168.1.67:8000/categories/greetings/products\";', '2023-08-10 05:00:16', '2023-08-14 13:03:24'),
+(117, 'storefront_slider_banner_1_call_to_action_url', 0, 's:30:\"/categories/greetings/products\";', '2023-08-10 05:00:16', '2023-10-17 14:08:03'),
 (118, 'storefront_slider_banner_1_open_in_new_window', 0, 's:1:\"0\";', '2023-08-10 05:00:16', '2023-08-10 11:05:22'),
-(119, 'storefront_slider_banner_2_call_to_action_url', 0, 's:52:\"http://192.168.1.67:8000/categories/bouquet/products\";', '2023-08-10 05:00:16', '2023-08-14 13:03:24'),
+(119, 'storefront_slider_banner_2_call_to_action_url', 0, 's:28:\"/categories/bouquet/products\";', '2023-08-10 05:00:16', '2023-10-17 14:08:03'),
 (120, 'storefront_slider_banner_2_open_in_new_window', 0, 's:1:\"0\";', '2023-08-10 05:00:16', '2023-08-10 05:00:16'),
 (121, 'storefront_three_column_full_width_banners_enabled', 0, 's:1:\"1\";', '2023-08-10 05:00:16', '2023-08-14 08:35:41'),
-(122, 'storefront_three_column_full_width_banners_1_call_to_action_url', 0, 's:62:\"http://192.168.1.67:8000/categories/same-day-delivery/products\";', '2023-08-10 05:00:16', '2023-08-14 13:11:52'),
+(122, 'storefront_three_column_full_width_banners_1_call_to_action_url', 0, 's:38:\"/categories/same-day-delivery/products\";', '2023-08-10 05:00:16', '2023-10-17 14:08:03'),
 (123, 'storefront_three_column_full_width_banners_1_open_in_new_window', 0, 's:1:\"0\";', '2023-08-10 05:00:16', '2023-08-10 05:00:16'),
-(124, 'storefront_three_column_full_width_banners_2_call_to_action_url', 0, 's:50:\"http://192.168.1.67:8000/categories/combo/products\";', '2023-08-10 05:00:16', '2023-08-14 13:11:52'),
+(124, 'storefront_three_column_full_width_banners_2_call_to_action_url', 0, 's:26:\"/categories/combo/products\";', '2023-08-10 05:00:16', '2023-10-17 14:08:03'),
 (125, 'storefront_three_column_full_width_banners_2_open_in_new_window', 0, 's:1:\"0\";', '2023-08-10 05:00:16', '2023-08-10 05:00:16'),
-(126, 'storefront_three_column_full_width_banners_3_call_to_action_url', 0, 's:54:\"http://192.168.1.67:8000/categories/greetings/products\";', '2023-08-10 05:00:16', '2023-08-14 13:11:53'),
+(126, 'storefront_three_column_full_width_banners_3_call_to_action_url', 0, 's:30:\"/categories/greetings/products\";', '2023-08-10 05:00:16', '2023-10-17 14:08:03'),
 (127, 'storefront_three_column_full_width_banners_3_open_in_new_window', 0, 's:1:\"0\";', '2023-08-10 05:00:16', '2023-08-10 05:00:16'),
 (128, 'storefront_featured_categories_section_enabled', 0, 's:1:\"1\";', '2023-08-10 05:00:16', '2023-08-14 07:45:25'),
 (129, 'storefront_featured_categories_section_category_1_category_id', 0, 's:2:\"15\";', '2023-08-10 05:00:16', '2023-08-14 11:54:30'),
@@ -3040,9 +3763,9 @@ INSERT INTO `settings` (`id`, `key`, `is_translatable`, `plain_value`, `created_
 (159, 'storefront_product_tabs_1_section_tab_4_products_limit', 0, 'N;', '2023-08-10 05:00:17', '2023-08-10 05:00:17'),
 (160, 'storefront_top_brands_section_enabled', 0, 's:1:\"0\";', '2023-08-10 05:00:17', '2023-08-14 05:14:41'),
 (161, 'storefront_top_brands', 0, 'a:2:{i:0;s:1:\"1\";i:1;s:1:\"2\";}', '2023-08-10 05:00:17', '2023-08-10 11:52:04'),
-(162, 'storefront_flash_sale_and_vertical_products_section_enabled', 0, 's:1:\"1\";', '2023-08-10 05:00:17', '2023-08-11 07:45:49'),
+(162, 'storefront_flash_sale_and_vertical_products_section_enabled', 0, 's:1:\"0\";', '2023-08-10 05:00:17', '2023-10-17 09:14:21'),
 (163, 'storefront_flash_sale_title', 0, 's:9:\"AADI SALE\";', '2023-08-10 05:00:17', '2023-08-11 07:22:17'),
-(164, 'storefront_active_flash_sale_campaign', 0, 's:1:\"3\";', '2023-08-10 05:00:18', '2023-08-11 07:23:32'),
+(164, 'storefront_active_flash_sale_campaign', 0, 's:1:\"4\";', '2023-08-10 05:00:18', '2023-10-17 08:11:53'),
 (165, 'storefront_vertical_products_1_title', 0, 's:17:\"Same day delivery\";', '2023-08-10 05:00:18', '2023-08-14 11:30:00'),
 (166, 'storefront_vertical_products_1_product_type', 0, 's:17:\"category_products\";', '2023-08-10 05:00:18', '2023-08-11 07:26:25'),
 (167, 'storefront_vertical_products_1_category_id', 0, 's:2:\"18\";', '2023-08-10 05:00:18', '2023-08-14 11:30:00'),
@@ -3056,11 +3779,11 @@ INSERT INTO `settings` (`id`, `key`, `is_translatable`, `plain_value`, `created_
 (175, 'storefront_vertical_products_3_category_id', 0, 's:1:\"2\";', '2023-08-10 05:00:18', '2023-08-14 05:43:21'),
 (176, 'storefront_vertical_products_3_products_limit', 0, 's:1:\"9\";', '2023-08-10 05:00:18', '2023-08-11 07:26:25'),
 (177, 'storefront_two_column_banners_enabled', 0, 's:1:\"1\";', '2023-08-10 05:00:18', '2023-08-14 07:46:46'),
-(178, 'storefront_two_column_banners_1_call_to_action_url', 0, 's:62:\"http://192.168.1.67:8000/categories/festival-garlands/products\";', '2023-08-10 05:00:18', '2023-08-14 13:12:32'),
+(178, 'storefront_two_column_banners_1_call_to_action_url', 0, 's:38:\"/categories/festival-garlands/products\";', '2023-08-10 05:00:18', '2023-10-17 14:08:04'),
 (179, 'storefront_two_column_banners_1_open_in_new_window', 0, 's:1:\"0\";', '2023-08-10 05:00:18', '2023-08-10 05:00:18'),
-(180, 'storefront_two_column_banners_2_call_to_action_url', 0, 's:61:\"http://192.168.1.67:8000/categories/wedding-garlands/products\";', '2023-08-10 05:00:18', '2023-08-14 13:12:32'),
+(180, 'storefront_two_column_banners_2_call_to_action_url', 0, 's:37:\"/categories/wedding-garlands/products\";', '2023-08-10 05:00:18', '2023-10-17 14:08:04'),
 (181, 'storefront_two_column_banners_2_open_in_new_window', 0, 's:1:\"0\";', '2023-08-10 05:00:18', '2023-08-10 05:00:18'),
-(182, 'storefront_product_grid_section_enabled', 0, 's:1:\"1\";', '2023-08-10 05:00:18', '2023-08-25 13:28:57'),
+(182, 'storefront_product_grid_section_enabled', 0, 's:1:\"0\";', '2023-08-10 05:00:18', '2023-10-17 08:45:03'),
 (183, 'storefront_product_grid_section_tab_1_product_type', 0, 's:17:\"category_products\";', '2023-08-10 05:00:18', '2023-08-11 07:57:14'),
 (184, 'storefront_product_grid_section_tab_1_category_id', 0, 's:1:\"1\";', '2023-08-10 05:00:18', '2023-08-11 07:57:14'),
 (185, 'storefront_product_grid_section_tab_1_products_limit', 0, 's:2:\"10\";', '2023-08-10 05:00:18', '2023-08-22 05:58:05'),
@@ -3074,11 +3797,11 @@ INSERT INTO `settings` (`id`, `key`, `is_translatable`, `plain_value`, `created_
 (193, 'storefront_product_grid_section_tab_4_category_id', 0, 'N;', '2023-08-10 05:00:19', '2023-08-10 05:00:19'),
 (194, 'storefront_product_grid_section_tab_4_products_limit', 0, 'N;', '2023-08-10 05:00:19', '2023-08-10 05:00:19'),
 (195, 'storefront_three_column_banners_enabled', 0, 's:1:\"1\";', '2023-08-10 05:00:19', '2023-08-14 05:51:24'),
-(196, 'storefront_three_column_banners_1_call_to_action_url', 0, 's:64:\"http://192.168.1.67:8000/categories/devotional-garlands/products\";', '2023-08-10 05:00:19', '2023-08-14 13:08:57'),
+(196, 'storefront_three_column_banners_1_call_to_action_url', 0, 's:40:\"/categories/devotional-garlands/products\";', '2023-08-10 05:00:19', '2023-10-17 14:08:04'),
 (197, 'storefront_three_column_banners_1_open_in_new_window', 0, 's:1:\"0\";', '2023-08-10 05:00:19', '2023-08-10 05:00:19'),
-(198, 'storefront_three_column_banners_2_call_to_action_url', 0, 's:54:\"http://192.168.1.67:8000/categories/pre-order/products\";', '2023-08-10 05:00:19', '2023-08-14 13:08:57'),
+(198, 'storefront_three_column_banners_2_call_to_action_url', 0, 's:30:\"/categories/pre-order/products\";', '2023-08-10 05:00:19', '2023-10-17 14:08:04'),
 (199, 'storefront_three_column_banners_2_open_in_new_window', 0, 's:1:\"0\";', '2023-08-10 05:00:19', '2023-08-10 05:00:19'),
-(200, 'storefront_three_column_banners_3_call_to_action_url', 0, 's:59:\"http://192.168.1.67:8000/categories/combo-IB1js2MR/products\";', '2023-08-10 05:00:19', '2023-08-14 13:08:57'),
+(200, 'storefront_three_column_banners_3_call_to_action_url', 0, 's:35:\"/categories/combo-IB1js2MR/products\";', '2023-08-10 05:00:19', '2023-10-17 14:08:04'),
 (201, 'storefront_three_column_banners_3_open_in_new_window', 0, 's:1:\"0\";', '2023-08-10 05:00:19', '2023-08-10 05:00:19'),
 (202, 'storefront_product_tabs_2_section_enabled', 0, 's:1:\"0\";', '2023-08-10 05:00:19', '2023-08-14 05:43:21'),
 (203, 'storefront_product_tabs_2_section_tab_1_product_type', 0, 's:17:\"category_products\";', '2023-08-10 05:00:19', '2023-08-11 07:59:20'),
@@ -3119,10 +3842,10 @@ INSERT INTO `settings` (`id`, `key`, `is_translatable`, `plain_value`, `created_
 (238, 'storefront_product_tabs_2_section_tab_3_products', 0, 'N;', '2023-08-10 05:00:21', '2023-08-10 05:00:21'),
 (239, 'storefront_product_tabs_2_section_tab_4_products', 0, 'N;', '2023-08-10 05:00:21', '2023-08-10 05:00:21'),
 (240, 'storefront_header_logo', 1, NULL, '2023-08-10 10:23:22', '2023-08-10 10:23:22'),
-(241, 'storefront_favicon', 0, 's:1:\"4\";', '2023-08-10 10:23:23', '2023-08-14 13:01:26'),
+(241, 'storefront_favicon', 0, 's:3:\"225\";', '2023-08-10 10:23:23', '2023-10-17 14:15:23'),
 (242, 'storefront_accepted_payment_methods_image', 0, 'N;', '2023-08-10 10:23:23', '2023-08-14 04:55:01'),
 (243, 'storefront_three_column_full_width_banners_background_file_id', 0, 'N;', '2023-08-10 10:23:24', '2023-08-14 06:11:31'),
-(244, 'maintenance_mode', 0, 's:1:\"0\";', '2023-08-10 12:11:31', '2023-08-28 09:19:38'),
+(244, 'maintenance_mode', 0, 's:1:\"0\";', '2023-08-10 12:11:31', '2023-10-20 06:38:38'),
 (245, 'store_tagline', 1, NULL, '2023-08-10 12:11:31', '2023-08-10 12:11:31'),
 (246, 'bank_transfer_instructions', 1, NULL, '2023-08-10 12:11:32', '2023-08-10 12:11:32'),
 (247, 'check_payment_instructions', 1, NULL, '2023-08-10 12:11:32', '2023-08-10 12:11:32'),
@@ -3210,8 +3933,8 @@ INSERT INTO `settings` (`id`, `key`, `is_translatable`, `plain_value`, `created_
 (329, 'flutterwave_secret_key', 0, 'N;', '2023-08-10 12:11:36', '2023-08-10 12:11:36'),
 (330, 'flutterwave_encryption_key', 0, 'N;', '2023-08-10 12:11:36', '2023-08-10 12:11:36'),
 (331, 'cod_enabled', 0, 's:1:\"1\";', '2023-08-10 12:11:36', '2023-08-10 12:11:36'),
-(332, 'bank_transfer_enabled', 0, 's:1:\"1\";', '2023-08-10 12:11:36', '2023-09-23 10:40:20'),
-(333, 'check_payment_enabled', 0, 's:1:\"1\";', '2023-08-10 12:11:36', '2023-09-23 10:40:20'),
+(332, 'bank_transfer_enabled', 0, 's:1:\"0\";', '2023-08-10 12:11:36', '2023-11-09 15:32:59'),
+(333, 'check_payment_enabled', 0, 's:1:\"0\";', '2023-08-10 12:11:36', '2023-11-09 15:32:59'),
 (334, 'sms_order_statuses', 0, 'N;', '2023-08-10 12:11:36', '2023-08-10 12:11:36'),
 (335, 'email_order_statuses', 0, 'N;', '2023-08-10 12:11:36', '2023-08-10 12:11:36'),
 (336, 'storefront_mail_logo', 1, NULL, '2023-08-14 13:01:26', '2023-08-14 13:01:26'),
@@ -3235,7 +3958,7 @@ INSERT INTO `settings` (`id`, `key`, `is_translatable`, `plain_value`, `created_
 (354, 'epoint_freview_point_value', 0, 's:2:\"50\";', '2023-09-04 11:31:31', '2023-09-04 12:50:09'),
 (355, 'epoint_fpay_point_value', 0, 's:2:\"50\";', '2023-09-04 11:31:31', '2023-09-04 12:50:09'),
 (356, 'epoint_bday_point_value', 0, 's:2:\"50\";', '2023-09-04 11:31:31', '2023-09-04 12:50:09'),
-(357, 'testimonial_slider_enabled', 0, 's:1:\"1\";', '2023-09-06 06:59:07', '2023-09-23 10:28:06'),
+(357, 'testimonial_slider_enabled', 0, 's:1:\"1\";', '2023-09-06 06:59:07', '2023-11-17 10:44:32'),
 (358, 'my_testimonial_enabled', 0, 's:1:\"1\";', '2023-09-06 06:59:08', '2023-09-28 11:35:46'),
 (359, 'razerpay_label', 1, NULL, '2023-09-23 10:26:39', '2023-09-23 10:26:39'),
 (360, 'razerpay_description', 1, NULL, '2023-09-23 10:26:39', '2023-09-23 10:26:39'),
@@ -3246,7 +3969,9 @@ INSERT INTO `settings` (`id`, `key`, `is_translatable`, `plain_value`, `created_
 (365, 'razerpay_url', 0, 's:43:\"https://sandbox.merchant.razer.com/RMS/pay/\";', '2023-09-23 10:26:40', '2023-09-23 10:38:25'),
 (366, 'razerpay_merchant_id', 0, 's:18:\"SB_lotusflowergift\";', '2023-09-23 10:26:40', '2023-09-23 10:38:25'),
 (367, 'razerpay_instructions', 0, 's:134:\"Make your payment  using Razer Merchant Service by  directly  into our bank account. Please use your Order ID as the payment reference\";', '2023-09-23 10:26:40', '2023-09-23 10:38:25'),
-(368, 'galleries_enabled', 0, 's:1:\"1\";', '2023-09-27 09:48:42', '2023-09-27 09:48:42');
+(368, 'galleries_enabled', 0, 's:1:\"1\";', '2023-09-27 09:48:42', '2023-11-11 07:27:35'),
+(369, 'rewardpoints_enabled', 0, 's:1:\"1\";', '2023-10-07 09:23:09', '2023-11-01 11:09:43'),
+(370, 'recurring_order_enabled', 0, 's:1:\"1\";', '2023-10-07 09:23:09', '2023-11-09 15:32:58');
 
 -- --------------------------------------------------------
 
@@ -3294,11 +4019,11 @@ INSERT INTO `setting_translations` (`id`, `setting_id`, `locale`, `value`) VALUE
 (26, 47, 'en', 's:100:\"Make your payment directly into our bank account. Please use your Order ID as the payment reference.\";'),
 (27, 48, 'en', 's:19:\"Check / Money Order\";'),
 (28, 49, 'en', 's:33:\"Please send a check to our store.\";'),
-(29, 51, 'en', 's:13:\"Welcome APS!!\";'),
+(29, 51, 'en', 's:40:\"🌟 Discover the Magic of Garlands!🌟\";'),
 (30, 52, 'en', 's:92:\"No 66, Jalan Padang Belia brickfields  50470 brickfields, Kuala Lumpur.  HQ - +6012 357 0799\";'),
-(31, 53, 'en', 's:13:\"Welcome APS!!\";'),
-(32, 54, 'en', 's:12:\"Aps Garlands\";'),
-(33, 55, 'en', 's:11:\"Information\";'),
+(31, 53, 'en', 'N;'),
+(32, 54, 'en', 's:4:\"Help\";'),
+(33, 55, 'en', 's:4:\"Info\";'),
 (34, 50, 'en', 's:92:\"Copyright © <a href=\"{{ store_url }}\">{{ store_name }}</a> {{ year }}. All rights reserved.\";'),
 (35, 56, 'en', 's:22:\"Delivery 7 Days A Week\";'),
 (36, 57, 'en', 's:26:\"Choose your preferred date\";'),
@@ -3330,18 +4055,18 @@ INSERT INTO `setting_translations` (`id`, `setting_id`, `locale`, `value`) VALUE
 (62, 83, 'en', 'N;'),
 (63, 84, 'en', 's:2:\"93\";'),
 (64, 85, 'en', 's:2:\"98\";'),
-(65, 86, 'en', 's:2:\"80\";'),
+(65, 86, 'en', 's:3:\"223\";'),
 (66, 87, 'en', 's:21:\"Fantastic Diwali Sale\";'),
 (67, 88, 'en', 's:5:\"TEST2\";'),
 (68, 89, 'en', 's:5:\"TEST2\";'),
 (69, 90, 'en', 's:5:\"TEST2\";'),
 (70, 91, 'en', 's:5:\"TEST2\";'),
 (71, 92, 'en', 's:2:\"76\";'),
-(72, 240, 'en', 's:1:\"4\";'),
+(72, 240, 'en', 's:3:\"225\";'),
 (73, 245, 'en', 'N;'),
 (74, 246, 'en', 's:100:\"Make your payment directly into our bank account. Please use your Order ID as the payment reference.\";'),
 (75, 247, 'en', 's:33:\"Please send a check to our store.\";'),
-(76, 336, 'en', 's:1:\"4\";'),
+(76, 336, 'en', 's:3:\"225\";'),
 (77, 359, 'en', 's:23:\"Razer Merchant Services\";'),
 (78, 360, 'en', 's:23:\"RMS Payment Integration\";');
 
@@ -3399,10 +4124,10 @@ INSERT INTO `slider_slides` (`id`, `slider_id`, `options`, `call_to_action_url`,
 (3, 1, '{\"caption_1\":{\"delay\":null,\"effect\":\"fadeInUp\"},\"caption_2\":{\"delay\":null,\"effect\":\"fadeInUp\"},\"call_to_action\":{\"delay\":null,\"effect\":\"fadeInUp\"}}', NULL, 1, 2, '2023-08-10 10:54:54', '2023-08-10 10:54:54'),
 (4, 2, '{\"caption_1\":{\"delay\":null,\"effect\":\"fadeInUp\"},\"caption_2\":{\"delay\":null,\"effect\":\"fadeInUp\"},\"call_to_action\":{\"delay\":null,\"effect\":\"fadeInUp\"}}', NULL, 1, 0, '2023-08-10 11:01:03', '2023-08-10 11:01:03'),
 (5, 2, '{\"caption_1\":{\"delay\":null,\"effect\":\"fadeInUp\"},\"caption_2\":{\"delay\":null,\"effect\":\"fadeInUp\"},\"call_to_action\":{\"delay\":null,\"effect\":\"fadeInUp\"}}', NULL, 1, 1, '2023-08-10 11:01:04', '2023-08-10 11:01:04'),
-(11, 3, '{\"caption_1\":{\"delay\":null,\"effect\":\"fadeInUp\"},\"caption_2\":{\"delay\":null,\"effect\":\"fadeInUp\"},\"call_to_action\":{\"delay\":null,\"effect\":\"fadeInUp\"}}', 'http://192.168.1.67:8000/categories/main-garland/products', 0, 3, '2023-08-14 04:46:27', '2023-08-14 13:06:09'),
-(18, 3, '{\"caption_1\":{\"delay\":null,\"effect\":\"fadeInUp\"},\"caption_2\":{\"delay\":null,\"effect\":\"fadeInUp\"},\"call_to_action\":{\"delay\":null,\"effect\":\"fadeInUp\"}}', 'http://192.168.1.67:8000/categories/hand-bouquet/products', 0, 1, '2023-08-14 05:16:17', '2023-08-14 13:06:09'),
-(19, 3, '{\"caption_1\":{\"delay\":null,\"effect\":\"fadeInUp\"},\"caption_2\":{\"delay\":null,\"effect\":\"fadeInUp\"},\"call_to_action\":{\"delay\":null,\"effect\":\"fadeInUp\"}}', 'http://192.168.1.67:8000/categories/hand-bouquet-1yQ0zKX4/products', 0, 0, '2023-08-14 09:46:49', '2023-08-14 13:06:09'),
-(20, 3, '{\"caption_1\":{\"delay\":null,\"effect\":\"fadeInUp\"},\"caption_2\":{\"delay\":null,\"effect\":\"fadeInUp\"},\"call_to_action\":{\"delay\":null,\"effect\":\"fadeInUp\"}}', 'http://192.168.1.67:8000/categories/bouquet/products', 0, 2, '2023-08-14 09:46:50', '2023-08-14 13:06:09');
+(11, 3, '{\"caption_1\":{\"delay\":null,\"effect\":\"fadeInUp\"},\"caption_2\":{\"delay\":null,\"effect\":\"fadeInUp\"},\"call_to_action\":{\"delay\":null,\"effect\":\"fadeInUp\"}}', '/categories/main-garland/products', 0, 3, '2023-08-14 04:46:27', '2023-10-17 14:10:12'),
+(18, 3, '{\"caption_1\":{\"delay\":null,\"effect\":\"fadeInUp\"},\"caption_2\":{\"delay\":null,\"effect\":\"fadeInUp\"},\"call_to_action\":{\"delay\":null,\"effect\":\"fadeInUp\"}}', '/categories/hand-bouquet/products', 0, 1, '2023-08-14 05:16:17', '2023-10-17 14:10:12'),
+(19, 3, '{\"caption_1\":{\"delay\":null,\"effect\":\"fadeInUp\"},\"caption_2\":{\"delay\":null,\"effect\":\"fadeInUp\"},\"call_to_action\":{\"delay\":null,\"effect\":\"fadeInUp\"}}', '/categories/hand-bouquet-1yQ0zKX4/products', 0, 0, '2023-08-14 09:46:49', '2023-10-17 14:10:12'),
+(20, 3, '{\"caption_1\":{\"delay\":null,\"effect\":\"fadeInUp\"},\"caption_2\":{\"delay\":null,\"effect\":\"fadeInUp\"},\"call_to_action\":{\"delay\":null,\"effect\":\"fadeInUp\"}}', '/categories/bouquet/products', 0, 2, '2023-08-14 09:46:50', '2023-10-17 14:10:12');
 
 -- --------------------------------------------------------
 
@@ -3431,10 +4156,10 @@ INSERT INTO `slider_slide_translations` (`id`, `slider_slide_id`, `locale`, `fil
 (3, 3, 'en', 32, 'test5', 'test6', NULL, 'left'),
 (4, 4, 'en', 33, 'test1', 'test2', NULL, 'left'),
 (5, 5, 'en', 32, 'test3', 'test4', NULL, 'left'),
-(11, 11, 'en', 68, NULL, NULL, 'Click here', 'right'),
-(18, 18, 'en', 76, NULL, NULL, 'Click here', 'right'),
-(19, 19, 'en', 109, 'Welcome', NULL, 'Click here', 'right'),
-(20, 20, 'en', 108, NULL, NULL, 'Click here', 'right');
+(11, 11, 'en', 224, NULL, NULL, NULL, 'right'),
+(18, 18, 'en', 76, NULL, NULL, NULL, 'right'),
+(19, 19, 'en', 222, NULL, NULL, NULL, 'right'),
+(20, 20, 'en', 80, NULL, NULL, NULL, 'right');
 
 -- --------------------------------------------------------
 
@@ -3457,6 +4182,29 @@ INSERT INTO `slider_translations` (`id`, `slider_id`, `locale`, `name`) VALUES
 (1, 1, 'en', 'aps garlands'),
 (2, 2, 'en', 'Aps -g'),
 (3, 3, 'en', 'aps');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `subscribers`
+--
+
+CREATE TABLE `subscribers` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `email` varchar(191) NOT NULL,
+  `is_active` tinyint(1) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `subscribers`
+--
+
+INSERT INTO `subscribers` (`id`, `email`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'prabakaranpbk@gmail.com', 1, '2023-11-01 14:03:15', '2023-11-01 14:03:15'),
+(2, 'prabakaran@santhila.co', 1, '2023-11-01 14:04:53', '2023-11-01 14:04:53'),
+(3, 'test@gm233.com', 1, '2023-11-03 08:16:36', '2023-11-03 08:16:36');
 
 -- --------------------------------------------------------
 
@@ -3595,6 +4343,48 @@ INSERT INTO `tax_rate_translations` (`id`, `tax_rate_id`, `locale`, `name`) VALU
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `templates`
+--
+
+CREATE TABLE `templates` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `slug` varchar(191) NOT NULL,
+  `is_active` tinyint(1) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `templates`
+--
+
+INSERT INTO `templates` (`id`, `slug`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'welcome-mail', 1, '2023-11-01 14:04:04', '2023-11-01 14:04:04');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `template_translations`
+--
+
+CREATE TABLE `template_translations` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `template_id` int(10) UNSIGNED NOT NULL,
+  `locale` varchar(191) NOT NULL,
+  `name` varchar(191) NOT NULL,
+  `body` longtext NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `template_translations`
+--
+
+INSERT INTO `template_translations` (`id`, `template_id`, `locale`, `name`, `body`) VALUES
+(1, 1, 'en', 'Welcome Mail', '<p>Welcome to APS&nbsp;</p>');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `testimonials`
 --
 
@@ -3619,7 +4409,8 @@ INSERT INTO `testimonials` (`id`, `user_id`, `user_name`, `comment`, `is_active`
 (3, 1, 'Prabakaran', 'From Testing Branch \r\n\r\nThis command will combine the changes from the \"san\" branch into the \"testing\" branch. If there are any conflicts, Git will prompt you to resolve them. After resolving conflicts', 1, NULL, '2023-09-06 08:10:15', '2023-09-06 08:31:40'),
 (4, 1, 'Sangeetha', 'Very Good', 1, NULL, '2023-09-06 09:51:03', '2023-09-06 09:53:43'),
 (6, 1, 'Sabari', 'Creating clean and meaningful commit history: By staging and committing changes in a controlled manner, you can maintain a clean and meaningful history of your project\'s development, making it easier', 1, NULL, '2023-09-08 11:32:55', '2023-09-22 07:37:19'),
-(7, 1, 'Navin', 'With this query, you can accurately calculate the points based on the scenario where claimed points are stored in separate rows, and unclaimed points can be utilized for multiple purchases if a reward', 1, NULL, '2023-09-08 14:47:02', '2023-09-22 07:37:27');
+(7, 1, 'Navin', 'With this query, you can accurately calculate the points based on the scenario where claimed points are stored in separate rows, and unclaimed points can be utilized for multiple purchases if a reward', 1, NULL, '2023-09-08 14:47:02', '2023-09-22 07:37:27'),
+(8, 6, 'sangeetha', 'Good', 0, NULL, '2023-11-17 11:47:11', '2023-11-17 11:47:11');
 
 -- --------------------------------------------------------
 
@@ -3736,7 +4527,36 @@ INSERT INTO `throttle` (`id`, `user_id`, `type`, `ip`, `created_at`, `updated_at
 (93, 3, 'user', NULL, '2023-10-03 09:46:12', '2023-10-03 09:46:12'),
 (94, NULL, 'global', NULL, '2023-10-03 09:46:21', '2023-10-03 09:46:21'),
 (95, NULL, 'ip', '192.168.1.20', '2023-10-03 09:46:21', '2023-10-03 09:46:21'),
-(96, 3, 'user', NULL, '2023-10-03 09:46:21', '2023-10-03 09:46:21');
+(96, 3, 'user', NULL, '2023-10-03 09:46:21', '2023-10-03 09:46:21'),
+(97, NULL, 'global', NULL, '2023-10-16 06:17:44', '2023-10-16 06:17:44'),
+(98, NULL, 'ip', '192.168.1.24', '2023-10-16 06:17:44', '2023-10-16 06:17:44'),
+(99, 4, 'user', NULL, '2023-10-16 06:17:44', '2023-10-16 06:17:44'),
+(100, NULL, 'global', NULL, '2023-10-16 06:17:59', '2023-10-16 06:17:59'),
+(101, NULL, 'ip', '192.168.1.24', '2023-10-16 06:17:59', '2023-10-16 06:17:59'),
+(102, 4, 'user', NULL, '2023-10-16 06:17:59', '2023-10-16 06:17:59'),
+(103, NULL, 'global', NULL, '2023-10-16 06:18:13', '2023-10-16 06:18:13'),
+(104, NULL, 'ip', '192.168.1.24', '2023-10-16 06:18:13', '2023-10-16 06:18:13'),
+(105, 4, 'user', NULL, '2023-10-16 06:18:13', '2023-10-16 06:18:13'),
+(106, NULL, 'global', NULL, '2023-10-26 06:44:54', '2023-10-26 06:44:54'),
+(107, NULL, 'ip', '192.168.1.51', '2023-10-26 06:44:54', '2023-10-26 06:44:54'),
+(108, 1, 'user', NULL, '2023-10-26 06:44:54', '2023-10-26 06:44:54'),
+(109, NULL, 'global', NULL, '2023-10-30 15:15:35', '2023-10-30 15:15:35'),
+(110, NULL, 'ip', '192.168.1.24', '2023-10-30 15:15:35', '2023-10-30 15:15:35'),
+(111, 4, 'user', NULL, '2023-10-30 15:15:35', '2023-10-30 15:15:35'),
+(112, NULL, 'global', NULL, '2023-10-31 06:45:16', '2023-10-31 06:45:16'),
+(113, NULL, 'ip', '192.168.1.67', '2023-10-31 06:45:16', '2023-10-31 06:45:16'),
+(114, 1, 'user', NULL, '2023-10-31 06:45:16', '2023-10-31 06:45:16'),
+(115, NULL, 'global', NULL, '2023-10-31 09:56:40', '2023-10-31 09:56:40'),
+(116, NULL, 'ip', '192.168.1.14', '2023-10-31 09:56:40', '2023-10-31 09:56:40'),
+(117, 1, 'user', NULL, '2023-10-31 09:56:40', '2023-10-31 09:56:40'),
+(118, NULL, 'global', NULL, '2023-11-10 06:33:21', '2023-11-10 06:33:21'),
+(119, NULL, 'ip', '192.168.1.24', '2023-11-10 06:33:21', '2023-11-10 06:33:21'),
+(120, 22, 'user', NULL, '2023-11-10 06:33:22', '2023-11-10 06:33:22'),
+(121, NULL, 'global', NULL, '2023-11-17 10:25:15', '2023-11-17 10:25:15'),
+(122, NULL, 'ip', '192.168.1.70', '2023-11-17 10:25:15', '2023-11-17 10:25:15'),
+(123, 1, 'user', NULL, '2023-11-17 10:25:15', '2023-11-17 10:25:15'),
+(124, NULL, 'global', NULL, '2023-11-17 11:52:08', '2023-11-17 11:52:08'),
+(125, NULL, 'ip', '192.168.1.70', '2023-11-17 11:52:08', '2023-11-17 11:52:08');
 
 -- --------------------------------------------------------
 
@@ -3864,7 +4684,9 @@ INSERT INTO `up_sell_products` (`product_id`, `up_sell_product_id`) VALUES
 (24, 15),
 (24, 16),
 (24, 17),
-(24, 18);
+(24, 18),
+(26, 18),
+(26, 24);
 
 -- --------------------------------------------------------
 
@@ -3879,6 +4701,7 @@ CREATE TABLE `users` (
   `email` varchar(191) NOT NULL,
   `phone` varchar(191) NOT NULL,
   `password` varchar(191) NOT NULL,
+  `user_type` tinyint(4) NOT NULL DEFAULT 0,
   `permissions` text DEFAULT NULL,
   `last_login` datetime DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -3896,14 +4719,17 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `first_name`, `last_name`, `email`, `phone`, `password`, `permissions`, `last_login`, `created_at`, `updated_at`, `image_url`, `is_sso_google`, `sso_id`, `sso_username`, `sso_locale`, `sso_avatar`, `is_sso_fb`) VALUES
-(1, 'GIRISH', 'SHANKAR', 'giri@santhila.co', '91404040404', '$2y$10$N9NQ0/x4BwItEArqEIKg2uzB6C/7D3.SNF9uPDVm34vxHtGAatpDu', '{\"admin.attributes.index\":true,\"admin.attributes.create\":true,\"admin.attributes.edit\":true,\"admin.attributes.destroy\":true,\"admin.attribute_sets.index\":true,\"admin.attribute_sets.create\":true,\"admin.attribute_sets.edit\":true,\"admin.attribute_sets.destroy\":true,\"admin.brands.index\":true,\"admin.brands.create\":true,\"admin.brands.edit\":true,\"admin.brands.destroy\":true,\"admin.categories.index\":true,\"admin.categories.create\":true,\"admin.categories.edit\":true,\"admin.categories.destroy\":true,\"admin.coupons.index\":true,\"admin.coupons.create\":true,\"admin.coupons.edit\":true,\"admin.coupons.destroy\":true,\"admin.currency_rates.index\":true,\"admin.currency_rates.edit\":true,\"admin.flash_sales.index\":true,\"admin.flash_sales.create\":true,\"admin.flash_sales.edit\":true,\"admin.flash_sales.destroy\":true,\"admin.importer.index\":true,\"admin.importer.create\":true,\"admin.media.index\":true,\"admin.media.create\":true,\"admin.media.destroy\":true,\"admin.menus.index\":true,\"admin.menus.create\":true,\"admin.menus.edit\":true,\"admin.menus.destroy\":true,\"admin.menu_items.index\":true,\"admin.menu_items.create\":true,\"admin.menu_items.edit\":true,\"admin.menu_items.destroy\":true,\"admin.options.index\":true,\"admin.options.create\":true,\"admin.options.edit\":true,\"admin.options.destroy\":true,\"admin.orders.index\":true,\"admin.orders.show\":true,\"admin.orders.edit\":true,\"admin.ordersubscription.index\":true,\"admin.ordersubscription.create\":true,\"admin.ordersubscription.edit\":true,\"admin.ordersubscription.destroy\":true,\"admin.pages.index\":true,\"admin.pages.create\":true,\"admin.pages.edit\":true,\"admin.pages.destroy\":true,\"admin.products.index\":true,\"admin.products.create\":true,\"admin.products.edit\":true,\"admin.products.destroy\":true,\"admin.reports.index\":true,\"admin.reviews.index\":true,\"admin.reviews.edit\":true,\"admin.reviews.destroy\":true,\"admin.rewardpoints.index\":true,\"admin.rewardpoints.create\":true,\"admin.rewardpoints.edit\":true,\"admin.rewardpoints.destroy\":true,\"admin.settings.edit\":true,\"admin.sliders.index\":true,\"admin.sliders.create\":true,\"admin.sliders.edit\":true,\"admin.sliders.destroy\":true,\"admin.tags.index\":true,\"admin.tags.create\":true,\"admin.tags.edit\":true,\"admin.tags.destroy\":true,\"admin.taxes.index\":true,\"admin.taxes.create\":true,\"admin.taxes.edit\":true,\"admin.taxes.destroy\":true,\"admin.testimonials.index\":true,\"admin.testimonials.create\":true,\"admin.testimonials.edit\":true,\"admin.testimonials.destroy\":true,\"admin.transactions.index\":true,\"admin.translations.index\":true,\"admin.translations.edit\":true,\"admin.users.index\":true,\"admin.users.create\":true,\"admin.users.edit\":true,\"admin.users.destroy\":true,\"admin.roles.index\":true,\"admin.roles.create\":true,\"admin.roles.edit\":true,\"admin.roles.destroy\":true,\"admin.storefront.edit\":true}', '2023-10-03 13:33:09', '2023-08-09 06:24:33', '2023-10-03 08:03:09', 'storage/profile/1/6517c1d73e3c7.png', 0, NULL, NULL, NULL, NULL, 0),
-(2, 'kiruthika', 's', 'kiruthika@gmail.com', '9788894897', '$2y$10$c4p8cbYj1hIxqiBV2pCH7ONrdT8jGP3fIdqKtr9Hwjo1KPRxUgSx6', NULL, NULL, '2023-08-16 11:05:35', '2023-08-16 11:05:35', NULL, 0, NULL, NULL, NULL, NULL, 0),
-(3, 'Mahendran', 'Sadhasivam', 'mahi@santhila.co', '9994520822', '$2y$10$ps/PgTA4UPkQWdt8ylEeSOozSb.AWkDGF8..Fd1BnaewFv2cxTaa6', NULL, '2023-08-22 16:26:52', '2023-08-22 10:55:43', '2023-08-22 10:56:52', NULL, 0, NULL, NULL, NULL, NULL, 0),
-(4, 'APS', 'Admin', 'prabakaran@santhila.co', '9578009264', '$2y$10$N9NQ0/x4BwItEArqEIKg2uzB6C/7D3.SNF9uPDVm34vxHtGAatpDu', '{\"admin.reviews.index\":true,\"admin.reviews.edit\":true,\"admin.reviews.destroy\":true,\"admin.rewardpoints.index\":true,\"admin.rewardpoints.create\":true,\"admin.rewardpoints.edit\":true,\"admin.rewardpoints.destroy\":true}', '2023-10-03 15:13:47', '2023-08-09 06:24:33', '2023-10-03 09:43:47', NULL, 0, NULL, NULL, NULL, NULL, 0),
-(5, 'Prabakaran', 'V', 'prabakaran13@santhila.co', '9578009264', '$2y$10$NFaYfYYqUB73CFvpx6oCmuQGUXKsssp6NhSZ1HGIuTwNrBBzbxj7S', NULL, '2023-10-04 11:38:43', '2023-08-24 10:05:50', '2023-10-04 06:08:43', NULL, 0, NULL, NULL, NULL, NULL, 0),
-(6, 'Sangeetha', 'M', 'msangeethaece2001@gmail.com', '9788894897', '$2y$10$v1vCBYySG7cf6uVb4VAX8u0fMZ/kBYnpCIAG53XVLm/nhgUhcxWOe', '[]', '2023-09-23 15:55:36', '2023-08-24 13:46:45', '2023-09-23 10:25:36', NULL, 0, NULL, NULL, NULL, NULL, 0),
-(7, 'Indumathi', 'E', 'indhumathi@santhila.co', '9995511447', '$2y$10$2m4CHsAPoujEZENnIL1cIujN5DnjKPdpPG/o5Rz7dBWak4q/Be28K', '[]', NULL, '2023-09-25 07:48:06', '2023-09-25 07:48:06', NULL, 0, NULL, NULL, NULL, NULL, 0);
+INSERT INTO `users` (`id`, `first_name`, `last_name`, `email`, `phone`, `password`, `user_type`, `permissions`, `last_login`, `created_at`, `updated_at`, `image_url`, `is_sso_google`, `sso_id`, `sso_username`, `sso_locale`, `sso_avatar`, `is_sso_fb`) VALUES
+(1, 'GIRISH', 'SHANKAR', 'giri@santhila.co', '91404040404', '$2y$10$N9NQ0/x4BwItEArqEIKg2uzB6C/7D3.SNF9uPDVm34vxHtGAatpDu', 0, '{\"admin.attributes.index\":true,\"admin.attributes.create\":true,\"admin.attributes.edit\":true,\"admin.attributes.destroy\":true,\"admin.attribute_sets.index\":true,\"admin.attribute_sets.create\":true,\"admin.attribute_sets.edit\":true,\"admin.attribute_sets.destroy\":true,\"admin.brands.index\":true,\"admin.brands.create\":true,\"admin.brands.edit\":true,\"admin.brands.destroy\":true,\"admin.categories.index\":true,\"admin.categories.create\":true,\"admin.categories.edit\":true,\"admin.categories.destroy\":true,\"admin.coupons.index\":true,\"admin.coupons.create\":true,\"admin.coupons.edit\":true,\"admin.coupons.destroy\":true,\"admin.currency_rates.index\":true,\"admin.currency_rates.edit\":true,\"admin.flash_sales.index\":true,\"admin.flash_sales.create\":true,\"admin.flash_sales.edit\":true,\"admin.flash_sales.destroy\":true,\"admin.importer.index\":true,\"admin.importer.create\":true,\"admin.media.index\":true,\"admin.media.create\":true,\"admin.media.destroy\":true,\"admin.menus.index\":true,\"admin.menus.create\":true,\"admin.menus.edit\":true,\"admin.menus.destroy\":true,\"admin.menu_items.index\":true,\"admin.menu_items.create\":true,\"admin.menu_items.edit\":true,\"admin.menu_items.destroy\":true,\"admin.options.index\":true,\"admin.options.create\":true,\"admin.options.edit\":true,\"admin.options.destroy\":true,\"admin.orders.index\":true,\"admin.orders.show\":true,\"admin.orders.edit\":true,\"admin.ordersubscription.index\":true,\"admin.ordersubscription.create\":true,\"admin.ordersubscription.edit\":true,\"admin.ordersubscription.destroy\":true,\"admin.pages.index\":true,\"admin.pages.create\":true,\"admin.pages.edit\":true,\"admin.pages.destroy\":true,\"admin.products.index\":true,\"admin.products.create\":true,\"admin.products.edit\":true,\"admin.products.destroy\":true,\"admin.reports.index\":true,\"admin.reviews.index\":true,\"admin.reviews.edit\":true,\"admin.reviews.destroy\":true,\"admin.rewardpoints.index\":true,\"admin.rewardpoints.create\":true,\"admin.rewardpoints.edit\":true,\"admin.rewardpoints.destroy\":true,\"admin.settings.edit\":true,\"admin.sliders.index\":true,\"admin.sliders.create\":true,\"admin.sliders.edit\":true,\"admin.sliders.destroy\":true,\"admin.tags.index\":true,\"admin.tags.create\":true,\"admin.tags.edit\":true,\"admin.tags.destroy\":true,\"admin.taxes.index\":true,\"admin.taxes.create\":true,\"admin.taxes.edit\":true,\"admin.taxes.destroy\":true,\"admin.testimonials.index\":true,\"admin.testimonials.create\":true,\"admin.testimonials.edit\":true,\"admin.testimonials.destroy\":true,\"admin.transactions.index\":true,\"admin.translations.index\":true,\"admin.translations.edit\":true,\"admin.users.index\":true,\"admin.users.create\":true,\"admin.users.edit\":true,\"admin.users.destroy\":true,\"admin.roles.index\":true,\"admin.roles.create\":true,\"admin.roles.edit\":true,\"admin.roles.destroy\":true,\"admin.storefront.edit\":true}', '2023-11-17 15:55:30', '2023-08-09 06:24:33', '2023-11-17 10:25:30', 'storage/profile/1/6517c1d73e3c7.png', 0, NULL, NULL, NULL, NULL, 0),
+(2, 'kiruthika', 's', 'kiruthika@gmail.com', '9788894897', '$2y$10$c4p8cbYj1hIxqiBV2pCH7ONrdT8jGP3fIdqKtr9Hwjo1KPRxUgSx6', 0, NULL, NULL, '2023-08-16 11:05:35', '2023-08-16 11:05:35', NULL, 0, NULL, NULL, NULL, NULL, 0),
+(3, 'Mahendran', 'Sadhasivam', 'mahi@santhila.co', '9994520822', '$2y$10$ps/PgTA4UPkQWdt8ylEeSOozSb.AWkDGF8..Fd1BnaewFv2cxTaa6', 0, NULL, '2023-08-22 16:26:52', '2023-08-22 10:55:43', '2023-08-22 10:56:52', NULL, 0, NULL, NULL, NULL, NULL, 0),
+(4, 'APS', 'Admin', 'prabakaran@santhila.co', '9578009264', '$2y$10$N9NQ0/x4BwItEArqEIKg2uzB6C/7D3.SNF9uPDVm34vxHtGAatpDu', 0, '{\"admin.reviews.index\":true,\"admin.reviews.edit\":true,\"admin.reviews.destroy\":true,\"admin.rewardpoints.index\":true,\"admin.rewardpoints.create\":true,\"admin.rewardpoints.edit\":true,\"admin.rewardpoints.destroy\":true}', '2023-11-11 12:43:07', '2023-08-09 06:24:33', '2023-11-11 07:13:07', '', 0, NULL, NULL, NULL, NULL, 0),
+(5, 'Prabakaran', 'V', 'prabakaran13@santhila.co', '9578009264', '$2y$10$NFaYfYYqUB73CFvpx6oCmuQGUXKsssp6NhSZ1HGIuTwNrBBzbxj7S', 0, NULL, '2023-11-10 12:03:45', '2023-08-24 10:05:50', '2023-11-10 06:33:45', NULL, 0, NULL, NULL, NULL, NULL, 0),
+(6, 'Sangeetha', 'M', 'sangeetha@gmail.com', '9788894897', '$2y$10$Q9ytB41b.RVx9igKPINZtOPGBktJMcGHRKOBQCJXAaHlWSOP6kvKG', 1, '[]', '2023-11-17 17:22:34', '2023-08-24 13:46:45', '2023-11-17 11:52:34', NULL, 0, NULL, NULL, NULL, NULL, 0),
+(7, 'Indumathi', 'E', 'indhumathi@santhila.co', '9995511447', '$2y$10$2m4CHsAPoujEZENnIL1cIujN5DnjKPdpPG/o5Rz7dBWak4q/Be28K', 0, '[]', '2023-10-30 20:05:10', '2023-09-25 07:48:06', '2023-10-30 14:35:10', NULL, 0, NULL, NULL, NULL, NULL, 0),
+(8, 'Prabakaran1', 'V', 'prabakaran@santhila.co1', '9578009226', '$2y$10$eAy2yNkcC/0X0NPn8fHUBOfvhsvfWpuxlZ84CZ4K3oCLxxAbXLyv2', 0, NULL, '2023-10-28 16:41:01', '2023-10-28 11:11:01', '2023-10-28 11:11:01', NULL, 0, NULL, NULL, NULL, NULL, 0),
+(22, 'Prabakaran', 'V', 'prabakaranpbk@gmail.com', '9578009264', '$2y$10$FjFIWjq2iihi.Qn79do/2OFQjNFnsm7L0mBGagLDSWOpLH34yyTve', 0, NULL, NULL, '2023-10-30 14:38:17', '2023-10-30 14:38:17', NULL, 0, NULL, NULL, NULL, NULL, 0),
+(23, 'udhaya', 's', 'udhaya@gmail.com', '546465', '$2y$10$V70r8LiB1OMbFTMAMz710OdneXysEDQ0RNORc2Or/OUrFpE6neXZ2', 0, NULL, '2023-11-17 17:24:37', '2023-11-17 11:54:21', '2023-11-17 11:54:37', NULL, 0, NULL, NULL, NULL, NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -3930,7 +4756,11 @@ INSERT INTO `user_roles` (`user_id`, `role_id`, `created_at`, `updated_at`) VALU
 (5, 2, '2023-08-24 10:05:50', '2023-08-24 10:05:50'),
 (6, 1, '2023-08-24 13:46:45', '2023-08-24 13:46:45'),
 (6, 2, '2023-08-24 13:46:45', '2023-08-24 13:46:45'),
-(7, 2, '2023-09-25 07:48:06', '2023-09-25 07:48:06');
+(7, 1, '2023-10-17 08:05:23', '2023-10-17 08:05:23'),
+(7, 2, '2023-09-25 07:48:06', '2023-09-25 07:48:06'),
+(8, 2, '2023-10-28 11:11:01', '2023-10-28 11:11:01'),
+(22, 2, '2023-10-30 14:38:17', '2023-10-30 14:38:17'),
+(23, 2, '2023-11-17 11:54:21', '2023-11-17 11:54:21');
 
 -- --------------------------------------------------------
 
@@ -4036,6 +4866,42 @@ ALTER TABLE `attribute_value_translations`
   ADD UNIQUE KEY `attribute_value_translations_attribute_value_id_locale_unique` (`attribute_value_id`,`locale`);
 
 --
+-- Indexes for table `blogcategorys`
+--
+ALTER TABLE `blogcategorys`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `blogcategorys_category_name_unique` (`category_name`);
+
+--
+-- Indexes for table `blogcomment`
+--
+ALTER TABLE `blogcomment`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `blogcomment_post_id_foreign` (`post_id`),
+  ADD KEY `blogcomment_author_id_foreign` (`author_id`);
+
+--
+-- Indexes for table `blogfeedback`
+--
+ALTER TABLE `blogfeedback`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `blogfeedback_post_id_foreign` (`post_id`),
+  ADD KEY `blogfeedback_author_id_foreign` (`author_id`);
+
+--
+-- Indexes for table `blogposts`
+--
+ALTER TABLE `blogposts`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `blogtags`
+--
+ALTER TABLE `blogtags`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `blogtags_tag_name_unique` (`tag_name`);
+
+--
 -- Indexes for table `brands`
 --
 ALTER TABLE `brands`
@@ -4111,7 +4977,9 @@ ALTER TABLE `currency_rates`
 --
 ALTER TABLE `customer_reward_points`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `customer_reward_points_customer_id_index` (`customer_id`);
+  ADD KEY `customer_reward_points_customer_id_index` (`customer_id`),
+  ADD KEY `customer_reward_points_order_id_foreign` (`order_id`),
+  ADD KEY `customer_reward_points_review_id_foreign` (`review_id`);
 
 --
 -- Indexes for table `default_addresses`
@@ -4120,6 +4988,12 @@ ALTER TABLE `default_addresses`
   ADD PRIMARY KEY (`id`),
   ADD KEY `default_addresses_customer_id_foreign` (`customer_id`),
   ADD KEY `default_addresses_address_id_foreign` (`address_id`);
+
+--
+-- Indexes for table `emails`
+--
+ALTER TABLE `emails`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `entity_files`
@@ -4263,7 +5137,8 @@ ALTER TABLE `option_value_translations`
 ALTER TABLE `orders`
   ADD PRIMARY KEY (`id`),
   ADD KEY `orders_customer_id_index` (`customer_id`),
-  ADD KEY `orders_coupon_id_index` (`coupon_id`);
+  ADD KEY `orders_coupon_id_index` (`coupon_id`),
+  ADD KEY `customer_reward_points_id` (`rewardpoints_id`);
 
 --
 -- Indexes for table `order_downloads`
@@ -4387,19 +5262,16 @@ ALTER TABLE `product_translations` ADD FULLTEXT KEY `name` (`name`);
 -- Indexes for table `recurrings`
 --
 ALTER TABLE `recurrings`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `recurring_orders`
---
-ALTER TABLE `recurring_orders`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `order_id` (`order_id`);
 
 --
 -- Indexes for table `recurring_sub_orders`
 --
 ALTER TABLE `recurring_sub_orders`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `recurring_id` (`recurring_id`),
+  ADD KEY `updated_user_id` (`updated_user_id`);
 
 --
 -- Indexes for table `related_products`
@@ -4527,6 +5399,12 @@ ALTER TABLE `slider_translations`
   ADD UNIQUE KEY `slider_translations_slider_id_locale_unique` (`slider_id`,`locale`);
 
 --
+-- Indexes for table `subscribers`
+--
+ALTER TABLE `subscribers`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `tags`
 --
 ALTER TABLE `tags`
@@ -4566,6 +5444,20 @@ ALTER TABLE `tax_rates`
 ALTER TABLE `tax_rate_translations`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `tax_rate_translations_tax_rate_id_locale_unique` (`tax_rate_id`,`locale`);
+
+--
+-- Indexes for table `templates`
+--
+ALTER TABLE `templates`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `templates_slug_unique` (`slug`);
+
+--
+-- Indexes for table `template_translations`
+--
+ALTER TABLE `template_translations`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `template_translations_template_id_locale_unique` (`template_id`,`locale`);
 
 --
 -- Indexes for table `testimonials`
@@ -4649,13 +5541,13 @@ ALTER TABLE `abandonedcartlistreport`
 -- AUTO_INCREMENT for table `activations`
 --
 ALTER TABLE `activations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `addresses`
 --
 ALTER TABLE `addresses`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `attributes`
@@ -4694,6 +5586,36 @@ ALTER TABLE `attribute_value_translations`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
+-- AUTO_INCREMENT for table `blogcategorys`
+--
+ALTER TABLE `blogcategorys`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT for table `blogcomment`
+--
+ALTER TABLE `blogcomment`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `blogfeedback`
+--
+ALTER TABLE `blogfeedback`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+
+--
+-- AUTO_INCREMENT for table `blogposts`
+--
+ALTER TABLE `blogposts`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+
+--
+-- AUTO_INCREMENT for table `blogtags`
+--
+ALTER TABLE `blogtags`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
 -- AUTO_INCREMENT for table `brands`
 --
 ALTER TABLE `brands`
@@ -4721,13 +5643,13 @@ ALTER TABLE `category_translations`
 -- AUTO_INCREMENT for table `coupons`
 --
 ALTER TABLE `coupons`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `coupon_translations`
 --
 ALTER TABLE `coupon_translations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `currency_rates`
@@ -4739,25 +5661,31 @@ ALTER TABLE `currency_rates`
 -- AUTO_INCREMENT for table `customer_reward_points`
 --
 ALTER TABLE `customer_reward_points`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
 
 --
 -- AUTO_INCREMENT for table `default_addresses`
 --
 ALTER TABLE `default_addresses`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `emails`
+--
+ALTER TABLE `emails`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `entity_files`
 --
 ALTER TABLE `entity_files`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=570;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=595;
 
 --
 -- AUTO_INCREMENT for table `files`
 --
 ALTER TABLE `files`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=221;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=227;
 
 --
 -- AUTO_INCREMENT for table `fixedrates`
@@ -4769,19 +5697,19 @@ ALTER TABLE `fixedrates`
 -- AUTO_INCREMENT for table `flash_sales`
 --
 ALTER TABLE `flash_sales`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `flash_sale_products`
 --
 ALTER TABLE `flash_sale_products`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `flash_sale_translations`
 --
 ALTER TABLE `flash_sale_translations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `galleries`
@@ -4793,73 +5721,73 @@ ALTER TABLE `galleries`
 -- AUTO_INCREMENT for table `menus`
 --
 ALTER TABLE `menus`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `menu_items`
 --
 ALTER TABLE `menu_items`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
 
 --
 -- AUTO_INCREMENT for table `menu_item_translations`
 --
 ALTER TABLE `menu_item_translations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
 
 --
 -- AUTO_INCREMENT for table `menu_translations`
 --
 ALTER TABLE `menu_translations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `meta_data`
 --
 ALTER TABLE `meta_data`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=130;
 
 --
 -- AUTO_INCREMENT for table `meta_data_translations`
 --
 ALTER TABLE `meta_data_translations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=114;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=141;
 
 --
 -- AUTO_INCREMENT for table `options`
 --
 ALTER TABLE `options`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `option_translations`
 --
 ALTER TABLE `option_translations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `option_values`
 --
 ALTER TABLE `option_values`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `option_value_translations`
 --
 ALTER TABLE `option_value_translations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=54;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=114;
 
 --
 -- AUTO_INCREMENT for table `order_downloads`
@@ -4871,13 +5799,13 @@ ALTER TABLE `order_downloads`
 -- AUTO_INCREMENT for table `order_products`
 --
 ALTER TABLE `order_products`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=73;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=182;
 
 --
 -- AUTO_INCREMENT for table `order_product_options`
 --
 ALTER TABLE `order_product_options`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `pages`
@@ -4895,49 +5823,43 @@ ALTER TABLE `page_translations`
 -- AUTO_INCREMENT for table `persistences`
 --
 ALTER TABLE `persistences`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=157;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=247;
 
 --
 -- AUTO_INCREMENT for table `pickupstores`
 --
 ALTER TABLE `pickupstores`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `product_attributes`
 --
 ALTER TABLE `product_attributes`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
 
 --
 -- AUTO_INCREMENT for table `product_translations`
 --
 ALTER TABLE `product_translations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `recurrings`
 --
 ALTER TABLE `recurrings`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Recurring Order Main Id', AUTO_INCREMENT=12;
-
---
--- AUTO_INCREMENT for table `recurring_orders`
---
-ALTER TABLE `recurring_orders`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `recurring_sub_orders`
 --
 ALTER TABLE `recurring_sub_orders`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `reminders`
@@ -4949,7 +5871,7 @@ ALTER TABLE `reminders`
 -- AUTO_INCREMENT for table `reviews`
 --
 ALTER TABLE `reviews`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `rewardpoints`
@@ -4961,7 +5883,7 @@ ALTER TABLE `rewardpoints`
 -- AUTO_INCREMENT for table `reward_points_gifted`
 --
 ALTER TABLE `reward_points_gifted`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `roles`
@@ -4985,7 +5907,7 @@ ALTER TABLE `search_terms`
 -- AUTO_INCREMENT for table `settings`
 --
 ALTER TABLE `settings`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=369;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=371;
 
 --
 -- AUTO_INCREMENT for table `setting_translations`
@@ -5015,6 +5937,12 @@ ALTER TABLE `slider_slide_translations`
 -- AUTO_INCREMENT for table `slider_translations`
 --
 ALTER TABLE `slider_translations`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `subscribers`
+--
+ALTER TABLE `subscribers`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
@@ -5054,16 +5982,28 @@ ALTER TABLE `tax_rate_translations`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT for table `templates`
+--
+ALTER TABLE `templates`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `template_translations`
+--
+ALTER TABLE `template_translations`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `testimonials`
 --
 ALTER TABLE `testimonials`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `throttle`
 --
 ALTER TABLE `throttle`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=97;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=126;
 
 --
 -- AUTO_INCREMENT for table `transactions`
@@ -5093,7 +6033,7 @@ ALTER TABLE `updater_scripts`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- Constraints for dumped tables
@@ -5149,6 +6089,20 @@ ALTER TABLE `attribute_value_translations`
   ADD CONSTRAINT `attribute_value_translations_attribute_value_id_foreign` FOREIGN KEY (`attribute_value_id`) REFERENCES `attribute_values` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `blogcomment`
+--
+ALTER TABLE `blogcomment`
+  ADD CONSTRAINT `blogcomment_author_id_foreign` FOREIGN KEY (`author_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `blogcomment_post_id_foreign` FOREIGN KEY (`post_id`) REFERENCES `blogposts` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `blogfeedback`
+--
+ALTER TABLE `blogfeedback`
+  ADD CONSTRAINT `blogfeedback_author_id_foreign` FOREIGN KEY (`author_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `blogfeedback_post_id_foreign` FOREIGN KEY (`post_id`) REFERENCES `blogposts` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `categories`
 --
 ALTER TABLE `categories`
@@ -5186,6 +6140,13 @@ ALTER TABLE `coupon_translations`
 ALTER TABLE `cross_sell_products`
   ADD CONSTRAINT `cross_sell_products_cross_sell_product_id_foreign` FOREIGN KEY (`cross_sell_product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `cross_sell_products_product_id_foreign` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `customer_reward_points`
+--
+ALTER TABLE `customer_reward_points`
+  ADD CONSTRAINT `customer_reward_points_order_id_foreign` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+  ADD CONSTRAINT `customer_reward_points_review_id_foreign` FOREIGN KEY (`review_id`) REFERENCES `reviews` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION;
 
 --
 -- Constraints for table `default_addresses`
@@ -5264,6 +6225,12 @@ ALTER TABLE `option_values`
 --
 ALTER TABLE `option_value_translations`
   ADD CONSTRAINT `option_value_translations_option_value_id_foreign` FOREIGN KEY (`option_value_id`) REFERENCES `option_values` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `orders`
+--
+ALTER TABLE `orders`
+  ADD CONSTRAINT `customer_reward_points_id` FOREIGN KEY (`rewardpoints_id`) REFERENCES `customer_reward_points` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `order_downloads`
@@ -5360,6 +6327,19 @@ ALTER TABLE `product_translations`
   ADD CONSTRAINT `product_translations_product_id_foreign` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `recurrings`
+--
+ALTER TABLE `recurrings`
+  ADD CONSTRAINT `order_id` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `recurring_sub_orders`
+--
+ALTER TABLE `recurring_sub_orders`
+  ADD CONSTRAINT `recurring_id` FOREIGN KEY (`recurring_id`) REFERENCES `recurrings` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `updated_user_id` FOREIGN KEY (`updated_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
 -- Constraints for table `related_products`
 --
 ALTER TABLE `related_products`
@@ -5431,6 +6411,12 @@ ALTER TABLE `tax_rates`
 --
 ALTER TABLE `tax_rate_translations`
   ADD CONSTRAINT `tax_rate_translations_tax_rate_id_foreign` FOREIGN KEY (`tax_rate_id`) REFERENCES `tax_rates` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `template_translations`
+--
+ALTER TABLE `template_translations`
+  ADD CONSTRAINT `template_translations_template_id_foreign` FOREIGN KEY (`template_id`) REFERENCES `templates` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `throttle`
