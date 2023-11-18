@@ -36,8 +36,21 @@
         th {
             background-color: #ffffff;
         }
+
+        .success-message {
+            background-color: #d4edda;
+            /* Green color for success */
+            border-color: #c3e6cb;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
     </style>
 
+    <div id="success-message" class="success-message" style="display: none;">
+        Order Status Updated Successfully
+    </div>
 
     <div style="display: flex; flex-direction: row; background-color: white; color: black; width: 50%; margin: 0 auto;">
         <div style="flex: 0.6; text-align: left; padding-right: 3px;">
@@ -79,7 +92,6 @@
     </div>
     <br>
 
-
     <table class="table">
         <thead>
             <tr>
@@ -97,48 +109,49 @@
                 $sno = 1; // Initialize the serial number counter
             @endphp
             @foreach ($recurringSubOrders as $sub_data)
+                @php
+                    // dd($sub_data);
+                @endphp
                 <tr>
-                    <form method='POST' action="{{ route('admin.recurrings.update', ['id' => $sub_data->id]) }}">
-                        @csrf
-                        @method('PUT')
-                        <td>
-                            <input type="checkbox" id='checkRow' class="rowCheckbox" value="{{ $sub_data->id }}"
-                                {{ strtotime($sub_data->selected_date) <= strtotime(date('Y-m-d')) || $sub_data->subscribe_status == 0 ? 'disabled' : '' }}
-                                title="<?php
-                                if (strtotime($sub_data->selected_date) <= strtotime(date('Y-m-d'))) {
-                                    echo 'Delivery date has passed';
-                                } elseif ($sub_data->subscribe_status == 0) {
-                                    echo 'You Already update Unsubscribed';
-                                } else {
-                                    echo 'Click to select';
-                                }
-                                ?>">
-                        </td>
-                        <td>{{ $sub_data->id }}</td>
+                    <td>
+                        <input type="checkbox" class="rowCheckbox" value="{{ $sub_data->id }}"
+                            {{ strtotime($sub_data->selected_date) <= strtotime(date('Y-m-d')) || $sub_data->subscribe_status == 0 ? 'disabled' : '' }}
+                            title="<?php
+                            if (strtotime($sub_data->selected_date) <= strtotime(date('Y-m-d'))) {
+                                echo 'Delivery date has passed';
+                            } elseif ($sub_data->subscribe_status == 0) {
+                                echo 'You Already update Unsubscribed';
+                            } else {
+                                echo 'Click to select';
+                            }
+                            ?>">
+                    </td>
+                    <td>{{ $sub_data->id }}</td>
 
-                        <td>{{ $sub_data->selected_date }}</td>
+                    <td>{{ $sub_data->selected_date }}</td>
 
-                        <td>
-                            @if ($sub_data->subscribe_status == 1)
-                                <span class="dot green"></span>
-                            @else
-                                <span class="dot red"></span>
-                            @endif
-                        </td>
-                        <td>
-                            @if ($sub_data->subscribe_status == 1)
-                                <select name="order_status" id="order_status" onchange="this.form.submit()">
-                                    @foreach (trans('order::statuses') as $name => $label)
-                                        <option value="{{ $name }}"
-                                            {{ $sub_data->order_status === $name ? 'selected' : '' }}>{{ $label }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            @else
-                                <span>--</span>
-                            @endif
-                        </td>
-                    </form>
+                    <td>
+                        @if ($sub_data->subscribe_status == 1)
+                            <span class="dot green"></span>
+                        @else
+                            <span class="dot red"></span>
+                        @endif
+                    </td>
+                    <td>
+                        @if (($sub_data->order_status == 'Unsubscribed') || $sub_data->order_status == '')
+                            {{ $sub_data->order_status }}
+                        @else
+                            <select name="order_status" id="order_status"
+                                onchange="updateOrderStatus(<?php echo $sub_data->id; ?>, this.value)">
+
+                                @foreach (trans('order::statuses') as $name => $label)
+                                    <option value="{{ $name }}"
+                                        {{ $sub_data->order_status === $name ? 'selected' : '' }}>{{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        @endif
+                    </td>
                 </tr>
                 @php
                     $sno++; // Increment the serial number counter
@@ -156,57 +169,29 @@
     </div>
 @endsection
 
-{{-- @include('recurring::admin.recurrings.partials.scripts') --}}
-
-
 <script>
+    function redirectToRoute(selectedValue) {
+        // Construct the URL using the selected value and redirect
+        window.location.href = "{{ route('admin.recurrings.unsubscribeMultipleOrder') }}" + "?order_status=" +
+            selectedValue;
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-    const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
-    const checkboxes = document.querySelectorAll('.rowCheckbox');
-    const overallUnsubscribeButton = document.getElementById('overallUnsubscribeButton');
-    overallUnsubscribeButton.disabled = true; +
-    // Add a click event listener to the "Select All" checkbox
-    // selectAllCheckbox.addEventListener('click', function() {
-    //     // Iterate through all row checkboxes and set their checked state to match the "Select All" checkbox
-    //     rowCheckboxes.forEach(function(checkbox) {
-    //         if (!checkbox.disabled) {
-    //             checkbox.checked = selectAllCheckbox.checked;
-    //         }
-    //     });
-    // });
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        const rowCheckboxes = document.querySelectorAll('.rowCheckbox');
+        const overallUnsubscribeButton = document.getElementById('overallUnsubscribeButton');
 
-    // Modfied
-    rowCheckboxes.forEach(function(checkbox) {
-        selectAllCheckbox.addEventListener('change', function() {
+        // Add a click event listener to the "Select All" checkbox
+        selectAllCheckbox.addEventListener('click', function() {
             // Iterate through all row checkboxes and set their checked state to match the "Select All" checkbox
-            const selectedCheckboxes = document.querySelectorAll('.rowCheckbox:checked');
-            if (!checkbox.disabled) {
-                -checkbox.checked = selectAllCheckbox.checked;
-                checkbox.checked = selectAllCheckbox.checked;
-            } +
-            +
-            if (selectAllCheckbox.checked == true) {
-                return overallUnsubscribeButton.disabled = false;
-            } else {
-                return overallUnsubscribeButton.disabled = true;
-            }
+            rowCheckboxes.forEach(function(checkbox) {
+                if (!checkbox.disabled) {
+                    checkbox.checked = selectAllCheckbox.checked;
+                }
+            });
         });
-    }); -
 
-    // individual checkbox
-    checkboxes.forEach(function(checkbox) {
-        checkbox.addEventListener('change', function() {
-            const selectedCheckboxes = document.querySelectorAll('.rowCheckbox:checked');
-            if (selectedCheckboxes.length == 0) {
-                return overallUnsubscribeButton.disabled = true;
-            } else {
-                return overallUnsubscribeButton.disabled = false;
-            }
-        });
     });
-    });
-
 
     function unsubscribeMultipleOrders() {
 
@@ -236,17 +221,13 @@
                     selectedIds: selectedOrderIds
                 },
                 success: function(response) {
-                    // Handle the response from the controller here
-                    console.log(response);
-                    window.location.reload();
-                    overallUnsubscribeButton.disabled = false;
-
+                    if(response.success){
+                        window.location.reload();
+                        // overallUnsubscribeButton.disabled = false;
+                    }
                 },
                 error: function(error) {
-
-                    overallUnsubscribeButton.disabled = false;
-
-                    // Handle any errors here
+                    // overallUnsubscribeButton.disabled = false;
                     console.error(error);
                 }
             });
@@ -254,5 +235,35 @@
             console.log("please Select");
             overallUnsubscribeButton.disabled = false;
         }
+    }
+
+    function updateOrderStatus(sub_id, order_status) {
+
+        $.ajax({
+            type: 'POST',
+            url: '{{ route('admin.recurrings.updateOrderStatus') }}',
+            data: {
+                sub_id: sub_id,
+                order_status: order_status
+            },
+            success: function(response) {
+                // Handle the response from the controller here
+                if (response.success) {
+                    // Show success message
+                    // Assuming you have a div with id="success-message" to display success messages
+                    $('#success-message').show();
+                    // Assuming you want to hide the success message after a certain time (e.g., 3 seconds)
+                    setTimeout(function() {
+                        $('#success-message').hide();
+                    }, 3000);
+                }else{
+                    console.log(response.error);
+                    $('#success-message').hide();
+                }
+            },
+            error: function(error) {
+                console.error(error);
+            }
+        });
     }
 </script>

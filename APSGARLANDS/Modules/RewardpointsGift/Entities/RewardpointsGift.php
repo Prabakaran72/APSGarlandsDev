@@ -43,7 +43,7 @@ class RewardpointsGift extends Model
     //create a table in view
     public function table()
     {
-        // $query = 
+        // $query =
         // User::join('user_roles', 'users.id', '=', 'user_roles.user_id')
         //     ->join('roles', 'user_roles.role_id', '=', 'roles.id')
         //     ->join('role_translations', 'roles.id', '=', 'role_translations.role_id')

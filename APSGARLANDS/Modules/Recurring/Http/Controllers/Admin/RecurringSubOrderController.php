@@ -39,7 +39,7 @@ class RecurringSubOrderController extends Controller
 
         // Pass the data to a view
         return view('recurring::admin.recurrings.RecurringSubOrder', compact('recurringMainOrders', 'recurringSubOrders', 'getRecurringSubOrders'));
-        
+
     }
 
     public function orderToRecurringRedirection($id){
@@ -52,38 +52,32 @@ class RecurringSubOrderController extends Controller
 
     public function unsubscribeMultipleOrder(Request $request)
     {
-
-        $indianTimezone = 'Asia/Kolkata';
-
-        $currentDateTime = Carbon::now($indianTimezone);
-
-        $formattedDateTime = $currentDateTime->format('Y-m-d H:i:s');
-
         // Get the selected order_ids from the AJAX request
         $selectedOrderIds = $request->input('selectedIds');
 
-        $affectedRows = RecurringSubOrder::whereIn('id', $selectedOrderIds)->update(['subscribe_status' => '0', 'updated_user_id' => auth()->id(), 'updated_at' => $formattedDateTime]);
+        $affectedRows = RecurringSubOrder::whereIn('id', $selectedOrderIds)->update(['subscribe_status' => '0','order_status'=>'Unsubscribed', 'updated_user_id' => auth()->id()]);
 
         if ($affectedRows > 0) {
-            return response()->json(['message' => 'update']);
+            return response()->json(['success' => 'Unsubscribe Status Updated Successfully']);
         } else {
-            return response()->json(['message' => 'not']);
+            return response()->json(['error' => 'Update Failed']);
         }
     }
 
-    public function update(Request $request, $id) 
+
+    public function updateOrderStatus(Request $request)
     {
-        $getRecurringSubOrders = recurringSubOrder::find($id);        
-        $getRecurringSubOrders->order_status = $request->input('order_status');        
+        $sub_id = $request->input('sub_id');
+        // $orderStaus = $request->input('order_status');
+
+        $getRecurringSubOrders = recurringSubOrder::find($sub_id);
+        $getRecurringSubOrders->order_status = $request->input('order_status');
         $getRecurringSubOrders->save();
 
-        if($getRecurringSubOrders)
-        {            
-            return redirect()->back()->with('success', 'Order Status Updated Successfully');;
+        if ($getRecurringSubOrders) {
+            return response()->json(['success' => 'Order Status Updated Successfully']);
+        } else {
+            return response()->json(['error' => 'Update Failed']);
         }
-        else
-        {            
-            return 'Update Failed';
-        }                
     }
 }

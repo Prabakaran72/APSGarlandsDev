@@ -2,7 +2,7 @@
 
 @component('admin::components.page.header_customer_reward')
     @slot('title', trans('admin::resource.edit', ['resource' => trans('rewardpointsgift::rewardpointsgifts.title')]))
-    
+
     <li class="pointer"><a
         href="{{ route('admin.rewardpointsgift.index')}}">{{ trans('rewardpointsgift::rewardpointsgifts.title') }}</a>
     </li>
@@ -27,7 +27,7 @@
 
                 {{ Form::number('reward_point_value', trans('rewardpointsgift::attributes.reward_point_value'), $errors, $rewardpointsgifted, [] ) }}
                 {{ Form::textarea('reward_point_remarks', trans('rewardpointsgift::attributes.reward_point_remarks'), $errors, $rewardpointsgifted,['rows' => 3, 'maxlength'=>100]) }}
-               
+
             </div>
         </div>
         <div class="form-group">
