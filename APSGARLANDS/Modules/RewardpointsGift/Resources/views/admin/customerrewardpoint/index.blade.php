@@ -18,7 +18,7 @@
                 <th>{{ trans('rewardpointsgift::customerrewardpoints.table.email') }}</th>
                 <th>{{ trans('rewardpointsgift::customerrewardpoints.table.reward_points_earned_total') }}</th>
                 <th>{{ trans('rewardpointsgift::customerrewardpoints.table.reward_points_claimed_total') }}</th>
-                <th>{{ trans('rewardpointsgift::customerrewardpoints.table.in_live_earned_rewardpoints') }}</th>
+                {{-- <th>{{ trans('rewardpointsgift::customerrewardpoints.table.in_live_earned_rewardpoints') }}</th> --}}
                 <th>{{ trans('rewardpointsgift::customerrewardpoints.table.expired_points') }}</th>
             </tr>
         @endslot
@@ -44,10 +44,10 @@
                             return capitalizedFirstName + ' ' + capitalizedLastName;
                         }
                     },
-                    name: 'customer_name', orderable: true,searchable: false, width: '25%'} ,              
-                { data: 'user.email', name: 'email',orderable: false,searchable: true, width: '25%' },                  
+                    name: 'customer_name', orderable: true,searchable: false, width: '25%'} ,
+                { data: 'user.email', name: 'email',orderable: false,searchable: true, width: '25%' },
                 { data: 'reward_points_earned_total', name: 'reward_points_earned_total', searchable: false, orderable: true, width: '15%' },
-                { data: 'reward_points_claimed_total', name: 'reward_points_claimed_total', orderable: true,searchable: false, width: '15%' },
+                // { data: 'reward_points_claimed_total', name: 'reward_points_claimed_total', orderable: true,searchable: false, width: '15%' },
                 { data: null,
                     render: function(row){
                         return row.reward_points_earned_total - row.reward_points_claimed_total-row.expired_points;
