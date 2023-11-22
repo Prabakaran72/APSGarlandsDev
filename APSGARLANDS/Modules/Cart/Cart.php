@@ -208,16 +208,6 @@ class Cart extends DarryldecodeCart implements JsonSerializable
 
     public function shippingCost()
     {
-        // Check if the shipping method is a flat rate option
-        // if ($this->shippingMethod()->name() === 'flat_rate') {
-        //     // Retrieve the dynamic_flat_rate_cost from the session
-        //     $dynamicFlatRateCost = Session::get('dynamic_flat_rate_cost', 0);
-        //     //dd(Money::inDefaultCurrency($dynamicFlatRateCost));
-        //     // Use the dynamic flat rate cost
-        //     return Money::inDefaultCurrency($dynamicFlatRateCost);
-        // }
-
-        // If it's not a flat rate option, return the default shipping cost
         return $this->shippingMethod()->cost();
     }
 
@@ -469,65 +459,61 @@ class Cart extends DarryldecodeCart implements JsonSerializable
         }
     }
 
-    public function storeFlatRateAmount($amt){
+    public function storeFlatRateAmount($amt)
+    {
         $flateRateAmount = floatval($amt);
         session(['flateRateAmount' => $flateRateAmount]);
     }
 
     public function rewardpoints()
     {
-    $currency = 0;    
-    if($this->redemptionRewardAmount > 0)
-    {
-        $currency = new Money($this->redemptionRewardAmount, "MYR");
-    }
-    // else if($resetSession && $this->session->exists('redemptionRewardAmount') ){
-    //     // dd($this->session->get('redemptionRewardAmount'));
-    //     // $currency =   new Money($this->session->get('redemptionRewardAmount'),'MYR');
-    //     $currency  = $this->session->get('redemptionRewardAmount');
-    // }
-    else{
-        // dd('else');
-        // $currency = new Money($this->redemptionRewardAmount, "MYR");
-        $currency = new Money(0, 'MYR');
-        
-    }
+        $sessionRedeemedAmount = session('sessionRedeemedAmount', 0); // 0 is the default value if not set in session
+        $this->redemptionRewardAmount = $sessionRedeemedAmount;
+        $currency = 0;
+        if ($this->redemptionRewardAmount > 0) {
+            $currency = new Money($this->redemptionRewardAmount, "MYR");
+        } else {
+            $currency = new Money(0, 'MYR');
+        }
         $this->session->put('redemptionRewardAmount', $currency);
         $this->session->put('redeemedpoints', $this->redeemedpoints);
 
-        // dd($this->session->get('redemptionRewardAmount'));
         return $currency;
     }
-    public function redeemRewardPoints($redeemedAmount = 0, $redeemedpoints = 0, $resetSession=false)
+    public function redeemRewardPoints($redeemedAmount = 0, $redeemedpoints = 0, $resetSession = false)
     {
-        if($resetSession){
-            if($this->session->exists('redemptionRewardAmount')){
+        session(['sessionRedeemedAmount' => $redeemedAmount]);
+        session(['sessionRedeemedpoints' => $redeemedpoints]);
+        if ($resetSession) {
+            if ($this->session->exists('redemptionRewardAmount')) {
                 $currency = $this->session->get('redemptionRewardAmount');
                 $this->redemptionRewardAmount = $currency->amount();
                 $this->redeemedpoints = $this->session->get('redeemedpoints');
                 return $currency;
-            }
-            else{
-                $this->redemptionRewardAmount = 0 ;
+            } else {
+                $this->redemptionRewardAmount = 0;
                 $this->redeemedpoints = 0;
             }
-        }
-        else{
-            
+        } else {
+
             $this->redemptionRewardAmount = $redeemedAmount;
-            $this->redeemedpoints = $redeemedpoints;            
+            $this->redeemedpoints = $redeemedpoints;
         }
         $this->rewardpoints();
     }
-    public function clearRedemption(){
-        $this->redemptionRewardAmount=0;
+    public function clearRedemption()
+    {
+        session()->forget('sessionRedeemedAmount');
+        session()->forget('sessionRedeemedpoints');
+        $this->redemptionRewardAmount = 0;
         $this->session->forget('redemptionRewardAmount');
         $this->session->forget('redeemedpoints');
         $this->redeemedpoints = 0;
         $this->rewardpoints();
     }
-    public function getrewardpoints(){
+    public function getrewardpoints()
+    {
         return  $this->redeemedpoints;
-        return $this->session('redeemedpoints');
+        return  $this->session('redeemedpoints');
     }
 }

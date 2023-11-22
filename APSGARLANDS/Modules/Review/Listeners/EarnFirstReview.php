@@ -39,7 +39,6 @@ class EarnFirstReview
      */
     public function handle(ReviewSubmitted $event)
     {
-        dd('from Listener');
         if ($this->rewardSettings->isRewardPointEnabled()) {
             // $rewardSettingsObj = new $this->rewardSettings;
             $epoint_freview_point_value = $this->rewardSettings->getRewardPointsSettingValue('epoint_freview_point_value');

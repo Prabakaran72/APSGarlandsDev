@@ -107,7 +107,6 @@ class OrderService
 
     private function store($request)
     {
-
         //GET RECURRING DETAILS
         $recurring_selected_date_count = $request->recurring_selected_date_count;
         $recurring_format_order_dates = $request->recurring_format_order_dates;
@@ -115,58 +114,44 @@ class OrderService
         $recurring_time = $request->recurring_time;
 
         $shippingMethod = Cart::shippingMethod()->name();
-        $shippingCost = 0;
 
-        // Retrieve the dynamic flat rate cost from the session
-        $dynamicFlatRateCost = Session::get('dynamic_flat_rate_cost');
+        $shippingCost = Cart::shippingCost()->amount();
 
-        if ($shippingMethod === 'flat_rate') {
-            // Use the dynamic flat rate cost if available, fallback to 99 if not set
-            $flatRateShippingCost = $dynamicFlatRateCost;
-            $shippingCost = $flatRateShippingCost;
-        } else {
-            $otherShippingCost = Cart::shippingCost()->amount();
-            $shippingCost = $otherShippingCost;
-        }
         $shippingMethod = $request->shipping_method;
 
         // Check if the selected shipping method is 'local pickup'
         if ($shippingMethod === 'local_pickup') {
-
             // Use the selected pickup store details as the shipping address
             $shippingAddress = $request->selectedPickupstoreDetails;
-            //dd($shippingAddress);
-
         } else {
             // Use the regular shipping address details
             $shippingAddress = $request->shipping;
-           //  dd($shippingAddress);
         }
 
-        // Calculate the total by adding the subTotal, discount, and shippingCost
-        $total = Cart::subTotal()->amount() - Cart::discount()->amount() + $shippingCost - Cart::rewardpoints()->amount();
-        
         //Insert customer claimed rewardpoints in customer_reward_points table
-        //Have to ensure customer has enough valid reward points        
-        if( $request->redemptionRewardPoints > 0)
-        {
-            $customer_rewards_id=CustomerRewardPoint::insertGetId([
-                'customer_id'=>  auth()->id(),
+        //Have to ensure customer has enough valid reward points
+        if ($request->redemptionRewardPoints > 0) {
+            $customer_rewards_id = CustomerRewardPoint::insertGetId([
+                'customer_id' =>  auth()->id(),
                 'reward_points_claimed' => $request->redemptionRewardPoints,
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s'),
             ]);
         }
+
+        $reward_amount = isset($customer_rewards_id) ? $request->redemptionRewardAmount['amount'] : 0;
+        // Calculate the total by adding the subTotal, discount, and shippingCost
+        $total = Cart::subTotal()->amount() - Cart::discount()->amount() + $shippingCost - $reward_amount;
+
         $subTotal = (Cart::subTotal()->amount());
         $discount = (Cart::discount()->amount());
 
         //Recurring Order - Amount Calculation
         if ($recurring_selected_date_count > 0) {
             $isRecurring = 1;
-        }else{
+        } else {
             $isRecurring = 0;
         }
-
 
         $createOrder =  Order::create([
             'customer_id' => auth()->id(),
@@ -204,8 +189,8 @@ class OrderService
             'locale' => locale(),
             'status' => Order::PENDING_PAYMENT,
             'note' => $request->order_note,
-            'rewardpoints_id'=> isset($customer_rewards_id) ? $customer_rewards_id: null,
-            'redemption_amount'=>isset($customer_rewards_id) ? $request->redemptionRewardAmount['amount'] : null,
+            'rewardpoints_id' => isset($customer_rewards_id) ? $customer_rewards_id : null,
+            'redemption_amount' => isset($customer_rewards_id) ? $request->redemptionRewardAmount['amount'] : null,
             'isRecurring' => $isRecurring,
         ]);
 
@@ -232,8 +217,7 @@ class OrderService
             }
         }
         return $createOrder;
-    
-}
+    }
 
 
     private function storeOrderProducts(Order $order)

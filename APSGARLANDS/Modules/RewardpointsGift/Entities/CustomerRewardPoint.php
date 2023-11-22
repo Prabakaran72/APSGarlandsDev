@@ -19,7 +19,7 @@ class CustomerRewardPoint extends Model
 
     protected $dates = ['deleted_at', 'created_at', 'updated_at'];
 
-    /** 
+    /**
      * Get the Log of Rewards Gained by  and Rewards Redeemed  by User
      *  @var array
      */
@@ -28,7 +28,7 @@ class CustomerRewardPoint extends Model
         return $result = 0;
     }
 
-    /**  
+    /**
      *  Get the Available of Reward points and equelent Amount per User
      *  @var array
      */
@@ -36,8 +36,8 @@ class CustomerRewardPoint extends Model
     {
         return $result = 0;
     }
-    /**  
-     *  Check if the user claimed 
+    /**
+     *  Check if the user claimed
      *  @var array
      */
     // public function is_customerGainedSignupReward(): bool
@@ -82,14 +82,14 @@ class CustomerRewardPoint extends Model
 
     //getUserRewardpoints() - returns active rewardpoints for an auth user
     public function getUsersActiveRewardpoints()
-    { 
+    {
         if(!empty(auth()->user()))
         {
             $result = DB::select('CALL GetCustomerEarnedTotal(?)',[auth()->user()->id]);
             return $result;
         }
         return false;
-        
+
     }
     public function getRewardSetting()
     {
@@ -104,14 +104,14 @@ class CustomerRewardPoint extends Model
         //get the active rewardpoints of a current user
         $activePoints = $modelInstance->getUsersActiveRewardpoints();
         // $result = DB::select('CALL YourStoredProcedureName(?, ?)', [$param1, $param2]);
-        
+
         $customer_active_reward_points = $activePoints ? ($activePoints[0]->earned_total) : 0;
-        
+
         $instance = [
             'activeRewardPoints' => $customer_active_reward_points > 0 ? $customer_active_reward_points : 0,
             "use_points_per_order" => $rewardSetting[0]['use_points_per_order'],
             "redeemedPoint" => $rewardSetting[0]['redeemedPoint'], //User's 'input
-            "pointsEquolantCash" => $rewardSetting[0]['redemption_point_value'], //Ex 100 Points equal to 20MYR.SO 1pt  20/100 ie (.2)
+            "pointsEquolantCash" => $rewardSetting[0]['redemption_currency_value'], //Ex 100 Points equal to 20MYR.SO 1pt  20/100 ie (.2)
             "min_order_cart_value_redemption" => $rewardSetting[0]['min_order_cart_value_redemption'],
             "currency_value" => $rewardSetting[0]['currency_value'], //if customer can earn rewardpoints, then currency 'rat'e
             "point_value" => $rewardSetting[0]['point_value'], //if customer can earn rewardpoints, then point values per order 'amoun't
@@ -120,5 +120,5 @@ class CustomerRewardPoint extends Model
         ];
         return $instance;
     }
-   
+
 }

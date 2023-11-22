@@ -12,8 +12,8 @@ class EventServiceProvider extends ServiceProvider
      * @var array
      */
     protected $listen = [
-        \Modules\Checkout\Events\ReviewSubmitted::class => [
-            \Modules\Checkout\Listeners\EarnFirstReview::class,
+        \Modules\Review\Events\ReviewSubmitted::class => [
+            \Modules\Review\Listeners\EarnFirstReview::class,
         ],
     ];
 }

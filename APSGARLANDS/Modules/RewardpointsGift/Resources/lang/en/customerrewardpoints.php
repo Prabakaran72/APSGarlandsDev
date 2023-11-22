@@ -13,7 +13,7 @@ return [
         'reward_points_earned_total'=> 'Total Earned Points',
         'reward_points_claimed_total'=> 'Total Claimed Points',
         'expired_earned_rewardpoints'=> 'Total Earned Points Expired', //Points Earned but expired
-        'expired_claimed_rewardpoints'=> 'Claimed Expired Points', // Customer utilized but 
+        'expired_claimed_rewardpoints'=> 'Claimed Expired Points', // Customer utilized but
         'in_live_earned_rewardpoints'=> 'Un Utilized Points',
         'expired_points'=> 'Total Points Expired ',
         'reward_type'=> 'Reward Type',
@@ -24,7 +24,7 @@ return [
     ],
     'rewardtype' =>[
         'birthday'=>'Birthday Reward',
-        'firstsignup' => 'Signup Reward ',
+        'signup' => 'Signup Reward ',
         'firstorder'=>'First Order',
         'firstpayment'=>'First Payment',
         'firstreview' =>'First Review',

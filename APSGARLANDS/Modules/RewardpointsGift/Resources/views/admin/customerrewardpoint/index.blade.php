@@ -47,12 +47,12 @@
                     name: 'customer_name', orderable: true,searchable: false, width: '25%'} ,
                 { data: 'user.email', name: 'email',orderable: false,searchable: true, width: '25%' },
                 { data: 'reward_points_earned_total', name: 'reward_points_earned_total', searchable: false, orderable: true, width: '15%' },
-                // { data: 'reward_points_claimed_total', name: 'reward_points_claimed_total', orderable: true,searchable: false, width: '15%' },
-                { data: null,
-                    render: function(row){
-                        return row.reward_points_earned_total - row.reward_points_claimed_total-row.expired_points;
-                    },
-                    name:'in_live',orderable: true,searchable: false, width: '15%'},
+                { data: 'reward_points_claimed_total', name: 'reward_points_claimed_total', orderable: true,searchable: false, width: '15%' },
+                // { data: null,
+                //     render: function(row){
+                //         return row.reward_points_earned_total - row.reward_points_claimed_total-row.expired_points;
+                //     },
+                //     name:'in_live',orderable: true,searchable: false, width: '15%'},
                 { data: 'expired_points', name: 'expired_points', orderable: true,searchable: false, width: '10%' },
             ],
         });

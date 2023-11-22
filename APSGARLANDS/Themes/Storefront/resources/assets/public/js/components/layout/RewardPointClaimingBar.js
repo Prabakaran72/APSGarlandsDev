@@ -46,16 +46,16 @@ export default {
                 };
             }
         },
-        
+
         redeemRewardPoints() {
             this.makeTrueReedemBtn();
             this.hasRedemptionErrors();
         },
 
         hasRedemptionErrors() {
-            
+
             // isRedemption Not Null Not Empty
-            if (this.reward.redeemedPoint >0 && this.reward.redeemedPoint &&  this.reward.redeemedPoint.trim(' ')) {
+                        if (this.reward.redeemedPoint >0 && this.reward.redeemedPoint &&  this.reward.redeemedPoint.trim(' ')) {
                 this.reward.error = { status: false, message: "" };
             } else {
                 this.reward.error = {
@@ -94,7 +94,7 @@ export default {
                 this.makeFalseReedemBtn();
                 return true;
             }
-            
+
             // isRedeedmedPointsAbove Min Order Limit
             if (
                 this.reward.error.status != true &&

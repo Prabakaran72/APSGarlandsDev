@@ -21,6 +21,7 @@ return new class extends Migration
             // $table->string('email','100')->index();
             $table->integer('reward_point_value')->index()->nullable()->default(0);
             $table->string('reward_point_remarks','100')->index()->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }
