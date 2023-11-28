@@ -1,4 +1,5 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 
 <form class="form-horizontal" id="order_create_form" enctype="multipart/form-data" novalidate>
     {{ csrf_field() }}
@@ -11,7 +12,7 @@
     margin-left: 23px;
     padding-top: 15px;
     padding-left: 15px;
-    
+
         ">
             User Details</h3>
         <div class="col-md-8" style="width: 100%;padding-left: 38px">
@@ -36,6 +37,7 @@
 
                                     </select>
                                 @else
+                               
                                     <select name="user" class="form-control custom-select-black " id="user">
                                         <option value="0">Select Customer</option>
                                         @foreach ($users as $user)
@@ -43,7 +45,7 @@
                                         @endforeach
                                     </select>
 
-                                @endif
+                                    @endif
 
                                 <span id="user_error" class="text-red"></span>
                             </div>
@@ -147,7 +149,7 @@
                                     <option value="0">Select Option</option>
                                     @foreach (trans('order::statuses') as $name => $label)
                                         <option value="{{ $name }}"
-                                            {{  $name === 'pending' ? 'selected' : '' }}>
+                                            {{ $name === 'pending' ? 'selected' : '' }}>
                                             {{ $label }}</option>
                                     @endforeach
                                 </select>
@@ -228,7 +230,6 @@
                                                             data-manage_stock = "{{ $product->manage_stock }}"
                                                             data-qty = "{{ $product->qty }}"
                                                             data-category = "{{ $product->category_id }}">
-
                                                             {{ $product->name }}
                                                         </option>
                                                     @endforeach
@@ -239,15 +240,10 @@
 
                                             <td>MYR&nbsp;0.00</td>
                                             <td>
-
-
-
-
-
                                                 <input type="number" name="qty" id="qty" class="quantity"
                                                     min='1'
                                                     style="background-color: transparent;
-                                                ;text-align: center;">
+                                                ;text-align: center; width:70px">
 
 
 
@@ -488,7 +484,7 @@
             </button>
         </div>
     </div>
-    <div id="product-data" data-products='{{ json_encode($products) }}'></div>$products
+    <div id="product-data" data-products='{{ json_encode($products) }}'></div>
 </form>
 
 <script>
@@ -505,6 +501,7 @@
     const phoneInput = document.getElementById('customer_phone');
     const user_typeInput = document.getElementById('user_type');
     const billingAddress = document.querySelector('.billing-address span');
+    // console.log(billingAddress);
     const shippingAddress = document.querySelector('.shipping-address span');
     // const formRadio = document.querySelector('.form-radio input');
     // const formRadio_shipping = document.querySelector('.form-radio-shipping input');
@@ -938,6 +935,8 @@
     // Get all the <select> elements with the class "order-product"
     const orderProductSelects = document.querySelectorAll('.order-product');
     // Add an event listener to each <select> element
+    //alert(orderProductSelects);
+    //    console.log(orderProductSelects);
     orderProductSelects.forEach(function(select) {
         select.addEventListener('change', function() {
             // Get the selected option
@@ -1034,9 +1033,12 @@
 
     // Function to calculate and display price when dropdown selection changes
     function displayPrice(selectedOption, quantityInput) {
+        console.log('display price', quantityInput);
         const unitPrice = selectedOption.getAttribute('data-info');
         const priceDisplay = quantityInput.parentElement.previousElementSibling;
-        //  console.log('quantityInput',quantityInput);
+        console.log('priceDisplay', quantityInput.parentElement);
+        console.log('priceDisplay', quantityInput.parentElement.previousElementSibling);
+
         priceDisplay.textContent = `MYR ${unitPrice}`;
     }
 
@@ -1048,7 +1050,7 @@
         const unitPrice = selectedOption.getAttribute('data-info');
         const lineTotal = quantity * unitPrice;
         row.querySelector('td:nth-child(4)').textContent = `MYR ${lineTotal.toFixed(2)}`;
-        // const obj = {quantity:quantity,selectedOption:selectedOption,unitPrice:unitPrice,lineTotal:lineTotal} 
+        // const obj = {quantity:quantity,selectedOption:selectedOption,unitPrice:unitPrice,lineTotal:lineTotal}
         updateTotal();
 
     }
@@ -1059,6 +1061,8 @@
         const tableBody = document.getElementById('productTableBody');
         const rowToClone = tableBody.querySelector('tr:first-child');
         const newRow = rowToClone.cloneNode(true);
+
+        console.log(newRow);
         const errorSpanQty = newRow.querySelector('td:nth-child(3) div span');
         const productSpanQty = newRow.querySelector('td:nth-child(1) div span');
         const uniqueId = 'qty_error_' + Date.now();
@@ -1092,6 +1096,7 @@
             const row = this.closest('tr');
             const unitPriceCell = row.querySelector('td:nth-child(2)');
             const quantityInput = row.querySelector('.quantity');
+            console.log(quantityInput);
             displayPrice(selectedOption, quantityInput);
 
         });
@@ -1099,12 +1104,9 @@
         updateTotal(); // Recalculate and update the total after adding a new row
     }
 
-
-
-
-
     // Function to delete a row
     function deleteRow(button) {
+        // console.log("button",button.parentElement.parentElement);
         const tableBody = document.getElementById('productTableBody');
         if (tableBody.rows.length > 1) {
             const row = button.parentElement.parentElement;
@@ -1133,6 +1135,7 @@
 
     document.getElementById('add_product').addEventListener('click', function(event) {
         event.preventDefault();
+        console.log(this);
         addRow(document.getElementById('productTableBody'), this);
         add_couponData();
         // console.log(productData);
@@ -1146,7 +1149,6 @@
             addProductData(event.target.parentElement.parentElement, type = 'delete');
         }
     });
-
 
     document.getElementById('productTableBody').addEventListener('change', function(event) {
         if (event.target.classList.contains('order-product')) {
@@ -1171,7 +1173,7 @@
     //             ) {
     //                 errorSpan.style.display = 'none';
     //             } else {
-    //                 errorSpan.style.display = 'block'; // Show the error span if the field is empty or the 
+    //                 errorSpan.style.display = 'block'; // Show the error span if the field is empty or the
     //             }
     //         }
     //     }
@@ -1206,6 +1208,8 @@
         // console.log('addProductData');
         if (type === 'delete') {
             const product_id = row.querySelector('.order-product').value;
+            $('#order_products option[value="' + product_id + '"]').prop('disabled', false);
+
             const indexToRemove = productDataArray.findIndex(item => item.product_id === product_id);
 
 
@@ -1224,8 +1228,10 @@
             }
 
         } else {
-            // console.log('productDataArray',productDataArray.length);
-             const productSpan = row.querySelector('.order-product').closest('td').querySelector('span');
+            //  console.log('productDataArray',productDataArray.length);
+            //console.log('productDataArray',productDataArray);
+
+            const productSpan = row.querySelector('.order-product').closest('td').querySelector('span');
 
             const product_id = row.querySelector('.order-product').value;
             const unit_price = row.querySelector('td:nth-child(2)').textContent
@@ -1235,58 +1241,68 @@
             const prepare_days = row.querySelector('.order-product option:checked').getAttribute('data-prepare_days');
             const is_preorder_status = row.querySelector('.order-product option:checked').getAttribute(
                 'data-is_preorder_status');
-               
-                const product = {
+
+            const product = {
                 product_id: row.querySelector('.order-product').value,
                 unit_price: unit_price,
                 qty: row.querySelector('.quantity').value,
                 line_total: line_total,
                 prepare_days: prepare_days,
                 is_preorder_status: is_preorder_status,
-                productSpan:productSpan.id
+                productSpan: productSpan.id
 
             };
+            $('#order_products option').prop('disabled', false);
 
-            if(productDataArray.length === 0){
+            if (productDataArray.length === 0) {
                 productDataArray.push(product);
-                // console.log('add ',productDataArray);
-            }else{
 
-                const indexToUpdate = productDataArray.findIndex(item => item.productSpan === productSpan.id);      
+                productDataArray.forEach(function(productchange) {
+
+                    var productIdToDisable = productchange.product_id;
+                    $('#order_products option[value="' + productIdToDisable + '"]').prop('disabled', true);
+                });
+                // console.log('add ',productDataArray);
+            } else {
+
+                const indexToUpdate = productDataArray.findIndex(item => item.productSpan === productSpan.id);
                 // console.log('indexToUpdate',indexToUpdate);
-            if (indexToUpdate !== -1) {
+                if (indexToUpdate !== -1) {
 
-                //  // If an object with the same product_id exists, replace it
-                productDataArray[indexToUpdate] = {
-                    product_id: product_id,
-                    unit_price: unit_price,
-                    qty: row.querySelector('.quantity').value,
-                    line_total: line_total,
-                    prepare_days: prepare_days,
-                    is_preorder_status: is_preorder_status,
-                    productSpan:productSpan.id
-                };
-                
-                //  console.log('Updated', productDataArray[indexToUpdate]);
-                //   console.log('indexToUpdate ',productDataArray);
-                 
-                // return false;
-            }else {
+                    //  // If an object with the same product_id exists, replace it
+                    productDataArray[indexToUpdate] = {
+                        product_id: product_id,
+                        unit_price: unit_price,
+                        qty: row.querySelector('.quantity').value,
+                        line_total: line_total,
+                        prepare_days: prepare_days,
+                        is_preorder_status: is_preorder_status,
+                        productSpan: productSpan.id
+                    };
 
-                productDataArray.push(product);
-                // console.log('add ',productDataArray);
+                    productDataArray.forEach(function(productchange) {
+                        var productIdToDisable = productchange.product_id;
+                        $('#order_products option[value="' + productIdToDisable + '"]').prop('disabled', true);
+                    });
+                    //  console.log('Updated', productDataArray[indexToUpdate]);
+                    //   console.log('indexToUpdate ',productDataArray);
+
+                    // return false;
+                } else {
+
+                    productDataArray.push(product);
+                    // console.log('add ',productDataArray);
+
+                    productDataArray.forEach(function(productchange) {
+                        var productIdToDisable = productchange.product_id;
+                        $('#order_products option[value="' + productIdToDisable + '"]').prop('disabled', true);
+                    });
+                }
 
             }
 
-            }
-           
-            
+
             //  console.log('add ',productDataArray);
-
-           
-            
-
-
 
 
         }
@@ -1301,14 +1317,14 @@
 
 
         // if (hasPreorder) {
-            const maxPrepareDays = Math.max(...productDataArray.map(item => parseInt(item.prepare_days)));
-            const thresholdHour = 13;
-            const thresholdMinute = 0;
-            const futureDate = calculateFutureDate(maxPrepareDays, thresholdHour, thresholdMinute);
-            const futureDateString = futureDate.toISOString().split('T')[0];
-            //  pre_order_calender.value = '';
-            pre_order_calender.min = futureDateString;
-            // console.log('preorderCalender', pre_order_calender);
+        const maxPrepareDays = Math.max(...productDataArray.map(item => parseInt(item.prepare_days)));
+        const thresholdHour = 13;
+        const thresholdMinute = 0;
+        const futureDate = calculateFutureDate(maxPrepareDays, thresholdHour, thresholdMinute);
+        const futureDateString = futureDate.toISOString().split('T')[0];
+        //  pre_order_calender.value = '';
+        pre_order_calender.min = futureDateString;
+        // console.log('preorderCalender', pre_order_calender);
 
         // }
 
@@ -1335,29 +1351,31 @@
         }
     });
 
-const targetNode = pre_order_calender;
+    const targetNode = pre_order_calender;
 
-// Create an observer instance
-const observerPreOrder = new MutationObserver((mutationsList) => {
-    for (const mutation of mutationsList) {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'min') {
-            // The 'min' attribute has changed
-            const newMinValue = mutation.target.min;
-            pre_order_calender.value = newMinValue;
-            // console.log('New min value:', newMinValue);
+    // Create an observer instance
+    const observerPreOrder = new MutationObserver((mutationsList) => {
+        for (const mutation of mutationsList) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'min') {
+                // The 'min' attribute has changed
+                const newMinValue = mutation.target.min;
+                pre_order_calender.value = newMinValue;
+                // console.log('New min value:', newMinValue);
 
-            // Perform your task here
-            // For example, trigger a function or do something with the new value
-            // yourTaskFunction(newMinValue);
+                // Perform your task here
+                // For example, trigger a function or do something with the new value
+                // yourTaskFunction(newMinValue);
+            }
         }
-    }
-});
-const config = { attributes: true };
-observerPreOrder.observe(targetNode, config);
+    });
+    const config = {
+        attributes: true
+    };
+    observerPreOrder.observe(targetNode, config);
 
-
+    //coupon calculaiton based on totl sublist amount
     function add_couponData() {
-        // console.log('discountAmt',discountAmt.value); 
+        // console.log('discountAmt',discountAmt.value);
         const is_present = sub.is_percent;
         const orderAmount = updateTotal();
         const type = 'percent';
@@ -1384,7 +1402,7 @@ observerPreOrder.observe(targetNode, config);
                 // console.log('sub', sub);
                 const thirdtd = discountRow.querySelector('td:nth-child(3)');
                 const forthtd = discountRow.querySelector('td:nth-child(4)');
-                forthtd.textContent = '-MYR ' + discountAmount;
+                forthtd.textContent = '( -MYR ' + discountAmount +  " )";
                 // thirdtd.textContent = 'coupon [' + sub.code + ']:';
                 thirdtd.innerHTML = `Coupon[${sub.code}]  <i class="fa-solid fa-xmark"></i>`;
                 errorElement.textContent = valid;
@@ -1401,7 +1419,7 @@ observerPreOrder.observe(targetNode, config);
 
 
 
-        } else if((!is_present && is_present !== undefined) && updateTotal() > 0 ){
+        } else if ((!is_present && is_present !== undefined) && updateTotal() > 0) {
             // console.log('sub',sub);
 
             const valid = handleCouponValidation(sub, orderAmount);
@@ -1428,7 +1446,7 @@ observerPreOrder.observe(targetNode, config);
                 // console.log('sub', sub);
                 const thirdtd = discountRow.querySelector('td:nth-child(3)');
                 const forthtd = discountRow.querySelector('td:nth-child(4)');
-                forthtd.textContent = '-MYR ' + discountAmount;
+                forthtd.textContent = '( -MYR ' + discountAmount +  " )";
                 // thirdtd.textContent = 'coupon [' + sub.code + ']:';
                 thirdtd.innerHTML = `Coupon[${sub.code}]  <i class="fa-solid fa-xmark"></i>`;
                 errorElement.textContent = valid;
@@ -1439,7 +1457,7 @@ observerPreOrder.observe(targetNode, config);
                 return valid;
             }
 
-           
+
         }
     }
 
@@ -1662,14 +1680,14 @@ observerPreOrder.observe(targetNode, config);
 
             const currentDate = new Date();
             const endDate = new Date(coupon.end_date);
-            if(coupon.end_date){
+            if (coupon.end_date) {
 
                 if (currentDate > endDate) {
-                throw new Error('Coupon has expired');
-            }
+                    throw new Error('Coupon has expired');
+                }
 
             }
-           
+
 
             // Check if the coupon is used up
             if (coupon.usage_limit_per_coupon && coupon.used >= coupon.usage_limit_per_coupon) {
@@ -1717,9 +1735,9 @@ observerPreOrder.observe(targetNode, config);
             }
 
 
-               // Check if the coupon category excluded
+            // Check if the coupon category excluded
 
-               if (Array.isArray(coupon.exclude_categories) && coupon.exclude_categories.length !== 0) {
+            if (Array.isArray(coupon.exclude_categories) && coupon.exclude_categories.length !== 0) {
                 const productDataRow = [];
                 const rows = document.querySelectorAll('#productTableBody tr');
                 rows.forEach(function(row) {
@@ -1757,7 +1775,7 @@ observerPreOrder.observe(targetNode, config);
                     return 'Coupon is Applied';
                 }
 
-               
+
 
             }
 
@@ -1792,7 +1810,7 @@ observerPreOrder.observe(targetNode, config);
                         return coupon.categories.some(couponCategory => couponCategory.id === category.id);
                     });
 
-                    // console.log('matchingProducts',matchingProducts);
+                // console.log('matchingProducts',matchingProducts);
                 // console.log('includedCategories',matchingCategories);
 
                 if (matchingCategories.length === 0) {
@@ -1806,9 +1824,9 @@ observerPreOrder.observe(targetNode, config);
             }
 
 
-             // Check if the coupon product excluded
+            // Check if the coupon product excluded
 
-             if (Array.isArray(coupon.exclude_products) && coupon.exclude_products.length !== 0) {
+            if (Array.isArray(coupon.exclude_products) && coupon.exclude_products.length !== 0) {
                 const productDataRow = [];
                 const rows = document.querySelectorAll('#productTableBody tr');
                 rows.forEach(function(row) {
@@ -1831,7 +1849,7 @@ observerPreOrder.observe(targetNode, config);
                     productDataRow.some(productData => parseInt(productData.product_id) === product.id)
                 );
 
-                const matchingProductExclude = matchingProducts 
+                const matchingProductExclude = matchingProducts
                     .filter(product => {
                         // Compare the category IDs from coupon and matchingCategories
                         return coupon.exclude_products.some(couponproduct => couponproduct.id === product.id);
@@ -1845,7 +1863,7 @@ observerPreOrder.observe(targetNode, config);
                     return 'Coupon is Applied';
                 }
 
-               
+
 
             }
 
@@ -1880,8 +1898,8 @@ observerPreOrder.observe(targetNode, config);
                         return coupon.products.some(couponproducts => couponproducts.id === product.id);
                     });
 
-                    // console.log('matchingProducts',matchingProducts);
-                    // console.log('matchingProductsCoupon',matchingProductsCoupon);
+                // console.log('matchingProducts',matchingProducts);
+                // console.log('matchingProductsCoupon',matchingProductsCoupon);
 
                 if (matchingProductsCoupon.length === 0) {
                     throw new Error('The coupon is not applicable for this product cart .');
@@ -1894,10 +1912,10 @@ observerPreOrder.observe(targetNode, config);
             }
 
 
-            
 
 
-           
+
+
 
             // If all checks pass, you can return a success message
             return 'Coupon is Applied';
@@ -2023,7 +2041,7 @@ observerPreOrder.observe(targetNode, config);
                         const type = 'percent';
                         const discountAmount = discounted(discount, orderAmount, type);
                         discountRow.style.display = 'table-row';
-                        forthtd.textContent = '-MYR ' + discountAmount;
+                        forthtd.textContent = '( -MYR ' + discountAmount +  " )";
                         // thirdtd.textContent = 'coupon [' + coupon + ']:';
                         thirdtd.innerHTML = `Coupon[${sub.code}]  <i class="fa-solid fa-xmark"></i>`;
 
@@ -2036,7 +2054,7 @@ observerPreOrder.observe(targetNode, config);
                         const type = 'fixed';
                         const discountAmount = discounted(dis, orderAmount, type);
                         discountRow.style.display = 'table-row';
-                        forthtd.textContent = '-MYR ' + discountAmount;
+                        forthtd.textContent = '( -MYR ' + discountAmount + "  )";
                         // thirdtd.textContent = 'coupon [' + coupon + ']:';
                         thirdtd.innerHTML = `Coupon[${sub.code}]  <i class="fa-solid fa-xmark"></i>`;
 
@@ -2155,7 +2173,7 @@ observerPreOrder.observe(targetNode, config);
             other_address_input.addEventListener('change', function() {
                 const shippingAddress = document.getElementById('shipping-address');
                 if (this.checked) {
-                    //  console.log('shippingAddress',shippingAddress); 
+                    //  console.log('shippingAddress',shippingAddress);
                     shippingAddress.style.display = 'inline-flex';
                     zipExists(parseInt(original_shipping_address.shipping_zip));
                 } else {
@@ -2226,11 +2244,11 @@ observerPreOrder.observe(targetNode, config);
                                                 <span>${pickupStore.address_2}</span>
                                                 <span>${pickupStore.city}</span>
                                                 <span>${pickupStore.zip}</span>
-                                                
+
                                                 <span>${pickupStore.state_name}</span>
-                                                
+
                                                 <span>${pickupStore.country_name}</span>
-                                                
+
                                             </label>
                                         </div>`;
 
@@ -2398,7 +2416,6 @@ observerPreOrder.observe(targetNode, config);
 
 
 
-    // Submit button click event
 
     document.addEventListener('DOMContentLoaded', function() {
         const editFormButton = document.getElementById('editForm');
@@ -2572,6 +2589,7 @@ observerPreOrder.observe(targetNode, config);
                         data[key] = data[key].trim();
                     }
                 }
+                document.getElementById('editForm').disabled = 'true';
 
 
                 fetch(route('admin.orders.update', id), {
@@ -2589,11 +2607,13 @@ observerPreOrder.observe(targetNode, config);
                     .then(data => {
 
                             if (data.data === 'success') {
+                                document.getElementById('editForm').disabled = 'false';
+
                                 // Redirect to the list page
                                 window.location.href = route(
                                     "admin.orders.index"); // Replace with the actual URL
 
-                                //  console.log('data',data.data); 
+                                //  console.log('data',data.data);
                             }
 
                         }
@@ -2651,6 +2671,9 @@ observerPreOrder.observe(targetNode, config);
 
                         };
                         selectedProducts.push(product);
+                        console.log("selectedProducts", selectedProducts);
+                        alert(selectedProducts);
+                        return false;
                     });
                     const formElements = [];
                     const form = document.getElementById('order_create_form');
@@ -2862,32 +2885,34 @@ observerPreOrder.observe(targetNode, config);
                     //   console.log('data', data);
                     //   console.log('selectedProducts', selectedProducts);
 
-                        //   return;
+                    //   return;
+                    //  submitButton.disabled = true;
+                    document.getElementById('submitForm').disabled = 'true';
+                    // fetch(route("admin.orders.store"), {
+                    //         method: 'POST',
+                    //         headers: {
+                    //             'Content-Type': 'application/json',
+                    //             'X-CSRF-TOKEN': csrfToken, // You should define 'csrfToken' or remove if not needed
+                    //         },
+                    //         body: JSON.stringify({
+                    //             data: data,
+                    //             product: selectedProducts
+                    //         }), // Replace 'yourDataHere' with your actual data
+                    //     })
+                    //     .then(response => response.json())
+                    //     .then(data => {
 
-                    fetch(route("admin.orders.store"), {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': csrfToken, // You should define 'csrfToken' or remove if not needed
-                            },
-                            body: JSON.stringify({
-                                data: data,
-                                product: selectedProducts
-                            }), // Replace 'yourDataHere' with your actual data
-                        })
-                        .then(response => response.json())
-                        .then(data => {
+                    //             if (data.data === 'success') {
+                    //                 // Redirect to the list page
+                    //                 document.getElementById('submitForm').disabled='false';
+                    //                 window.location.href = route(
+                    //                     "admin.orders.index"); // Replace with the actual URL
+                    //                 // console.log('products',data.products);
+                    //             }
 
-                                if (data.data === 'success') {
-                                    // Redirect to the list page
-                                    window.location.href = route(
-                                        "admin.orders.index"); // Replace with the actual URL
-                                    // console.log('products',data.products);
-                                }
+                    //         }
 
-                            }
-
-                        );
+                    //     );
 
                     //   console.log('billingData',shippingData);
 

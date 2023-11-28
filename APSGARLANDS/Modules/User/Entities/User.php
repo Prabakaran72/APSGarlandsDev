@@ -157,7 +157,7 @@ class User extends EloquentUser implements AuthenticatableContract
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
-    
+
     public function wishlist()
     {
         // return $this->belongsToMany(Product::class, 'wish_lists')->withTimestamps();
@@ -213,7 +213,7 @@ class User extends EloquentUser implements AuthenticatableContract
         // return ucfirst($this->customer_first_name)." ".ucfirst($this->customer_last_name);
         return ucfirst($this->first_name)." ".ucfirst($this->last_name);
     }
-   
+
 
     /**
      * Set user's permissions.
@@ -271,7 +271,7 @@ class User extends EloquentUser implements AuthenticatableContract
     {
         return $this->hasMany(RewardpointsGift::class, 'user_id');
     }
-    
+
     public function customerRewardPoints()
     {
         return $this->hasMany(CustomerRewardPoint::class,'customer_id');

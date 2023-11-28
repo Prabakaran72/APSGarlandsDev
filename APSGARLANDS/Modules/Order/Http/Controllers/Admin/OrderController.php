@@ -17,7 +17,7 @@ use Modules\Shipping\Facades\ShippingMethod;
 use Modules\Support\Money;
 use Modules\Currency\Entities\CurrencyRate;
 use Modules\Address\Entities\DefaultAddress;
-
+use Modules\Address\Entities\Address;
 
 
 class OrderController
@@ -60,23 +60,37 @@ class OrderController
         // $user = User::all(['id', 'first_name']);
         // $customer = Customer::all(['id','first_name']);
         // $users = $user->merge($customer);
-        $user = User::all(['id', 'first_name','last_name'])->map(function ($user) {
-            $user['ids'] .= 'L-'.$user['id'];
-            $customer['fullname'] = $user['first_name'].' '.$user['last_name'];
-            return $user;
-        });
+
+        // before adding the concept of manual order enable option
+        // $user = User::all(['id', 'first_name','last_name'])->map(function ($user) {
+        //     $user['ids'] .= 'L-'.$user['id'];
+        //     $customer['fullname'] = $user['first_name'].' '.$user['last_name'];
+        //     return $user;
+        // });
     
         // $customer = Customer::all(['id', 'first_name', 'last_name'])->map(function ($customer) {
         //     $customer['ids'] .= 'M-'.$customer['id'];
         //     $customer['fullname'] = $customer['first_name'].' '.$customer['last_name'];
         //     return $customer;
         // });
+        // after adding the concept of manual order enable option
+        $user = User::select(['id', 'first_name', 'last_name'])
+    ->whereHas('addresses', function ($query) {
+        $query->where('user_type', 1);
+    })
+    ->get()
+    ->map(function ($user) {
+        $user['ids'] .= 'L-' . $user['id'];
+        $user['fullname'] = $user['first_name'] . ' ' . $user['last_name'];
+        return $user;
+    });
     
          $users = $user;
         $date = Carbon::now()->format('Y-m-d');
 
-        $countries =   Country::all();
-        
+        $address_user =   Address::all();
+                $countries =   Country::all();
+
          $products = Product::select('id','slug','price','prepare_days','is_preorder_status','manage_stock','qty','in_stock','special_price') ->with('categories')->get();
         
           $shippingMethods =  ShippingMethod::availableShippingMannual();
@@ -85,7 +99,8 @@ class OrderController
         // $query = str_replace(array('?'), array('\'%s\''), $products->toSql());
         // $query = vsprintf($query, $products->getBindings());
         // return  response()->json(['user' => $users ]) ;
-         return view("{$this->viewPath}.create", compact('users','date','countries','products','shippingMethods','minimumAmount'));
+
+         return view("{$this->viewPath}.create", compact('users','date','countries','products','shippingMethods','minimumAmount')) ;
     }
 
     public function details($id){
