@@ -64,13 +64,16 @@
                                 {{ trans('storefront::account.pages.my_addresses') }}
                             </a>
                         </li>
+
+                        @if (setting('rewardpoints_enabled'))
                         <li class="{{ request()->routeIs('account.rewardpoints.index') ? 'active' : '' }}">
                             <a href="{{ route('account.rewardpoints.index') }}">
                                 <i class="las la-gifts"></i>
                                 {{ trans('storefront::account.pages.my_rewardpoints') }}
                             </a>
                         </li>
-
+                        @endif
+                        
                         <li class="{{ request()->routeIs('account.profile.edit') ? 'active' : '' }}">
                             <a href="{{ route('account.profile.edit') }}">
                                 <i class="las la-user-circle"></i>
