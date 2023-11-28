@@ -21,26 +21,26 @@ class SidebarExtender extends BaseSidebarExtender
             });
         });
 
-        $menu->group(trans('admin::sidebar.system'), function (Group $group) {
-            $group->weight(10);
+        // $menu->group(trans('admin::sidebar.system'), function (Group $group) {
+        //     $group->weight(10);
 
-            $group->item(trans('admin::sidebar.appearance'), function (Item $item) {
-                $item->icon('fa fa-paint-brush');
-                $item->weight(15);
-                $item->route('admin.sliders.index');
-                $item->authorize(
-                    $this->auth->hasAnyAccess(['admin.sliders.index', 'admin.storefront.edit'])
-                );
-            });
+        //     $group->item(trans('admin::sidebar.appearance'), function (Item $item) {
+        //         $item->icon('fa fa-paint-brush');
+        //         $item->weight(15);
+        //         $item->route('admin.sliders.index');
+        //         $item->authorize(
+        //             $this->auth->hasAnyAccess(['admin.sliders.index', 'admin.storefront.edit'])
+        //         );
+        //     });
 
-            $group->item(trans('admin::sidebar.tools'), function (Item $item) {
-                $item->icon('fa fa-wrench');
-                $item->weight(20);
-                $item->route('admin.importer.index');
-                $item->authorize(
-                    $this->auth->hasAnyAccess(['admin.importer.index'])
-                );
-            });
-        });
+            // $group->item(trans('admin::sidebar.tools'), function (Item $item) {
+            //     $item->icon('fa fa-wrench');
+            //     $item->weight(20);
+            //     $item->route('admin.importer.index');
+            //     $item->authorize(
+            //         $this->auth->hasAnyAccess(['admin.importer.index'])
+            //     );
+            // });
+        // });
     }
 }
