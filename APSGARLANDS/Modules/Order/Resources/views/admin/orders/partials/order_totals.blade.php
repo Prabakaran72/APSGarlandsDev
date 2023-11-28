@@ -37,6 +37,13 @@
                             </tr>
                         @endif
 
+                        @if ($order->redemption_amount)
+                            <tr>
+                                <td>{{ trans('order::orders.rewards') }}</td>
+                                <td class="text-right">{{ "MYR ".$order->redemption_amount}}</td>
+                            </tr>
+                        @endif
+
                         <tr>
                             <td>{{ trans('order::orders.total') }}</td>
                             <td class="text-right">{{ $order->total->format() }}</td>
