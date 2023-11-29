@@ -480,25 +480,34 @@ class Cart extends DarryldecodeCart implements JsonSerializable
 
         return $currency;
     }
+    // COMMAND ON 28.11.2023
+    // public function redeemRewardPoints($redeemedAmount = 0, $redeemedpoints = 0, $resetSession = false)
+    // {
+    //     if ($resetSession) {
+    //         if ($this->session->exists('redemptionRewardAmount')) {
+    //             $currency = $this->session->get('redemptionRewardAmount');
+    //             $this->redemptionRewardAmount = $currency->amount();
+    //             $this->redeemedpoints = $this->session->get('redeemedpoints');
+    //             return $currency;
+    //         } else {
+    //             $this->redemptionRewardAmount = 0;
+    //             $this->redeemedpoints = 0;
+    //         }
+    //     } else {
+
+    //         $this->redemptionRewardAmount = $redeemedAmount;
+    //         $this->redeemedpoints = $redeemedpoints;
+    //     }
+    //     $this->rewardpoints();
+    // }
+
     public function redeemRewardPoints($redeemedAmount = 0, $redeemedpoints = 0, $resetSession = false)
     {
         session(['sessionRedeemedAmount' => $redeemedAmount]);
         session(['sessionRedeemedpoints' => $redeemedpoints]);
-        if ($resetSession) {
-            if ($this->session->exists('redemptionRewardAmount')) {
-                $currency = $this->session->get('redemptionRewardAmount');
-                $this->redemptionRewardAmount = $currency->amount();
-                $this->redeemedpoints = $this->session->get('redeemedpoints');
-                return $currency;
-            } else {
-                $this->redemptionRewardAmount = 0;
-                $this->redeemedpoints = 0;
-            }
-        } else {
 
-            $this->redemptionRewardAmount = $redeemedAmount;
-            $this->redeemedpoints = $redeemedpoints;
-        }
+        $this->redemptionRewardAmount = session('sessionRedeemedAmount', 0);
+        $this->redeemedpoints = session('sessionRedeemedpoints', 0);
         $this->rewardpoints();
     }
     public function clearRedemption()
@@ -511,9 +520,10 @@ class Cart extends DarryldecodeCart implements JsonSerializable
         $this->redeemedpoints = 0;
         $this->rewardpoints();
     }
+
     public function getrewardpoints()
     {
-        return  $this->redeemedpoints;
+        return  $this->redeemedpoints; 
         return  $this->session('redeemedpoints');
     }
 }

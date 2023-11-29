@@ -50,6 +50,7 @@ export default {
             store.syncCompareList(this.product.id);
         },
 
+
         addToCart() {
             this.addingToCart = true;
 

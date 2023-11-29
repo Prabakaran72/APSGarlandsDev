@@ -41,6 +41,7 @@ return [
     'recurringSubtotal' => 'Recurring Subtotal',
     'shipping_method' => 'Shipping Method',
     'coupon' => 'Coupon',
+    'rewards' => 'Rewards',
     'tax' => 'Tax',
     'total' => 'Total',
     'buttons' => [
@@ -54,6 +55,5 @@ return [
         'quantity' => 'Quantity',
         'line_total' => 'Line Total',
     ]
-    
+
 ];
- 

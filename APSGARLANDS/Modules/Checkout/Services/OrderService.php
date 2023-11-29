@@ -114,9 +114,7 @@ class OrderService
         $recurring_time = $request->recurring_time;
 
         $shippingMethod = Cart::shippingMethod()->name();
-
         $shippingCost = Cart::shippingCost()->amount();
-
         $shippingMethod = $request->shipping_method;
 
         // Check if the selected shipping method is 'local pickup'
@@ -130,10 +128,13 @@ class OrderService
 
         //Insert customer claimed rewardpoints in customer_reward_points table
         //Have to ensure customer has enough valid reward points
-        if ($request->redemptionRewardPoints > 0) {
+
+        $sessionRedeemedpoints = session('sessionRedeemedpoints', 0);
+
+        if ($sessionRedeemedpoints > 0) {
             $customer_rewards_id = CustomerRewardPoint::insertGetId([
                 'customer_id' =>  auth()->id(),
-                'reward_points_claimed' => $request->redemptionRewardPoints,
+                'reward_points_claimed' => $sessionRedeemedpoints,
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s'),
             ]);
@@ -176,19 +177,18 @@ class OrderService
             'shipping_zip' => $request->shipping['zip'],
             'shipping_country' => $request->shipping['country'],
             'sub_total' => Cart::subTotal()->amount(),
-            // 'sub_total' => $subTotal, //MODIFY THE CODE BASED ON RECURRING ORDER - 26.10.2023
             'shipping_method' => Cart::shippingMethod()->name(),
             'shipping_cost' => $shippingCost,
             'coupon_id' => Cart::coupon()->id(),
             'discount' => Cart::discount()->amount(),
-            // 'discount' => $discount, //MODIFY THE CODE BASED ON RECURRING ORDER - 26.10.2023
             'total' => $total, // Use the calculated total
             'payment_method' => $request->payment_method,
             'currency' => currency(),
             'currency_rate' => CurrencyRate::for(currency()),
             'locale' => locale(),
             'status' => Order::PENDING_PAYMENT,
-            'note' => $request->order_note,
+            // 'note' => $request->order_note,
+            'note' => $sessionRedeemedpoints,
             'rewardpoints_id' => isset($customer_rewards_id) ? $customer_rewards_id : null,
             'redemption_amount' => isset($customer_rewards_id) ? $request->redemptionRewardAmount['amount'] : null,
             'isRecurring' => $isRecurring,
