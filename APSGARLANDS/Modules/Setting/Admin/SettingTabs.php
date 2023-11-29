@@ -41,9 +41,7 @@ class SettingTabs extends Tabs
 
         $this->group('payment_methods', trans('setting::settings.tabs.group.payment_methods'))
             ->add($this->razerpay())
-            ->add($this->cod())
-            ->add($this->bankTransfer())
-            ->add($this->checkPayment());
+            ->add($this->cod());
     }
 
     private function general() {
@@ -210,21 +208,21 @@ class SettingTabs extends Tabs
         });
     }
 
-    private function bankTransfer() {
-        return tap(new Tab('bank_transfer', trans('setting::settings.tabs.bank_transfer')), function (Tab $tab) {
-            $tab->weight(71);
-            $tab->fields(['bank_transfer_enabled', 'translatable.bank_transfer_label', 'translatable.bank_transfer_description', 'translatable.bank_transfer_instructions']);
-            $tab->view('setting::admin.settings.tabs.bank_transfer');
-        });
-    }
+    // private function bankTransfer() {
+    //     return tap(new Tab('bank_transfer', trans('setting::settings.tabs.bank_transfer')), function (Tab $tab) {
+    //         $tab->weight(71);
+    //         $tab->fields(['bank_transfer_enabled', 'translatable.bank_transfer_label', 'translatable.bank_transfer_description', 'translatable.bank_transfer_instructions']);
+    //         $tab->view('setting::admin.settings.tabs.bank_transfer');
+    //     });
+    // }
 
-    private function checkPayment() {
-        return tap(new Tab('check_payment', trans('setting::settings.tabs.check_payment')), function (Tab $tab) {
-            $tab->weight(72);
+    // private function checkPayment() {
+    //     return tap(new Tab('check_payment', trans('setting::settings.tabs.check_payment')), function (Tab $tab) {
+    //         $tab->weight(72);
 
-            $tab->fields(['check_payment_enabled', 'translatable.check_payment_label', 'translatable.check_payment_description', 'translatable.check_payment_instructions']);
+    //         $tab->fields(['check_payment_enabled', 'translatable.check_payment_label', 'translatable.check_payment_description', 'translatable.check_payment_instructions']);
 
-            $tab->view('setting::admin.settings.tabs.check_payment');
-        });
-    }
+    //         $tab->view('setting::admin.settings.tabs.check_payment');
+    //     });
+    // }
 }

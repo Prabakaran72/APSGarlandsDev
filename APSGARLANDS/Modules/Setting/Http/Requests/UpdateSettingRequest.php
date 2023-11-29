@@ -88,7 +88,7 @@ class UpdateSettingRequest extends Request
 
             'flat_rate_enabled' => 'required|boolean',
             'translatable.flat_rate_label' => 'required_if:flat_rate_enabled,1',
-            
+
             // 'flat_rate_cost' => '',
             'flat_rate_cost' => ['required_if:flat_rate_enabled,1', 'nullable', 'numeric'],
 
@@ -106,15 +106,6 @@ class UpdateSettingRequest extends Request
             'translatable.cod_label' => 'required_if:cod_enabled,1',
             'translatable.cod_description' => 'required_if:cod_enabled,1',
 
-            'bank_transfer_enabled' => 'required|boolean',
-            'translatable.bank_transfer_label' => 'required_if:bank_transfer_enabled,1',
-            'translatable.bank_transfer_description' => 'required_if:bank_transfer_enabled,1',
-            'translatable.bank_transfer_instructions' => 'required_if:bank_transfer_enabled,1',
-
-            'check_payment_enabled' => 'required|boolean',
-            'translatable.check_payment_label' => 'required_if:check_payment_enabled,1',
-            'translatable.check_payment_description' => 'required_if:check_payment_enabled,1',
-            'translatable.check_payment_instructions' => 'required_if:check_payment_enabled,1',
         ];
     }
 
