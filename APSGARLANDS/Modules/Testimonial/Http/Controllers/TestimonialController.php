@@ -15,20 +15,23 @@ class TestimonialController extends Controller
      * @return Renderable
      */
 
-     public function testindex()
+    public function testindex()
     {
         if (auth()->id()) {
-        return view('public.testimonial.index');
-        }else{
+            return view('public.testimonial.index');
+        } else {
             return redirect()->route('login')->with('error', 'You are not authorized. Please Login and Try..!');
         }
-
     }
+
+    
+
     public function showTestimonialSlider()
     {
-        $testimonials = Testimonial::where('is_active',1)->get()->shuffle()->take(5);
+        $testimonials = Testimonial::with('user')->where('is_active', 1)->take(5)->latest()->get();
         return view('public.testimonial.testimonial_slider', compact('testimonials'));
     }
+
 
     public function store(Request $request)
     {
@@ -41,8 +44,5 @@ class TestimonialController extends Controller
 
         ]);
         return redirect()->route('products.index')->with('success', 'Testimonial added successfully!');
-        //return redirect()->route('account.testimonials.index');
-        // return redirect()->route('products.index');
     }
-
- }
+}
