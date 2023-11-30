@@ -27,13 +27,13 @@
                                 <th>Comment</th>
                                 {{-- <th>{{ trans('storefront::account.status') }}</th> --}}
                                 <th>{{ trans('storefront::account.date') }}</th>
+                                <th>{{ trans('storefront::account.action') }}</th>
                             </tr>
                         </thead>
 
                         <tbody>
                             @foreach ($testimonials as $testimonial)
                                 <tr>
-
                                     <td>
                                         {{ $testimonial->user_name}}
                                     </td>
@@ -48,6 +48,12 @@
 
                                     <td>
                                         {{ $testimonial->created_at->toFormattedDateString() }}
+                                    </td>
+                                    <td>
+                                        <a href="{{ route('account.testimonials.show', $testimonial->id) }}" class="btn btn-view">
+                                            <i class="las la-eye"></i>
+                                            {{ trans('storefront::account.orders.view') }}
+                                        </a>
                                     </td>
 
                                 </tr>

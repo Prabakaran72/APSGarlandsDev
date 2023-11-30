@@ -74,6 +74,10 @@ return [
     ],
     'testimonials' => [
         'no_testimonials' => 'You don\'t have a Testimonial',
+        'view_testimonial' => 'View Testimonial',
+    ],
+    'view_testimonial' =>[
+        'view_testimonial' => 'View Testimonial',
     ],
     'addresses' => [
         'confirm' => 'Are you sure want to delete this address?',
@@ -127,5 +131,5 @@ return [
         'totalPointEarned' => 'Total Points Earned',
         'totalPointsClaimed' => 'Totla Points Claimed',
         'alive_points' => 'Available Points'
-    ],  
+    ],
 ];

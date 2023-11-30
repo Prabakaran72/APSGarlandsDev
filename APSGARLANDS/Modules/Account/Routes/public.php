@@ -19,6 +19,10 @@ Route::middleware('auth')->group(function () {
     Route::get('account/reviews', 'AccountReviewController@index')->name('account.reviews.index');
 
     Route::get('account/testimonials', 'AccountTestimonialController@index')->name('account.testimonials.index');
+    Route::get('account/testimonials/{id}', 'AccountTestimonialController@show')->name('account.testimonials.show');
+    // Route::post('testimonialsEdit', 'AccountTestimonialController@edit')->name('account.testimonials.edit');
+    Route::put('testimonials/{id}', 'AccountTestimonialController@update')->name('account.testimonials.update');
+
 
     Route::get('addresses', 'AccountAddressController@index')->name('account.addresses.index');
     Route::post('addresses', 'AccountAddressController@store')->name('account.addresses.store');
